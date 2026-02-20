@@ -1,0 +1,56 @@
+# ----------------------
+# Python
+# ----------------------
+*.pyc
+*.pyo
+__pycache__/
+*.pyd
+
+# Environments
+venv/
+env/
+.venv/
+
+# ----------------------
+# Django
+# ----------------------
+*.log
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.py[cod]
+
+# ----------------------
+# IDEs / Editors
+# ----------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ----------------------
+# OS
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# Testing / Coverage
+# ----------------------
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# ----------------------
+# Secrets / Configuration
+# ----------------------
+.env
+.env.local
+.env.production
+
+# ----------------------
+# Others
+# ----------------------
+*.swp
