@@ -1,5 +1,3 @@
-
-
 from rest_framework import serializers
 from .models import Group, CustomUser, CoachProfile, PlayerProfile , SubGroup
 
@@ -10,38 +8,48 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'role']
 
+
 class CoachSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     coach_profile = serializers.SerializerMethodField()
-    
+    groups = serializers.SerializerMethodField()  
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'password', 'role', 'phone', 'club', 'coach_profile']
+        fields = ['id', 'username', 'email', 'password', 'role', 'phone', 'club', 'coach_profile', 'groups']
         extra_kwargs = {'role': {'default': 'coach'}}
 
     def get_coach_profile(self, obj):
-        """Return coach profile ID if it exists"""
         if hasattr(obj, 'coach_profile'):
             return {'id': obj.coach_profile.id}
         return None
 
+    def get_groups(self, obj): 
+        if hasattr(obj, 'coach_profile'):
+            groups = obj.coach_profile.groups.all()
+            return [{'id': g.id, 'name': g.name} for g in groups]
+        return []
+
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = CustomUser(**validated_data)
-        user.set_password(password)  # Hash password
+        user.set_password(password)
         user.role = 'coach'
         user.save()
         return user
+    
+
 class SubGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubGroup
         fields = ['id', 'name', 'group']
 
+
 class GroupSerializer(serializers.ModelSerializer):
     coach = serializers.PrimaryKeyRelatedField(queryset=CoachProfile.objects.all(), required=False, allow_null=True)
     coach_detail = CoachSerializer(source='coach.user', read_only=True)
-    subgroups = SubGroupSerializer(many=True, read_only=True)  # utilise related_name="subgroups"
+    subgroups = SubGroupSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Group
@@ -59,7 +67,8 @@ class GroupSerializer(serializers.ModelSerializer):
         representation.pop('coach_detail', None)
         return representation
 
-# serializers.py
+
+
 class PlayerProfileSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer(read_only=True)
     group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all(), required=False, allow_null=True)

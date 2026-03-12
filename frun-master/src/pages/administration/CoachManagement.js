@@ -3,7 +3,7 @@ import { FiSearch, FiPlus, FiEye, FiEyeOff, FiX, FiEdit, FiTrash2, FiUser, FiCli
 import { motion, AnimatePresence } from 'framer-motion';
 import API from './api';
 
-const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
+const CoachManagement = ({ coaches, setCoaches }) => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -12,10 +12,10 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Same data source as Player Management (groups from App)
-  const groups = groupsProp || [];
+  const [errors, setErrors] = useState({});
+  const [groups, setGroups] = useState([]);
+  const [subgroups, setSubgroups] = useState([]);
 
-  // Form state matches your CustomUser model (same shape as Player Management for group/subgroup)
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -44,7 +44,44 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
     fetchCoaches();
   }, [setCoaches]);
 
-  // Password strength calculator
+  // Fetch groups & subgroups
+  useEffect(() => {
+    const fetchGroupsAndSubgroups = async () => {
+      try {
+        const [groupsRes, subgroupsRes] = await Promise.all([
+          API.get('groups/'),
+          API.get('subgroups/')
+        ]);
+        setGroups(groupsRes.data);
+        setSubgroups(subgroupsRes.data);
+      } catch (err) {
+        console.error('Failed to fetch groups/subgroups', err);
+      }
+    };
+    fetchGroupsAndSubgroups();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleGroupChangeInForm = (e) => {
+    setFormData(prev => ({ ...prev, group: e.target.value, subgroup: '' }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const password = e.target.value;
+    setFormData(prev => ({ ...prev, password }));
+    setPasswordStrength(calculatePasswordStrength(password));
+  };
+
+  // ✅ Filter subgroups by selected group ID
+  const filteredSubgroups = subgroups.filter(
+    sub => String(sub.group) === String(formData.group)
+  );
+
   const calculatePasswordStrength = (password) => {
     let strength = 0;
     if (password.length >= 8) strength += 1;
@@ -56,111 +93,45 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
     return Math.min(strength, 5);
   };
 
-  const handlePasswordChange = (e) => {
-    const password = e.target.value;
-    setFormData(prev => ({ ...prev, password }));
-    setPasswordStrength(calculatePasswordStrength(password));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Same as Player Management: when group changes, clear subgroup (subgroups are group-specific)
-  const handleGroupChangeInForm = (e) => {
-    const value = e.target.value;
-    setFormData(prev => ({ ...prev, group: value, subgroup: '' }));
-  };
-
-  // Same data source and logic as Player Management: groups + existing entities for options
-  const groupOptionsForCoach = [...new Set([
-    ...groups.map(g => g.name),
-    ...(coaches || []).map(c => c.group).filter(Boolean)
-  ])].filter(Boolean).sort();
-
-  const getSubgroupsForSelectedGroup = () => {
-    if (!formData.group) return [];
-    const g = groups.find(gr => gr.name === formData.group);
-    if (g && g.subgroups && g.subgroups.filter(Boolean).length > 0) {
-      return g.subgroups.map(s => (typeof s === 'object' && s && s.name != null ? s.name : (s != null ? String(s) : ''))).filter(Boolean);
-    }
-    return [...new Set((coaches || []).filter(c => c.group === formData.group).map(c => c.subgroup).filter(Boolean))];
-  };
-  const baseSubgroupOptions = getSubgroupsForSelectedGroup();
-  const subgroupOptionsForCoach = formData.subgroup && !baseSubgroupOptions.includes(formData.subgroup)
-    ? [...baseSubgroupOptions, formData.subgroup]
-    : baseSubgroupOptions;
-
-  // API functions
+  // ---------- API functions ----------
   const addCoachAPI = async (coachData) => {
-    try {
-      const response = await API.post('coaches/', coachData);
-      return response.data;
-    } catch (error) {
-      console.error('Error:', error.response?.data);
-      throw error;
-    }
+    const payload = {
+      ...coachData,
+      role: coachData.role || 'coach',
+      group: coachData.group ? parseInt(coachData.group) : null,
+      subgroup: coachData.subgroup ? parseInt(coachData.subgroup) : null
+    };
+    const response = await API.post('coaches/', payload);
+    return response.data;
   };
 
   const updateCoachAPI = async (id, coachData) => {
-    try {
-      const payload = { ...coachData };
-      // Don't send password if it's empty (not being changed)
-      if (!payload.password) delete payload.password;
-      
-      const response = await API.put(`coaches/${id}/`, payload);
-      return response.data;
-    } catch (error) {
-      console.error('Error:', error.response?.data);
-      throw error;
-    }
+    const payload = {
+      ...coachData,
+      group: coachData.group ? parseInt(coachData.group) : null,
+      subgroup: coachData.subgroup ? parseInt(coachData.subgroup) : null
+    };
+    if (!payload.password) delete payload.password;
+    const response = await API.put(`coaches/${id}/`, payload);
+    return response.data;
   };
 
   const deleteCoachAPI = async (id) => {
-    try {
-      await API.delete(`coaches/${id}/`);
-    } catch (error) {
-      console.error('Error:', error.response?.data);
-      throw error;
-    }
+    await API.delete(`coaches/${id}/`);
   };
-  const syncCoachGroups = async (coach, selectedGroupName) => {
-    try {
-      if (!coach) return;
 
-      // ID du coach (CustomUser)
-      const coachUserId = coach.id;
-      // ID du CoachProfile (renvoyé par CoachSerializer via coach_profile.id)
-      const coachProfileId = coach.coach_profile?.id || null;
-
-      // 1) Nettoyer les anciens groupes qui pointent sur ce coach
-      const groupsToClear = (groups || []).filter(
-        g => g.coach && g.coach.id === coachUserId && g.name !== selectedGroupName
-      );
-
-      await Promise.all(
-        groupsToClear.map(g =>
-          API.patch(`groups/${g.id}/`, { coach: null })
-        )
-      );
-
-      // 2) Affecter le coach au groupe sélectionné dans le formulaire
-      if (selectedGroupName && coachProfileId) {
-        const targetGroup = (groups || []).find(g => g.name === selectedGroupName);
-        if (targetGroup) {
-          await API.patch(`groups/${targetGroup.id}/`, { coach: coachProfileId });
-        }
-      }
-    } catch (error) {
-      console.error('Error syncing coach groups:', error);
-    }
-  };
-  // Form handlers
-    const handleSubmit = async (e) => {
+  // ---------- Form Handlers ----------
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setErrors({});
+
+    if (!formData.username || !formData.email || (!editCoachId && !formData.password)) {
+      setError('Please fill all required fields: username, email, password');
+      setIsLoading(false);
+      return;
+    }
 
     if (!editCoachId && passwordStrength < 3) {
       setError('Password is too weak. Please use a stronger password.');
@@ -169,41 +140,39 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
     }
 
     try {
-      let savedCoach;
       if (editCoachId) {
-        savedCoach = await updateCoachAPI(editCoachId, formData);
-        setCoaches(coaches.map(c => (c.id === editCoachId ? savedCoach : c)));
+        const updatedCoach = await updateCoachAPI(editCoachId, formData);
+        setCoaches(coaches.map(c => (c.id === editCoachId ? updatedCoach : c)));
       } else {
-        savedCoach = await addCoachAPI(formData);
-        setCoaches(prev => [...prev, savedCoach]);
+        const newCoach = await addCoachAPI(formData);
+        setCoaches(prev => [...prev, newCoach]);
       }
-
-      // Synchroniser les groupes en base avec la valeur du formulaire
-      await syncCoachGroups(savedCoach, formData.group);
-
       resetForm();
       setShowModal(false);
     } catch (err) {
-      setError(
-        err.response?.data?.username?.[0] ||
-        err.response?.data?.error ||
-        'Failed to save coach'
-      );
+      console.log(err.response?.data);
+      setError(JSON.stringify(err.response?.data) || 'Failed to save coach');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ FIXED: coach.groups est un tableau [{id, name}, ...]
   const handleEdit = (coach) => {
+    // Récupère le premier groupe assigné au coach (depuis coach.groups)
+    const firstGroup = coach.groups && coach.groups.length > 0 ? coach.groups[0] : null;
+
+    // Cherche le subgroup actuel dans la liste des subgroups
+    // (pas retourné directement par l'API coach, donc on laisse vide pour l'instant)
     setFormData({
-      username: coach.username,
-      email: coach.email,
+      username: coach.username || '',
+      email: coach.email || '',
       password: '',
       phone: coach.phone || '',
       club: coach.club || '',
-      role: coach.role || 'coach',
-      group: coach.group || '',
-      subgroup: coach.subgroup || ''
+      role: ['coach', 'assistant_coach', 'head_coach'].includes(coach.role) ? coach.role : 'coach',
+      group: firstGroup ? String(firstGroup.id) : '',  // ✅ ID du groupe
+      subgroup: ''
     });
     setEditCoachId(coach.id);
     setShowModal(true);
@@ -214,7 +183,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
     setIsLoading(true);
     try {
       await deleteCoachAPI(id);
-      setCoaches(coaches.filter(coach => coach.id !== id));
+      setCoaches(coaches.filter(c => c.id !== id));
     } catch (err) {
       setError('Failed to delete coach');
     } finally {
@@ -238,24 +207,14 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
     setShowPassword(false);
     setError(null);
   };
-    // Récupérer les noms de groupes liés à un coach via Group.coach
-  const getGroupsForCoach = (coachId) => {
-    return (groups || [])
-      .filter(g => g.coach && g.coach.id === coachId)
-      .map(g => g.name);
-  };
-  // UI helpers
-  const filteredCoaches = coaches.filter(coach => {
-    const username = coach.username ? coach.username.toLowerCase() : '';
-    const email = coach.email ? coach.email.toLowerCase() : '';
-    const club = coach.club ? coach.club.toLowerCase() : '';
-    const searchTermLower = searchTerm.toLowerCase();
 
-    return (
-      username.includes(searchTermLower) ||
-      email.includes(searchTermLower) ||
-      club.includes(searchTermLower)
-    );
+  // ---------- Filtered Coaches ----------
+  const filteredCoaches = coaches.filter(coach => {
+    const username = coach.username?.toLowerCase() || '';
+    const email = coach.email?.toLowerCase() || '';
+    const club = coach.club?.toLowerCase() || '';
+    const term = searchTerm.toLowerCase();
+    return username.includes(term) || email.includes(term) || club.includes(term);
   });
 
   const strengthLabels = ['Very Weak', 'Weak', 'Medium', 'Strong', 'Very Strong'];
@@ -281,10 +240,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
   const itemVariants = {
@@ -295,9 +251,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
   return (
     <motion.div
       className="min-h-screen p-4 sm:p-6 md:p-8"
-      style={{
-        background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)'
-      }}
+      style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -336,10 +290,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  resetForm();
-                  setShowModal(true);
-                }}
+                onClick={() => { resetForm(); setShowModal(true); }}
                 className="px-4 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:from-[#00d0cb] hover:to-[#4fb0ff] text-white rounded-xl font-medium transition-all flex items-center gap-2"
                 disabled={isLoading}
               >
@@ -428,25 +379,30 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                         <span className="ml-2 text-white">{coach.phone}</span>
                       </div>
                     )}
-                                        {getGroupsForCoach(coach.id).length > 0 && (
+
+                    {/* ✅ FIXED: Affichage des groupes depuis coach.groups (tableau) */}
+                    {coach.groups && coach.groups.length > 0 && (
                       <div className="flex flex-col text-gray-300">
                         <span className="text-sm font-medium mb-1">Groups:</span>
                         <div className="flex flex-wrap gap-1">
-                          {getGroupsForCoach(coach.id).map(name => (
+                          {coach.groups.map((g) => (
                             <span
-                              key={name}
+                              key={g.id}
                               className="px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-[#902bd1]/20 to-[#7c3aed]/20 text-purple-300 border border-purple-700/30"
                             >
-                              {name}
+                              {g.name}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
+
                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/50">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-white">{coach.teams ?? 0}</div>
-                        <div className="text-xs text-gray-400">Teams</div>
+                        <div className="text-lg font-bold text-white">
+                          {coach.groups ? coach.groups.length : 0}
+                        </div>
+                        <div className="text-xs text-gray-400">Groups</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-bold text-white">{coach.rating ?? '–'}</div>
@@ -471,10 +427,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    resetForm();
-                    setShowModal(true);
-                  }}
+                  onClick={() => { resetForm(); setShowModal(true); }}
                   className="px-5 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white rounded-xl hover:from-[#4fb0ff]/90 hover:to-[#00d0cb]/90 transition-all duration-300 flex items-center gap-2 font-medium mx-auto"
                 >
                   <FiPlus />
@@ -509,7 +462,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                       whileHover={{ rotate: 90, scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       type="button"
-                      onClick={() => setShowModal(false)}
+                      onClick={() => { setShowModal(false); resetForm(); }}
                       className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
                     >
                       <FiX size={20} />
@@ -621,7 +574,7 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                       </div>
                     </div>
 
-                    {/* Group & Sub-group: same UI flow as Player Management */}
+                    {/* ✅ Group select using group.id */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">Group</label>
@@ -631,15 +584,17 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                           onChange={handleGroupChangeInForm}
                           className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
                         >
-                          <option value="" className="bg-gray-800">Select group</option>
-                          {groupOptionsForCoach.map((name) => (
-                            <option key={name} value={name} className="bg-gray-800">{name}</option>
+                          <option value="" className="bg-gray-800">Select group (optional)</option>
+                          {groups.map((group) => (
+                            <option key={group.id} value={group.id} className="bg-gray-800">
+                              {group.name}
+                            </option>
                           ))}
                         </select>
                       </div>
-                    </div>
-                    {formData.group && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                      {/* ✅ Subgroup filtered by selected group */}
+                      {formData.group && (
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">Sub-group</label>
                           <select
@@ -648,21 +603,25 @@ const CoachManagement = ({ coaches, setCoaches, groups: groupsProp = [] }) => {
                             onChange={handleChange}
                             className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
                           >
-                            <option value="" className="bg-gray-800">{subgroupOptionsForCoach.length > 0 ? 'Select sub-group' : 'No sub-groups'}</option>
-                            {subgroupOptionsForCoach.map((name) => (
-                              <option key={name} value={name} className="bg-gray-800">{name}</option>
+                            <option value="" className="bg-gray-800">
+                              {filteredSubgroups.length > 0 ? 'Select sub-group' : 'No sub-groups'}
+                            </option>
+                            {filteredSubgroups.map((subgroup) => (
+                              <option key={subgroup.id} value={subgroup.id} className="bg-gray-800">
+                                {subgroup.name}
+                              </option>
                             ))}
                           </select>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50">
                       <motion.button
                         type="button"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowModal(false)}
+                        onClick={() => { setShowModal(false); resetForm(); }}
                         className="px-5 py-2.5 bg-gray-800/50 text-gray-300 rounded-xl font-medium hover:bg-gray-700/50 transition-all border border-gray-700/50"
                       >
                         Cancel
