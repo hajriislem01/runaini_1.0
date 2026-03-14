@@ -35,34 +35,30 @@ const LoginForm = () => {
 
         try {
             const response = await axios.post('http://localhost:8000/api/login/', {
-                 email,
-                 password
-             });
-    //         const response = await axios.post(
-    //     `${process.env.REACT_APP_API_URL}/login/`,
-    //     { email, password }
-    // );
+                email,
+                password
+            });
 
+            const { token, user: userData } = response.data;
 
-            const { token, user: userData } = response.data; // Destructure with alias
-            localStorage.setItem('token', token);
-            
-            // Make sure user data exists before storing
             if (userData) {
+                // ✅ Sauvegarde token + user + academy_id
+                localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
-                
+                localStorage.setItem('role', userData.role);
+                localStorage.setItem('academy_id', userData.academy_id);  // ✅ nouveau
+
                 setSuccess('Login successful! Redirecting...');
                 setEmail('');
                 setPassword('');
 
-                // Redirect based on role
                 setTimeout(() => {
                     if (userData.role === 'admin') {
-                        navigate('/administration/Profile');
+                        navigate('/administration/Dashboard');
                     } else if (userData.role === 'coach') {
-                        navigate('/coach/profile');
+                        navigate('/coach/Dashboard');
                     } else {
-                        navigate('/players/profile');
+                        navigate('/players/Dashboard');
                     }
                 }, 1000);
             } else {
@@ -99,7 +95,7 @@ const LoginForm = () => {
                         Welcome Back to RUNAINI
                     </motion.h1>
                     <p className="text-gray-400 text-lg">
-                        I don’t have an account.{' '}
+                        I don't have an account.{' '}
                         <a href="./signup" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
                             Create one now
                         </a>
@@ -116,7 +112,6 @@ const LoginForm = () => {
                             {error}
                         </motion.div>
                     )}
-
                     {success && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}

@@ -1,11 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
-from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup
+from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup, Academy
 from .serializers import PlayerProfileSerializer
 from .permissions import IsAdmin
 
@@ -20,20 +20,29 @@ class AdminSignupView(APIView):
             return Response({"error": "Only admin signup is allowed"}, status=403)
 
         try:
+            # ✅ Crée l'académie automatiquement avec le nom fourni
+            academy = Academy.objects.create(
+                name=data.get("academy_name", f"{data['username']}'s Academy"),
+            )
+
             user = CustomUser.objects.create(
                 username=data["username"],
                 email=data["email"],
                 password=make_password(data["password"]),
                 role="admin",
                 first_name=data.get("first_name", ""),
-                last_name=data.get("last_name", "")
+                last_name=data.get("last_name", ""),
+                phone=data.get("phone", ""),
+                club=data.get("club", ""),
+                academy=academy  # ✅ Assigne l'académie à l'admin
             )
-            user.phone = data.get("phone", "")
-            user.club = data.get("club", "")
-            user.save()
 
             token = Token.objects.create(user=user)
-            return Response({"token": token.key}, status=201)
+            return Response({
+                "token": token.key,
+                "academy_id": academy.id,
+                "academy_name": academy.name
+            }, status=201)
 
         except Exception as e:
             return Response({"error": str(e)}, status=400)
@@ -62,7 +71,8 @@ class LoginView(APIView):
                     "id": user.id,
                     "email": user.email,
                     "role": user.role,
-                    "username": user.username
+                    "username": user.username,
+                    "academy_id": user.academy_id  # ✅ retourne l'ID de l'académie
                 }
             }, status=200)
         else:
@@ -91,7 +101,8 @@ class CoachSignupView(APIView):
                 first_name=data.get("first_name", ""),
                 last_name=data.get("last_name", ""),
                 phone=data.get("phone", ""),
-                club=data.get("club", "")
+                club=data.get("club", ""),
+                academy=request.user.academy  # ✅ hérite l'académie de l'admin
             )
 
             CoachProfile.objects.create(
@@ -129,15 +140,19 @@ class PlayerSignupView(APIView):
                 role="player",
                 first_name=data.get("first_name", ""),
                 last_name=data.get("last_name", ""),
-                phone=data.get("phone", "")
+                phone=data.get("phone", ""),
+                academy=request.user.academy  # ✅ hérite l'académie de l'admin
             )
 
-            # Group optionnel
+            # Group — doit appartenir à la même académie
             group_instance = None
             group_id = data.get("group")
             if group_id:
                 try:
-                    group_instance = Group.objects.get(id=group_id)
+                    group_instance = Group.objects.get(
+                        id=group_id,
+                        academy=request.user.academy  # ✅ sécurité
+                    )
                 except Group.DoesNotExist:
                     return Response({"error": "Invalid group"}, status=400)
 
@@ -161,7 +176,8 @@ class PlayerSignupView(APIView):
                 subgroup=subgroup_instance,
                 phone=data.get("phone", ""),
                 address=data.get("address", ""),
-                notes=data.get("notes", "")
+                notes=data.get("notes", ""),
+                academy=request.user.academy  # ✅ hérite l'académie de l'admin
             )
 
             serializer = PlayerProfileSerializer(player)

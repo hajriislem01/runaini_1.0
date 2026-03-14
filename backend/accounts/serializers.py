@@ -1,12 +1,57 @@
 from rest_framework import serializers
-from .models import Group, CustomUser, CoachProfile, PlayerProfile , SubGroup
+from .models import Group, CustomUser, CoachProfile, PlayerProfile , SubGroup , Academy
+
+from rest_framework import serializers
+from .models import Academy
 
 
+class AcademySerializer(serializers.ModelSerializer):
+    # ✅ Pour la LECTURE — retourne URL complète
+    logo_url = serializers.SerializerMethodField()
+    home_kit_url = serializers.SerializerMethodField()
+    away_kit_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Academy
+        fields = [
+            'id', 'name', 'founded', 'country', 'city', 'colors',
+            'philosophy', 'achievements',
+            'logo', 'logo_url',           # logo = écriture, logo_url = lecture
+            'email', 'phone', 'website', 'facebook', 'instagram',
+            'home_kit', 'home_kit_url',   # home_kit = écriture, home_kit_url = lecture
+            'away_kit', 'away_kit_url',   # away_kit = écriture, away_kit_url = lecture
+            'technical_director', 'head_coach_name', 'fitness_coach', 'medical_staff',
+            'stadium_name', 'stadium_location', 'has_gym', 'has_cafeteria', 'has_dormitory',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'logo_url', 'home_kit_url', 'away_kit_url']
+        extra_kwargs = {
+            'logo': {'required': False, 'allow_null': True},
+            'home_kit': {'required': False, 'allow_null': True},
+            'away_kit': {'required': False, 'allow_null': True},
+        }
+
+    def get_logo_url(self, obj):
+        return self._get_image_url(obj.logo)
+
+    def get_home_kit_url(self, obj):
+        return self._get_image_url(obj.home_kit)
+
+    def get_away_kit_url(self, obj):
+        return self._get_image_url(obj.away_kit)
+
+    def _get_image_url(self, image_field):
+        if not image_field:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(image_field.url)
+        return f"http://127.0.0.1:8000{image_field.url}"
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'role']
+        fields = ['id', 'username', 'email', 'role', 'date_joined']
 
 
 class CoachSerializer(serializers.ModelSerializer):
@@ -74,9 +119,7 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
     group = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all(), required=False, allow_null=True)
     subgroup = serializers.PrimaryKeyRelatedField(queryset=SubGroup.objects.all(), required=False, allow_null=True)
     
-    # Nested serializers for read operations
-    group_detail = GroupSerializer(source='group', read_only=True)
-    subgroup_detail = SubGroupSerializer(source='subgroup', read_only=True)
+  
     
     class Meta:
         model = PlayerProfile

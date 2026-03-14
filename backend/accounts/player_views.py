@@ -5,12 +5,15 @@ from .serializers import PlayerProfileSerializer
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
-    queryset = PlayerProfile.objects.all()
     serializer_class = PlayerProfileSerializer
     permission_classes = [IsAuthenticated]
+    queryset = PlayerProfile.objects.all()  # ✅ requis par le router
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # ✅ Filtre par académie de l'admin connecté
+        queryset = PlayerProfile.objects.filter(
+            academy=self.request.user.academy
+        )
         group_id = self.request.query_params.get('group_id')
         if group_id:
             queryset = queryset.filter(group__id=group_id)
