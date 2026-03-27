@@ -7,13 +7,22 @@ from .serializers import PlayerProfileSerializer
 class PlayerViewSet(viewsets.ModelViewSet):
     serializer_class = PlayerProfileSerializer
     permission_classes = [IsAuthenticated]
-    queryset = PlayerProfile.objects.all()  # ✅ requis par le router
+    queryset = PlayerProfile.objects.all()
 
     def get_queryset(self):
-        # ✅ Filtre par académie de l'admin connecté
+        user = self.request.user
         queryset = PlayerProfile.objects.filter(
-            academy=self.request.user.academy
+            academy=user.academy
         )
+        # ✅ Coach voit seulement les joueurs de ses groupes
+        if user.role == 'coach':
+            try:
+                queryset = queryset.filter(
+                    group__coach=user.coach_profile
+                )
+            except Exception:
+                return PlayerProfile.objects.none()
+
         group_id = self.request.query_params.get('group_id')
         if group_id:
             queryset = queryset.filter(group__id=group_id)

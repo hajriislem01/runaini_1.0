@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from .models import Group, CustomUser, CoachProfile, PlayerProfile , SubGroup , Academy
+from .models import Payment , Group, CustomUser, CoachProfile, PlayerProfile , SubGroup , Academy , Event, EventParticipant
 
-from rest_framework import serializers
-from .models import Academy
 
 
 class AcademySerializer(serializers.ModelSerializer):
@@ -139,4 +137,61 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
             representation['subgroup'] = SubGroupSerializer(instance.subgroup).data
         return representation
 
-   
+
+
+class EventParticipantSerializer(serializers.ModelSerializer):
+    player_name = serializers.CharField(source='player.full_name', read_only=True)
+    player_position = serializers.CharField(source='player.position', read_only=True)
+
+    class Meta:
+        model = EventParticipant
+        fields = ['id', 'player', 'player_name', 'player_position', 'status', 'joined_at']
+        read_only_fields = ['id', 'joined_at']
+
+
+class EventSerializer(serializers.ModelSerializer):
+    participants = EventParticipantSerializer(many=True, read_only=True)
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    subgroup_name = serializers.CharField(source='subgroup.name', read_only=True, allow_null=True)
+    participants_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'description', 'type', 'date', 'location',
+            'target_academy', 'status', 'winner',
+            'group', 'group_name',
+            'subgroup', 'subgroup_name',
+            'academy',
+            'participants', 'participants_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'academy', 'created_at', 'updated_at']
+
+    def get_participants_count(self, obj):
+        return obj.participants.count()
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    player_name = serializers.CharField(source='player.full_name', read_only=True)
+    player_position = serializers.CharField(source='player.position', read_only=True)
+    group_name = serializers.CharField(source='player.group.name', read_only=True)
+    receipt_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'player', 'player_name', 'player_position', 'group_name',
+            'amount', 'payment_date', 'month', 'method', 'status',
+            'receipt', 'receipt_url', 'notes',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'academy', 'created_at', 'updated_at']
+
+    def get_receipt_url(self, obj):
+        if not obj.receipt:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.receipt.url)
+        return f"http://127.0.0.1:8000{obj.receipt.url}"

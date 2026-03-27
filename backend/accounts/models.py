@@ -192,4 +192,127 @@ class PlayerProfile(models.Model):
                 raise ValidationError("SubGroup must belong to selected Group")
 
     def __str__(self):
-        return self.full_names
+        return self.full_name
+    
+
+class Event(models.Model):
+    TYPE_CHOICES = [
+        ('Match Friendly', 'Match Friendly'),
+        ('Tournament', 'Tournament'),
+    ]
+
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='Match Friendly')
+    date = models.DateTimeField()
+    location = models.CharField(max_length=200)
+    target_academy = models.CharField(max_length=200, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    winner = models.CharField(max_length=200, blank=True, null=True)
+
+    group = models.ForeignKey(
+        'Group',
+        on_delete=models.CASCADE,
+        related_name='events'
+    )
+    subgroup = models.ForeignKey(
+        'SubGroup',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='events'
+    )
+    academy = models.ForeignKey(
+        'Academy',
+        on_delete=models.CASCADE,
+        related_name='events'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
+
+    def __str__(self):
+        return f"{self.title} ({self.type})"
+
+
+class EventParticipant(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='participants'
+    )
+    player = models.ForeignKey(
+        'PlayerProfile',
+        on_delete=models.CASCADE,
+        related_name='event_participations'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['event', 'player']]
+
+    def __str__(self):
+        return f"{self.player.full_name} - {self.event.title}"
+
+
+
+class Payment(models.Model):
+    METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('card', 'Credit/Debit Card'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('check', 'Check'),
+        ('online', 'Online Payment'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Completed', 'Completed'),
+        ('Pending', 'Pending'),
+        ('Late', 'Late'),
+    ]
+
+    player = models.ForeignKey(
+        'PlayerProfile',
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    academy = models.ForeignKey(
+        'Academy',
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateField()
+    month = models.CharField(max_length=7)  # format: "2026-03"
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='cash')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Completed')
+    receipt = models.FileField(upload_to='payments/receipts/', blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-payment_date', '-created_at']
+        # ✅ Un joueur ne peut payer qu'une fois par mois
+        unique_together = [['player', 'month']]
+
+    def __str__(self):
+        return f"{self.player.full_name} - {self.month} - {self.amount}"

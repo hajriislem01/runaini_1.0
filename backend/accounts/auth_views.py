@@ -102,16 +102,24 @@ class CoachSignupView(APIView):
                 last_name=data.get("last_name", ""),
                 phone=data.get("phone", ""),
                 club=data.get("club", ""),
-                academy=request.user.academy  # ✅ hérite l'académie de l'admin
+                academy=request.user.academy
             )
 
-            CoachProfile.objects.create(
+            coach_profile = CoachProfile.objects.create(
                 user=user,
                 specialization=data.get("specialization", ""),
                 years_of_experience=data.get("years_of_experience", 0),
                 certification=data.get("certification", ""),
                 notes=data.get("notes", "")
             )
+
+            # ✅ Assigne le groupe au coach
+            group_id = data.get("group")
+            if group_id:
+                Group.objects.filter(
+                    id=group_id,
+                    academy=request.user.academy
+                ).update(coach=coach_profile)
 
             return Response({"message": "Coach account created successfully"}, status=201)
 

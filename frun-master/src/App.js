@@ -15,7 +15,6 @@ import PricingPage from './pages/PricingPage';
 
 import AdministrationLayout from './layouts/AdministrationLayout';
 import AdministrationDashboard from './pages/administration/AdministrationDashboard';
-
 import PlayerManagement from './pages/administration/PlayerManagement';
 import CoachManagement from './pages/administration/CoachManagement';
 import AgendaManagement from './pages/administration/AgendaManagement';
@@ -25,6 +24,8 @@ import Profile from './pages/administration/Profile';
 import Contact from './pages/administration/Contact';
 import EventsManagement from './pages/administration/EventsManagement';
 import CreateEvent from './pages/administration/CreateEvent';
+import EventDetail from './pages/administration/EventDetail'; // ✅ nouveau
+
 import CoachLayout from './layouts/CoachLayout';
 import CoachPlayers from './pages/coach/CoachPlayers';
 import CoachMatches from './pages/coach/CoachMatches';
@@ -33,6 +34,8 @@ import CreateTraining from './pages/coach/CreateTraining';
 import CoachAgenda from './pages/coach/CoachAgenda';
 import CoachProfile from './pages/coach/CoachProfile';
 import CoachSettings from './pages/coach/CoachSettings';
+import CoachDashboard from './pages/coach/CoachDashboard';
+
 import PlayerLayout from './layouts/PlayerLayout';
 import PlayersDashboard from './pages/players/PlayersDashboard';
 import Training from './pages/players/Training';
@@ -41,24 +44,37 @@ import Analysis from './pages/players/Analysis';
 import Feedback from './pages/players/Feedback';
 import PlayerProfile from './pages/players/PlayerProfile';
 import PlayerSettings from './pages/players/PlayerSettings';
-import CoachDashboard from './pages/coach/CoachDashboard';
 
 function Layout({ children }) {
   const location = useLocation();
-  const noLayoutRoutes = ['/signup', '/login', '/forgot-password', '/administration',
-    '/administration/player-management', '/administration/coach-management',
-    '/administration/agenda-management', '/administration/payment-management',
-    '/administration/settings', '/administration/profile', '/administration/Profile', '/administration/contact',
-    '/administration/events-management', '/administration/create-event',
-    '/coach', '/coach/dashboard', '/coach/players', '/coach/training', '/coach/matches', '/coach/settings',
-    '/coach/agenda', '/coach/create-training', '/coach/profile',
-    '/coach/CoachMatches', '/players' , '/players/training', '/players/performance',
-    '/players/analysis', '/players/feedback', '/players/profile', '/players/settings', '/coach/dashboard',
-    '/administration/dashboard',  
-    `/coach/video/${window.location.pathname.split('/').pop()}`
+
+  const noLayoutRoutes = [
+    '/signup', '/login', '/forgot-password',
+    '/administration',
+    '/administration/player-management',
+    '/administration/coach-management',
+    '/administration/agenda-management',
+    '/administration/payment-management',
+    '/administration/settings',
+    '/administration/profile',
+    '/administration/Profile',
+    '/administration/contact',
+    '/administration/events-management',
+    '/administration/create-event',
+    '/administration/dashboard',
+    '/coach', '/coach/dashboard', '/coach/players', '/coach/training',
+    '/coach/matches', '/coach/settings', '/coach/agenda',
+    '/coach/create-training', '/coach/profile', '/coach/CoachMatches',
+    '/players', '/players/training', '/players/performance',
+    '/players/analysis', '/players/feedback', '/players/profile', '/players/settings',
   ];
 
-  const isFullScreen = noLayoutRoutes.includes(location.pathname);
+  // ✅ Gère les routes dynamiques
+  const isDynamicNoLayout =
+    location.pathname.startsWith('/administration/event/') ||
+    location.pathname.startsWith('/coach/video/');
+
+  const isFullScreen = noLayoutRoutes.includes(location.pathname) || isDynamicNoLayout;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -86,10 +102,8 @@ function App() {
     return savedGroups ? JSON.parse(savedGroups) : [];
   });
 
-  // Extract unique groups and subgroups from players with IDs
   const groupsWithSubgroups = useMemo(() => {
     const groupsMap = new Map();
-    
     players.forEach(player => {
       if (player?.groupId) {
         if (!groupsMap.has(player.groupId)) {
@@ -99,7 +113,6 @@ function App() {
             subgroups: new Map()
           });
         }
-        
         if (player?.subgroupId) {
           const group = groupsMap.get(player.groupId);
           if (!group.subgroups.has(player.subgroupId)) {
@@ -111,8 +124,6 @@ function App() {
         }
       }
     });
-
-    // Convert Map to array and convert subgroups Map to array
     return Array.from(groupsMap.values()).map(group => ({
       ...group,
       subgroups: Array.from(group.subgroups.values())
@@ -121,102 +132,34 @@ function App() {
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
-    if (storedUser) {
-      setUser(storedUser);
-    }
+    if (storedUser) setUser(storedUser);
 
-    // Load events from localStorage
     const storedEvents = JSON.parse(localStorage.getItem('events')) || [];
     setEvents(storedEvents);
 
-    // Load sample data (replace with API calls in real app)
-    setPlayers([
-      { 
-        id: 'p1', 
-        name: 'Player 1', 
-        groupId: 'group-a', 
-        group: 'Group A',
-        subgroupId: 'subgroup-1',
-        subgroup: 'Subgroup 1',
-        email: 'player1@example.com',
-        status: 'Active'
-      },
-      { 
-        id: 'p2', 
-        name: 'Player 2', 
-        groupId: 'group-b', 
-        group: 'Group B',
-        subgroupId: 'subgroup-2',
-        subgroup: 'Subgroup 2',
-        email: 'player2@example.com',
-        status: 'Active'
-      },
-      { 
-        id: 'p3', 
-        name: 'Player 3', 
-        groupId: 'group-a', 
-        group: 'Group A',
-        subgroupId: 'subgroup-1',
-        subgroup: 'Subgroup 1',
-        email: 'player3@example.com',
-        status: 'Active'
-      },
-      { 
-        id: 'p4', 
-        name: 'Player 4', 
-        groupId: 'group-a', 
-        group: 'Group A',
-        subgroupId: 'subgroup-2',
-        subgroup: 'Subgroup 2',
-        email: 'player4@example.com',
-        status: 'Active'
-      },
-    ]);
-
-    // Load sample groups
     const sampleGroups = [
-      {
-        id: 'group-a',
-        name: 'Group A',
-        subgroups: [
-          { id: 'subgroup-1', name: 'Subgroup 1' },
-          { id: 'subgroup-2', name: 'Subgroup 2' }
-        ]
-      },
-      {
-        id: 'group-b',
-        name: 'Group B',
-        subgroups: [
-          { id: 'subgroup-2', name: 'Subgroup 2' }
-        ]
-      }
+      { id: 'group-a', name: 'Group A', subgroups: [{ id: 'subgroup-1', name: 'Subgroup 1' }, { id: 'subgroup-2', name: 'Subgroup 2' }] },
+      { id: 'group-b', name: 'Group B', subgroups: [{ id: 'subgroup-2', name: 'Subgroup 2' }] }
     ];
     setGroups(sampleGroups);
     localStorage.setItem('playerGroups', JSON.stringify(sampleGroups));
-
-    // Coaches will be fetched from backend when needed. Sample data removed.
   }, []);
 
-  // Listen for localStorage changes to sync events
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'events') {
-        const newEvents = JSON.parse(e.newValue || '[]');
-        setEvents(newEvents);
+        setEvents(JSON.parse(e.newValue || '[]'));
       }
     };
-
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Also sync events when window regains focus (for same-tab updates)
   useEffect(() => {
     const handleFocus = () => {
       const storedEvents = JSON.parse(localStorage.getItem('events')) || [];
       setEvents(storedEvents);
     };
-
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
@@ -228,73 +171,12 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('academy_id');
+    localStorage.removeItem('role');
     setUser(null);
   };
 
-  // Notification function
-  const sendNotifications = (event) => {
-    const newNotifications = [];
-
-    // Notify coach
-    const coach = coaches.find(c => c.id === event.coachId);
-    if (coach) {
-      newNotifications.push({
-        id: Date.now().toString(),
-        type: 'coach',
-        recipientId: coach.id,
-        recipientName: coach.name,
-        eventId: event.id,
-        eventTitle: event.title,
-        message: `You have been assigned to ${event.title} on ${new Date(event.date).toLocaleDateString()}`,
-        timestamp: new Date().toISOString(),
-        read: false
-      });
-    }
-
-    // Notify players in the selected group
-    if (event.group) {
-      const playersInGroup = players.filter(p => p.group === event.group);
-      if (event.subgroup) {
-        // If subgroup is specified, only notify players in that subgroup
-        playersInGroup.filter(p => p.subgroup === event.subgroup).forEach(player => {
-          newNotifications.push({
-            id: Date.now().toString() + player.id,
-            type: 'player',
-            recipientId: player.id,
-            recipientName: player.name,
-            eventId: event.id,
-            eventTitle: event.title,
-            message: `You have been invited to ${event.title} on ${new Date(event.date).toLocaleDateString()}`,
-            timestamp: new Date().toISOString(),
-            read: false
-          });
-        });
-      } else {
-        // If no subgroup is specified, notify all players in the group
-        playersInGroup.forEach(player => {
-          newNotifications.push({
-            id: Date.now().toString() + player.id,
-            type: 'player',
-            recipientId: player.id,
-            recipientName: player.name,
-            eventId: event.id,
-            eventTitle: event.title,
-            message: `You have been invited to ${event.title} on ${new Date(event.date).toLocaleDateString()}`,
-            timestamp: new Date().toISOString(),
-            read: false
-          });
-        });
-      }
-    }
-
-    setNotifications(prev => [...prev, ...newNotifications]);
-
-    // In a real app, you would send these notifications to your backend
-    // which would then send emails/push notifications to the recipients
-    console.log('New notifications:', newNotifications);
-  };
-
-  // Add event handler with notifications
   const addEvent = (event) => {
     const newEvent = { ...event, id: Date.now().toString() };
     setEvents(prev => {
@@ -302,56 +184,24 @@ function App() {
       localStorage.setItem('events', JSON.stringify(updatedEvents));
       return updatedEvents;
     });
-    sendNotifications(newEvent);
   };
 
-  // Update event handler
   const updateEvent = (updatedEvent) => {
     setEvents(prev => {
-      const updatedEvents = prev.map(event => 
-        event.id === updatedEvent.id ? updatedEvent : event
-      );
+      const updatedEvents = prev.map(e => e.id === updatedEvent.id ? updatedEvent : e);
       localStorage.setItem('events', JSON.stringify(updatedEvents));
       return updatedEvents;
     });
-    sendNotifications(updatedEvent);
   };
 
-  // Delete event handler
   const deleteEvent = (eventId) => {
     setEvents(prev => {
-      const updatedEvents = prev.filter(event => event.id !== eventId);
+      const updatedEvents = prev.filter(e => e.id !== eventId);
       localStorage.setItem('events', JSON.stringify(updatedEvents));
       return updatedEvents;
     });
   };
 
-  // Mark notification as read
-  const markNotificationAsRead = (notificationId) => {
-    setNotifications(prev => prev.map(notification =>
-      notification.id === notificationId
-        ? { ...notification, read: true }
-        : notification
-    ));
-  };
-
-  // Delete notification
-  const deleteNotification = (notificationId) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== notificationId));
-  };
-
-  // Get subgroups for a group
-  const getSubgroupsForGroup = (groupId) => {
-    if (!groupId || !groups) return [];
-    const group = groups.find(g => g.id === groupId);
-    if (!group || !group.subgroups) return [];
-    return group.subgroups.map(subgroup => ({
-      id: subgroup.id || subgroup,
-      name: subgroup.name || subgroup
-    }));
-  };
-
-  // Always sync players and groups to localStorage when they change
   useEffect(() => {
     localStorage.setItem('players', JSON.stringify(players));
   }, [players]);
@@ -375,97 +225,24 @@ function App() {
                 <Route path="/logout" element={<LoginForm onLogout={handleLogout} />} />
                 <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
 
-
-
                 <Route path="/administration" element={<AdministrationLayout />}>
-                  <Route 
-                    index
-                    element={
-                      <AdministrationDashboard 
-                        players={players}
-                        coaches={coaches}
-                        events={events}
-                      />
-                    } 
-                  />
-                  <Route 
-                    path="dashboard" 
-                    element={
-                      <AdministrationDashboard 
-                        players={players}
-                        coaches={coaches}
-                        events={events}
-                      />
-                    } 
-                  />                  <Route 
-                    path="profile" 
-                    element={<Profile />} 
-                  />
-                  <Route 
-                    path="player-management" 
-                    element={
-                      <PlayerManagement 
-                        players={players} 
-                        setPlayers={setPlayers}
-                        groups={groups}
-                        setGroups={setGroups}
-                      />
-                    } 
-                  />
-                  <Route 
-                    path="coach-management" 
-                    element={<CoachManagement coaches={coaches} setCoaches={setCoaches} groups={groups} />} 
-                  />
-                  <Route 
-                    path="events-management" 
-                    element={
-                      <EventsManagement 
-                        events={events}
-                        addEvent={addEvent}
-                        updateEvent={updateEvent}
-                        deleteEvent={deleteEvent}
-                        groups={groups}
-                      />
-                    } 
-                  />
-                  <Route
-                    path="create-event"
-                    element={
-                      <CreateEvent
-                        groups={groups}
-                        addEvent={addEvent}
-                      />
-                    }
-                  />
-                  <Route 
-                    path="agenda-management" 
-                    element={
-                      <AgendaManagement 
-                        events={events} 
-                        addEvent={addEvent}
-                        updateEvent={updateEvent}
-                        deleteEvent={deleteEvent}
-                        players={players}
-                        coaches={coaches}
-                      />
-                    } 
-                  />
-                  <Route 
-                    path="payment-management" 
-                    element={<PaymentManagement players={players} groups={groupsWithSubgroups} />} 
-                  />
-                  <Route 
-                    path="settings" 
-                    element={<Settings />} 
-                  />
-                  <Route 
-                    path="contact" 
-                    element={<Contact />} 
-                  />
+                  <Route index element={<AdministrationDashboard players={players} coaches={coaches} events={events} />} />
+                  <Route path="dashboard" element={<AdministrationDashboard players={players} coaches={coaches} events={events} />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="Profile" element={<Profile />} />
+                  <Route path="player-management" element={<PlayerManagement players={players} setPlayers={setPlayers} groups={groups} setGroups={setGroups} />} />
+                  <Route path="coach-management" element={<CoachManagement coaches={coaches} setCoaches={setCoaches} groups={groups} />} />
+                  <Route path="events-management" element={<EventsManagement />} />
+                  <Route path="create-event" element={<CreateEvent />} />
+                  <Route path="event/:id" element={<EventDetail />} /> {/* ✅ nouveau */}
+                  <Route path="agenda-management" element={<AgendaManagement events={events} addEvent={addEvent} updateEvent={updateEvent} deleteEvent={deleteEvent} players={players} coaches={coaches} />} />
+                  <Route path="payment-management" element={<PaymentManagement players={players} groups={groupsWithSubgroups} />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="contact" element={<Contact />} />
                 </Route>
 
                 <Route path="/coach" element={<CoachLayout />}>
-                <Route index element={<CoachDashboard />} />
+                  <Route index element={<CoachDashboard />} />
                   <Route path="dashboard" element={<CoachDashboard />} />
                   <Route path="players" element={<CoachPlayers />} />
                   <Route path="training" element={<CreateTraining />} />

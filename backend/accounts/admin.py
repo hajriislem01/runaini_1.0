@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup, Academy
+from .models import CustomUser, Payment ,CoachProfile, PlayerProfile, Group, SubGroup, Academy , Event, EventParticipant
+
 
 
 @admin.register(Academy)
@@ -107,6 +108,59 @@ class PlayerProfileAdmin(admin.ModelAdmin):
     list_display = ('full_name', 'position', 'status', 'group', 'academy')
     list_filter = ('status', 'position', 'academy')
     search_fields = ('full_name', 'user__username')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(academy=request.user.academy)
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.academy:
+            obj.academy = request.user.academy
+        super().save_model(request, obj, form, change)
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'type', 'date', 'location', 'status', 'group', 'academy')
+    list_filter = ('type', 'status', 'academy')
+    search_fields = ('title', 'location', 'target_academy')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(academy=request.user.academy)
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.academy:
+            obj.academy = request.user.academy
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(EventParticipant)
+class EventParticipantAdmin(admin.ModelAdmin):
+    list_display = ('player', 'event', 'status', 'joined_at')
+    list_filter = ('status',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(event__academy=request.user.academy)
+    
+
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('get_player', 'amount', 'month', 'method', 'status', 'payment_date', 'academy')
+    list_filter = ('status', 'method', 'month', 'academy')
+    search_fields = ('player__full_name',)
+
+    def get_player(self, obj):
+        return obj.player.full_name
+    get_player.short_description = 'Player'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
