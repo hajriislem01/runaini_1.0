@@ -44,6 +44,7 @@ import Analysis from './pages/players/Analysis';
 import Feedback from './pages/players/Feedback';
 import PlayerProfile from './pages/players/PlayerProfile';
 import PlayerSettings from './pages/players/PlayerSettings';
+import CoachAnalysis from './pages/coach/CoachAnalysis';
 
 function Layout({ children }) {
   const location = useLocation();
@@ -65,8 +66,7 @@ function Layout({ children }) {
     '/coach', '/coach/dashboard', '/coach/players', '/coach/training',
     '/coach/matches', '/coach/settings', '/coach/agenda',
     '/coach/create-training', '/coach/profile', '/coach/CoachMatches',
-    '/players', '/players/training', '/players/performance',
-    '/players/analysis', '/players/feedback', '/players/profile', '/players/settings',
+    '/coach/analysis',
   ];
 
   // ✅ Gère les routes dynamiques
@@ -250,6 +250,7 @@ function App() {
                   <Route path="matches" element={<CoachMatches />} />
                   <Route path="profile" element={<CoachProfile />} />
                   <Route path="settings" element={<CoachSettings />} />
+                  <Route path="analysis" element={<CoachAnalysis />} />
                 </Route>
                 <Route path="/coach/video/:id" element={<VideoAnalysis />} />
 
