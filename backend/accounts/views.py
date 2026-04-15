@@ -6,3 +6,5 @@ from .academy_views import AcademyView  , AcademyDirectoryView
 from .event_views import EventViewSet 
 from .payment_views import PaymentViewSet
 from .coach_profile_views import CoachProfileView
+from .player_report_views import PlayerReportViewSet
+from .training_views import TrainingSessionViewSet

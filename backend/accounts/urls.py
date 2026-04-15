@@ -1,7 +1,9 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, include
 from .views import (
     AdminSignupView, LoginView, CoachSignupView,
-    PlayerSignupView, AcademyView , AcademyDirectoryView , CoachProfileView
+    PlayerSignupView, AcademyView , AcademyDirectoryView , CoachProfileView , PlayerViewSet
 )
 
 urlpatterns = [
@@ -12,5 +14,6 @@ urlpatterns = [
     path('academy/', AcademyView.as_view(), name='academy'),
     path('academies/', AcademyDirectoryView.as_view(), name='academy-directory'),
     path('coachprofile/', CoachProfileView.as_view(), name='coach-profile'),
+    
     path('', include('accounts.api_urls')),  # ✅ toujours en dernier
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -23,6 +23,8 @@ class AdminSignupView(APIView):
             # ✅ Crée l'académie automatiquement avec le nom fourni
             academy = Academy.objects.create(
                 name=data.get("academy_name", f"{data['username']}'s Academy"),
+                email=data.get("email", ""),
+                phone=data.get("phone", "")
             )
 
             user = CustomUser.objects.create(
