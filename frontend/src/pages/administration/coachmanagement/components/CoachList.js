@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
 
@@ -21,17 +22,26 @@ const CoachList = ({
           className="bg-gray-900/65 backdrop-blur-sm rounded-2xl border border-gray-700/50 overflow-hidden hover:border-gray-600 transition-all">
           <div className="p-5">
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center">
-                  <FiUser className="text-white text-xl" />
+              <Link 
+                to={`/administration/coach-profile/${coach.id}`}
+                className="flex items-center gap-3 cursor-pointer group"
+              >
+                <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105 border-2 border-transparent group-hover:border-white/20">
+                  {coach.coach_profile?.photo ? (
+                    <img src={coach.coach_profile.photo} alt={coach.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <FiUser className="text-white text-xl" />
+                  )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-lg">{coach.username}</h3>
+                  <h3 className="font-bold text-white text-lg group-hover:text-[#4fb0ff] transition-colors">
+                    {coach.first_name || coach.last_name ? `${coach.first_name || ''} ${coach.last_name || ''}`.trim() : coach.username}
+                  </h3>
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-[#902bd1]/20 to-[#4fb0ff]/20 text-purple-300">
                     Coach
                   </span>
                 </div>
-              </div>
+              </Link>
               <div className="flex gap-2">
                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                   onClick={() => handleEdit(coach)}

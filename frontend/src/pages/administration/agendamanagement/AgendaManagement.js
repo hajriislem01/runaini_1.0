@@ -11,20 +11,23 @@ import CalendarGrid from './components/CalendarGrid';
 
 import EventFormModal from './modals/EventFormModal';
 import DayEventsModal from './modals/DayEventsModal';
+import EventDetailDrawer from '../../../components/common/EventDetailDrawer';
 import DeleteConfirmModal from './modals/DeleteConfirmModal';
 
 const AgendaManagement = () => {
   const {
-    events, groupsWithSubgroups, coaches, isLoading,
+    events, groupsWithSubgroups, coaches, players, isLoading,
     showEventModal, setShowEventModal, selectedEvent,
     currentDate, setCurrentDate, selectedGroups, setSelectedGroups,
     selectedSubgroups, setSelectedSubgroups, selectedDay, setSelectedDay,
     showDayEventsModal, setShowDayEventsModal, expandedGroup, setExpandedGroup,
     showDeleteConfirm, setShowDeleteConfirm, eventToDelete, setEventToDelete,
     isSubmitting, eventForm, setEventForm,
-    handleFormChange, handleGroupToggle, handleSubgroupToggle, resetForm,
+    handleFormChange, handleGroupToggle, handleSubgroupToggle,
+    handleCoachToggle, handlePlayerToggle, resetForm,
     handleSubmit, handleEditEvent, handleConfirmDelete, handleDayClick, createEventForDay,
-    filteredEvents, stats, calendarDays
+    filteredEvents, stats, calendarDays,
+    detailSession, setDetailSession, isDetailLoading, handleOpenDetail
   } = useAgendaData();
 
   return (
@@ -35,13 +38,13 @@ const AgendaManagement = () => {
     >
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
-        <AgendaHeader 
+        <AgendaHeader
           stats={stats} isLoading={isLoading}
           resetForm={resetForm} setShowEventModal={setShowEventModal}
-          itemVariants={itemVariants} 
+          itemVariants={itemVariants}
         />
 
-        <AgendaFilters 
+        <AgendaFilters
           groupsWithSubgroups={groupsWithSubgroups}
           selectedGroups={selectedGroups} setSelectedGroups={setSelectedGroups}
           selectedSubgroups={selectedSubgroups} setSelectedSubgroups={setSelectedSubgroups}
@@ -49,29 +52,42 @@ const AgendaManagement = () => {
           itemVariants={itemVariants}
         />
 
-        <CalendarGrid 
+        <CalendarGrid
           currentDate={currentDate} setCurrentDate={setCurrentDate}
           calendarDays={calendarDays} handleDayClick={handleDayClick}
           itemVariants={itemVariants}
         />
 
-        <EventFormModal 
+        <EventFormModal
           showEventModal={showEventModal} resetForm={resetForm} selectedEvent={selectedEvent}
           eventForm={eventForm} handleFormChange={handleFormChange}
           handleSubmit={handleSubmit} isSubmitting={isSubmitting}
-          groupsWithSubgroups={groupsWithSubgroups} expandedGroup={expandedGroup}
+          groupsWithSubgroups={groupsWithSubgroups}
+          coaches={coaches} players={players}
+          expandedGroup={expandedGroup}
           setExpandedGroup={setExpandedGroup}
           handleGroupToggle={handleGroupToggle} handleSubgroupToggle={handleSubgroupToggle}
+          handleCoachToggle={handleCoachToggle} handlePlayerToggle={handlePlayerToggle}
         />
 
-        <DayEventsModal 
+        <DayEventsModal
           showDayEventsModal={showDayEventsModal} setShowDayEventsModal={setShowDayEventsModal}
           selectedDay={selectedDay} calendarDays={calendarDays}
           handleEditEvent={handleEditEvent} setEventToDelete={setEventToDelete}
           setShowDeleteConfirm={setShowDeleteConfirm} createEventForDay={createEventForDay}
+          handleOpenDetail={handleOpenDetail}
         />
 
-        <DeleteConfirmModal 
+        <EventDetailDrawer
+          detailSession={detailSession} setDetailSession={setDetailSession}
+          isDetailLoading={isDetailLoading}
+          handleEditEvent={handleEditEvent}
+          setEventToDelete={setEventToDelete}
+          setShowDeleteConfirm={setShowDeleteConfirm}
+          setShowDayEventsModal={setShowDayEventsModal}
+        />
+
+        <DeleteConfirmModal
           showDeleteConfirm={showDeleteConfirm} setShowDeleteConfirm={setShowDeleteConfirm}
           eventToDelete={eventToDelete} setEventToDelete={setEventToDelete}
           handleConfirmDelete={handleConfirmDelete}

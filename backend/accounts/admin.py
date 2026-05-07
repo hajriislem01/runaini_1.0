@@ -56,7 +56,7 @@ class CoachProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ('name', 'coach', 'academy')
+    list_display = ('name', 'academy') # 'coach' legacy removed
     list_filter = ('academy',)
     search_fields = ('name',)
 
@@ -122,9 +122,13 @@ class PlayerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'type', 'date', 'location', 'status', 'group', 'academy')
+    list_display = ('title', 'type', 'date', 'location', 'status', 'get_groups_count', 'academy')
     list_filter = ('type', 'status', 'academy')
     search_fields = ('title', 'location', 'target_academy')
+
+    def get_groups_count(self, obj):
+        return obj.groups.count()
+    get_groups_count.short_description = 'Groups'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

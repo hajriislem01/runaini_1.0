@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaEnvelope, FaPhone, FaUserTie, FaTrophy,
   FaPlus, FaTrash
 } from 'react-icons/fa';
-import { FiSave, FiUpload, FiUsers, FiCalendar, FiAward, FiTarget, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiSave, FiUpload, FiUsers, FiCalendar, FiAward, FiTarget, FiLock, FiEye, FiEyeOff, FiCamera, FiCheck, FiX } from 'react-icons/fi';
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
+import { useCoachSession } from '../../context/CoachSessionContext';
 
 const CoachSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const fileRef = useRef(null);
+
+  // Sidebar live refresh
+  const { refresh: refreshSession } = useCoachSession();
+
+  // Photo
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // ✅ Données du coach depuis l'API
   const [formData, setFormData] = useState({
@@ -81,9 +91,11 @@ const CoachSettings = () => {
           address: data.address || '',
           notes: data.notes || '',
           philosophy,
-          methodology
+          methodology,
+          photo: data.photo || null
         });
 
+        setPhotoPreview(data.photo || null);
         setExperiences(experiences);
         setCertifications(certifications);
 
@@ -125,6 +137,36 @@ const CoachSettings = () => {
     if (newCertification.name && newCertification.year) {
       setCertifications(prev => [...prev, newCertification]);
       setNewCertification({ name: '', year: '' });
+    }
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be under 5MB'); return; }
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target?.result);
+    reader.readAsDataURL(file);
+  };
+
+  const uploadPhoto = async () => {
+    if (!photoFile) return;
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('photo', photoFile);
+      await API.patch('coachprofile/', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Photo updated successfully! ✅');
+      setPhotoFile(null);
+      // ✅ Update the sidebar avatar immediately
+      refreshSession();
+    } catch {
+      toast.error('Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -211,6 +253,48 @@ const CoachSettings = () => {
 
             {/* Left Column */}
             <div className="lg:col-span-1 space-y-6">
+
+              {/* Profile Photo */}
+              <motion.div whileHover={{ y: -4 }}
+                className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all flex flex-col items-center">
+                <div className="relative mb-4">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#00d0cb]/40">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-4xl font-bold text-white">
+                        {formData.first_name?.charAt(0) || 'C'}
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    className="absolute bottom-0 right-0 w-10 h-10 rounded-full flex items-center justify-center text-white border-2 border-gray-900"
+                    style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
+                    <FiCamera size={16} />
+                  </button>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                </div>
+                
+                <AnimatePresence>
+                  {photoFile && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                      className="flex gap-2 w-full mt-2">
+                      <button type="button" onClick={uploadPhoto} disabled={uploadingPhoto}
+                        className="flex-1 flex justify-center items-center gap-2 py-2 rounded-xl text-sm font-bold text-white bg-green-500 hover:bg-green-600 transition-all">
+                        {uploadingPhoto ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <><FiCheck /> Save Photo</>
+                        )}
+                      </button>
+                      <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(formData.photo); }}
+                        className="px-3 py-2 rounded-xl text-sm bg-gray-700 text-gray-300 hover:bg-gray-600">
+                        <FiX />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Personal Info */}
               <motion.div whileHover={{ y: -4 }}

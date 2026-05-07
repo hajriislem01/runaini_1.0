@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiCheckCircle, FiXCircle, FiUser } from 'react-icons/fi';
 
 const OverviewTab = ({ 
   isLoading, paidPlayers, unpaidPlayers, payments,
@@ -28,8 +28,12 @@ const OverviewTab = ({
                   <motion.div key={player.id} whileHover={{ x: 4 }}
                     className="flex items-center justify-between p-3 bg-[#22c55e]/5 rounded-xl border border-[#22c55e]/20">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#22c55e] to-[#4fb0ff] flex items-center justify-center text-white text-sm font-bold">
-                        {player.full_name?.charAt(0)}
+                      <div className="w-10 h-10 rounded-full border border-white/10 shadow-lg overflow-hidden bg-gray-800 flex items-center justify-center shrink-0">
+                        {player.photo_url ? (
+                          <img src={player.photo_url} alt={player.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <FiUser className="text-gray-500" size={18} />
+                        )}
                       </div>
                       <div>
                         <div className="text-white text-sm font-medium">{player.full_name}</div>
@@ -70,8 +74,12 @@ const OverviewTab = ({
                 <motion.div key={player.id} whileHover={{ x: 4 }}
                   className="flex items-center justify-between p-3 bg-red-500/5 rounded-xl border border-red-500/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-[#902bd1] flex items-center justify-center text-white text-sm font-bold">
-                      {player.full_name?.charAt(0)}
+                    <div className="w-10 h-10 rounded-full border border-white/10 shadow-lg overflow-hidden bg-gray-800 flex items-center justify-center shrink-0">
+                      {player.photo_url ? (
+                        <img src={player.photo_url} alt={player.full_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <FiUser className="text-gray-500" size={18} />
+                      )}
                     </div>
                     <div>
                       <div className="text-white text-sm font-medium">{player.full_name}</div>

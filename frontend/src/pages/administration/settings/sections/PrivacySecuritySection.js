@@ -15,9 +15,9 @@ const PrivacySecuritySection = ({ passwords, setPasswords, showPassword, setShow
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { key: 'currentPassword', label: 'Current Password', placeholder: '••••••' },
-          { key: 'newPassword', label: 'New Password', placeholder: 'Create a new password' },
-          { key: 'confirmPassword', label: 'Confirm New Password', placeholder: 'Confirm your new password' }
+          { key: 'currentPassword', label: 'Current Password', placeholder: '••••••', autoComplete: 'current-password' },
+          { key: 'newPassword', label: 'New Password', placeholder: 'Create a new password', autoComplete: 'new-password' },
+          { key: 'confirmPassword', label: 'Confirm New Password', placeholder: 'Confirm your new password', autoComplete: 'new-password' }
         ].map(item => (
           <div key={item.key}>
             <label className="block text-gray-300 font-medium mb-2">{item.label}</label>
@@ -26,6 +26,7 @@ const PrivacySecuritySection = ({ passwords, setPasswords, showPassword, setShow
                 value={passwords[item.key]}
                 onChange={(e) => setPasswords(p => ({ ...p, [item.key]: e.target.value }))}
                 className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-white placeholder-gray-500 pr-12"
+                autoComplete={item.autoComplete}
                 placeholder={item.placeholder} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300">

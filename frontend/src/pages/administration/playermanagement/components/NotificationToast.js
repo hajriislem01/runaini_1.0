@@ -4,7 +4,7 @@ import { FiCheck } from 'react-icons/fi';
 
 const NotificationToast = ({ notifications }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-xs w-full">
+    <div className="fixed top-4 right-4 z-[10000] space-y-2 max-w-xs w-full">
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div

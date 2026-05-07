@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Group, SubGroup
 from .serializers import GroupSerializer, SubGroupSerializer
 from .permissions import IsAdmin
+from django.db.models import Q
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -16,13 +17,14 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # ✅ Coach voit seulement ses groupes assignés
+        # ✅ NEW: Coach sees groups where assigned
         if user.role == 'coach':
             try:
+                profile = user.coach_profile
                 return Group.objects.filter(
                     academy=user.academy,
-                    coach=user.coach_profile
-                )
+                    assigned_coaches=profile
+                ).distinct()
             except Exception:
                 return Group.objects.none()
         # ✅ Admin voit tous les groupes de son académie
@@ -42,12 +44,14 @@ class SubGroupViewSet(viewsets.ModelViewSet):
         queryset = SubGroup.objects.filter(
             group__academy=user.academy
         )
-        # ✅ Coach voit seulement les subgroups de ses groupes
+        # ✅ NEW: Coach sees assigned subgroups OR all subgroups of full_access groups
         if user.role == 'coach':
             try:
+                profile = user.coach_profile
                 queryset = queryset.filter(
-                    group__coach=user.coach_profile
-                )
+                    Q(assigned_coaches=profile) |
+                    Q(group__full_access_coaches=profile)
+                ).distinct()
             except Exception:
                 return SubGroup.objects.none()
 

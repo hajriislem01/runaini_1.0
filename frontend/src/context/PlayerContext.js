@@ -4,11 +4,11 @@ import API from '../pages/administration/api';
 const PlayerContext = createContext();
 
 export const PlayerProvider = ({ children }) => {
-  const [player,    setPlayer]    = useState(null);
+  const [player, setPlayer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error,     setError]     = useState(null);
+  const [error, setError] = useState(null);
 
-  const fetchPlayer = useCallback(async () => {
+  const fetchPlayer = useCallback(async (background = false) => {
     const stored = localStorage.getItem('user');
     if (!stored) { setIsLoading(false); return; }
 
@@ -18,7 +18,7 @@ export const PlayerProvider = ({ children }) => {
     if (userObj?.role !== 'player') { setIsLoading(false); return; }
 
     try {
-      setIsLoading(true);
+      if (!background) setIsLoading(true);
       const res = await API.get('players/me/');
       setPlayer(res.data);
       setError(null);
@@ -27,14 +27,14 @@ export const PlayerProvider = ({ children }) => {
       setError('Failed to load player profile');
       setPlayer(null);
     } finally {
-      setIsLoading(false);
+      if (!background) setIsLoading(false);
     }
   }, []);
 
   // ── Charger au montage + refetch au focus ─────────────────────────────────
   useEffect(() => {
     fetchPlayer();
-    const handleFocus = () => fetchPlayer();
+    const handleFocus = () => fetchPlayer(true); // background refresh
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [fetchPlayer]);
@@ -43,27 +43,30 @@ export const PlayerProvider = ({ children }) => {
     await fetchPlayer();
   }, [fetchPlayer]);
 
+  const updatePlayer = useCallback((newData) => {
+    if (newData) setPlayer(newData);
+  }, []);
+
   // ── Computed helpers ──────────────────────────────────────────────────────
   const playerName = player
     ? (
-        player.full_name ||
-        `${player.user?.first_name || ''} ${player.user?.last_name || ''}`.trim() ||
-        player.user?.username ||
-        'Player'
-      )
+      player.full_name ||
+      `${player.user?.first_name || ''} ${player.user?.last_name || ''}`.trim() ||
+      player.user?.username ||
+      'Player'
+    )
     : '';
 
   const playerInitial = playerName?.charAt(0)?.toUpperCase() || 'P';
 
-  // ✅ Fix photo URL — priorité à photo_url (URL absolue retournée par le backend)
-  // photo_url est construit par le serializer avec request.build_absolute_uri
-  // photo est juste le chemin relatif (/media/player_photos/...)
-  const photoUrl = player?.photo_url
+  // Standardized photoUrl logic: priority to profile_picture (absolute URL from backend)
+  const photoUrl = player?.profile_picture 
+    || player?.photo_url
     || (player?.photo
-        ? player.photo.startsWith('http')
-          ? player.photo
-          : `http://127.0.0.1:8000${player.photo}`
-        : null);
+      ? player.photo.startsWith('http')
+        ? player.photo
+        : `http://127.0.0.1:8000${player.photo}`
+      : null);
 
   return (
     <PlayerContext.Provider value={{
@@ -71,6 +74,7 @@ export const PlayerProvider = ({ children }) => {
       isLoading,
       error,
       refreshPlayer,
+      updatePlayer, // ✅ Added for immediate sync
       playerName,
       playerInitial,
       photoUrl,

@@ -1,483 +1,479 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FiUser, FiLock, FiSave, FiCheck,
-  FiEye, FiEyeOff, FiCamera, FiX, FiAlertTriangle,
-} from 'react-icons/fi';
+import { FiUser, FiLock, FiSave, FiCheck, FiEye, FiEyeOff, FiX, FiUpload } from 'react-icons/fi';
 import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 
 const PlayerSettings = () => {
+  const { player, isLoading: playerLoading, updatePlayer, photoUrl } = usePlayer();
   const fileRef = useRef(null);
-  const { player, isLoading: playerLoading, refreshPlayer, playerInitial, photoUrl } = usePlayer();
 
-  const [tab, setTab] = useState('profile');
+  // Core State
+  const [formData, setFormData] = useState({
+    full_name: '',
+    phone: '',
+    address: '',
+    notes: '',
+    height: '',
+    weight: ''
+  });
+  
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
 
-  // Profile form
-  const [profileForm,    setProfileForm]    = useState({ full_name:'', phone:'', address:'', notes:'' });
-  const [isSavingProfile,setIsSavingProfile]= useState(false);
-  const [profileChanged, setProfileChanged] = useState(false);
+  const [previewURL, setPreviewURL] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [showPwd, setShowPwd] = useState({ current: false, new: false, confirm: false });
 
-  // Photo
-  const [photoPreview,   setPhotoPreview]   = useState(null);
-  const [photoFile,      setPhotoFile]      = useState(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  // Control State
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPhotoSaving, setIsPhotoSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Password
-  const [pwdForm,    setPwdForm]    = useState({ current_password:'', new_password:'', confirm_password:'' });
-  const [showPwd,    setShowPwd]    = useState({ current:false, new:false, confirm:false });
-  const [isSavingPwd,setIsSavingPwd]= useState(false);
-  const [pwdStrength,setPwdStrength]= useState(0);
-
+  // Initialization & Sync
   useEffect(() => {
-    if (!player) return;
-    setProfileForm({
+    // Strict block: Do NOT reset UI data while a save is in progress or user has unsaved edits
+    if (!player || isSaving || isPhotoSaving || hasChanges) return;
+
+    setFormData({
       full_name: player.full_name || '',
-      phone:     player.phone    || '',
-      address:   player.address  || '',
-      notes:     player.notes    || '',
+      phone: player.phone || '',
+      address: player.address || '',
+      notes: player.notes || '',
+      height: player.height || '',
+      weight: player.weight || ''
     });
-    setPhotoPreview(photoUrl);
-  }, [player, photoUrl]);
 
-  useEffect(() => {
-    const p = pwdForm.new_password;
-    let score = 0;
-    if (p.length >= 8)          score++;
-    if (/[A-Z]/.test(p))        score++;
-    if (/[0-9]/.test(p))        score++;
-    if (/[^A-Za-z0-9]/.test(p)) score++;
-    setPwdStrength(score);
-  }, [pwdForm.new_password]);
+    if (!photoFile) {
+      setPreviewURL(photoUrl || null);
+    }
+  }, [player, isSaving, isPhotoSaving, hasChanges, photoFile, photoUrl]);
 
-  const strengthInfo = [
-    { label:'Too short', color:'#f87171' },
-    { label:'Weak',      color:'#f87171' },
-    { label:'Fair',      color:'#f59e0b' },
-    { label:'Good',      color:'#4fb0ff' },
-    { label:'Strong',    color:'#4ade80' },
-  ][pwdStrength];
-
-  // ── Photo ─────────────────────────────────────────────────────────────────
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Photo must be under 5MB'); return; }
-    setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setPhotoPreview(ev.target?.result);
-    reader.readAsDataURL(file);
+  // Event Handlers
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setHasChanges(true); // Flag prevents API sync from overwriting local typing
   };
 
-  const uploadPhoto = async () => {
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Photo must be under 5MB');
+      return;
+    }
+
+    if (previewURL && previewURL.startsWith('blob:')) {
+      URL.revokeObjectURL(previewURL);
+    }
+
+    setPhotoFile(file);
+    setPreviewURL(URL.createObjectURL(file));
+  };
+
+  const handleCancelPhoto = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (previewURL && previewURL.startsWith('blob:')) {
+      URL.revokeObjectURL(previewURL);
+    }
+    setPhotoFile(null);
+    setPreviewURL(photoUrl || null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const handlePhotoUpload = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!photoFile) return;
-    setUploadingPhoto(true);
+
+    setIsPhotoSaving(true);
+    
     try {
       const fd = new FormData();
       fd.append('photo', photoFile);
-      // ✅ Pas de Content-Type manuel — axios gère le boundary automatiquement
-      await API.patch('players/me/', fd);
-      await refreshPlayer();
-      toast.success('Photo updated ✅');
+
+      const res = await API.patch('players/me/', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      updatePlayer(res.data);
+      toast.success('Profile photo updated successfully');
       setPhotoFile(null);
-    } catch { toast.error('Failed to upload photo'); }
-    finally  { setUploadingPhoto(false); }
-  };
-
-  const cancelPhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(photoUrl);
-  };
-
-  // ── Profile save ──────────────────────────────────────────────────────────
-  const handleSaveProfile = async () => {
-    if (!profileForm.full_name.trim()) { toast.error('Full name is required'); return; }
-    setIsSavingProfile(true);
-    try {
-      await API.patch('players/me/', {
-        full_name: profileForm.full_name,
-        phone:     profileForm.phone,
-        address:   profileForm.address,
-        notes:     profileForm.notes,
-      });
-      await refreshPlayer();
-      setProfileChanged(false);
-      toast.success('Profile updated ✅');
-    } catch { toast.error('Failed to update profile'); }
-    finally  { setIsSavingProfile(false); }
-  };
-
-  // ── Password save ─────────────────────────────────────────────────────────
-  const handleSavePassword = async () => {
-    if (!pwdForm.current_password)          { toast.error('Enter your current password'); return; }
-    if (pwdForm.new_password.length < 8)    { toast.error('New password must be at least 8 characters'); return; }
-    if (pwdForm.new_password !== pwdForm.confirm_password) { toast.error('Passwords do not match'); return; }
-    setIsSavingPwd(true);
-    try {
-      await API.patch('players/me/', {
-        current_password: pwdForm.current_password,
-        new_password:     pwdForm.new_password,
-      });
-      setPwdForm({ current_password:'', new_password:'', confirm_password:'' });
-      toast.success('Password changed ✅');
     } catch (err) {
-      const msg = err?.response?.data?.error || 'Failed to change password';
-      toast.error(msg);
-    } finally { setIsSavingPwd(false); }
+      toast.error('Failed to update photo');
+    } finally {
+      setIsPhotoSaving(false);
+    }
   };
 
-  const cV = { hidden:{opacity:0}, visible:{opacity:1,transition:{staggerChildren:0.08}} };
-  const iV = { hidden:{y:16,opacity:0}, visible:{y:0,opacity:1} };
+  const handleSaveProfile = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!formData.full_name.trim()) {
+      toast.error('Full name is required');
+      return;
+    }
 
-  if (playerLoading) return (
-    <div className="min-h-screen flex items-center justify-center"
-      style={{ background:'linear-gradient(135deg,#000 0%,#0a0f2a 45%,#180033 100%)' }}>
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d0cb]"/>
-    </div>
-  );
+    setIsSaving(true);
+
+    try {
+      const payload = {
+        full_name: formData.full_name,
+        phone: formData.phone,
+        address: formData.address,
+        notes: formData.notes,
+        height: formData.height ? parseFloat(formData.height) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+      };
+
+      const res = await API.patch('players/me/', payload);
+      
+      updatePlayer(res.data);
+      setHasChanges(false);
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      toast.error('Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSavePassword = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!passwordData.current_password || !passwordData.new_password) {
+      toast.error('Current and new password are required');
+      return;
+    }
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (passwordData.new_password.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await API.patch('players/me/', {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+      });
+      
+      setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+      toast.success('Password changed successfully');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to change password');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Render Loader
+  if (playerLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#050510]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d0cb]" />
+      </div>
+    );
+  }
 
   return (
-    <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
-      style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
-      initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right"/>
-      <div className="max-w-3xl mx-auto">
-
+    <div className="min-h-screen text-white p-6 md:p-8 lg:p-10 bg-gradient-to-br from-[#050510] via-[#0a0f2a] to-[#180033]">
+      <Toaster position="top-right" />
+      <div className="max-w-4xl mx-auto space-y-8">
+        
         {/* Header */}
-        <motion.div variants={iV} className="mb-8">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
+        <div>
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] to-[#00d0cb] bg-clip-text text-transparent pb-1">
             Settings
           </h1>
-          <p className="text-gray-400 mt-1 text-sm">Manage your account and preferences</p>
-        </motion.div>
+          <p className="text-gray-400 mt-2 text-sm">Manage your account profile and security preferences.</p>
+        </div>
 
-        {/* Tabs */}
-        <motion.div variants={iV}
-          className="flex bg-gray-900/70 border border-gray-700/50 rounded-xl overflow-hidden mb-6">
-          {[
-            { key:'profile',  icon:<FiUser size={14}/>, label:'Profile'  },
-            { key:'security', icon:<FiLock size={14}/>, label:'Security' },
-          ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all"
-              style={tab===t.key
-                ? { background:'rgba(79,176,255,.2)', color:'#4fb0ff', borderBottom:'2px solid #4fb0ff' }
-                : { color:'#64748b' }}>
-              {t.icon}{t.label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* ══ PROFILE TAB ══ */}
-        {tab === 'profile' && (
-          <motion.div variants={iV} className="space-y-5">
-
-            {/* Photo */}
-            <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
-              <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <FiCamera size={14} className="text-[#4fb0ff]"/>Profile photo
-              </h2>
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="relative flex-shrink-0">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border-2"
-                    style={{ borderColor:'rgba(0,208,203,.4)' }}>
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Profile" className="w-full h-full object-cover"/>
+        {/* Top Section: Photo & Name */}
+        <div className="bg-gray-900/60 backdrop-blur-md rounded-3xl p-8 border border-gray-800 shadow-xl flex flex-col md:flex-row items-center gap-8">
+          <div className="relative flex-shrink-0">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-800 transition-colors focus-within:border-[#00d0cb] relative shadow-lg bg-gray-900 flex items-center justify-center">
+              {previewURL ? (
+                <img src={previewURL} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-4xl font-bold text-gray-500">
+                  {player?.user?.username?.charAt(0).toUpperCase() || 'P'}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-2xl font-bold text-white mb-1">{player?.full_name || 'Player Name'}</h2>
+            <p className="text-sm text-gray-400 mb-5">@{player?.user?.username}</p>
+            
+            <input 
+              type="file" 
+              ref={fileRef} 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handlePhotoSelect} 
+            />
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3">
+              {!photoFile ? (
+                <button 
+                  type="button" 
+                  onClick={() => fileRef.current?.click()}
+                  className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-semibold text-white border border-gray-700 transition-all flex items-center gap-2"
+                >
+                  <FiUpload size={16} /> Choose new photo
+                </button>
+              ) : (
+                <>
+                  <button 
+                    type="button" 
+                    onClick={handlePhotoUpload}
+                    disabled={isPhotoSaving}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#22c55e] to-[#14b8a6] hover:brightness-110 text-sm font-bold text-white transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isPhotoSaving ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white"
-                        style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                        {playerInitial}
-                      </div>
+                      <FiCheck size={16} />
                     )}
-                  </div>
-                  {!photoFile && (
-                    <button onClick={() => fileRef.current?.click()}
-                      className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-lg flex items-center justify-center text-white"
-                      style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                      <FiCamera size={12}/>
-                    </button>
-                  )}
-                  <input ref={fileRef} type="file" accept="image/*"
-                    className="hidden" onChange={handlePhotoChange}/>
-                </div>
+                    {isPhotoSaving ? 'Saving...' : 'Confirm Photo'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleCancelPhoto}
+                    disabled={isPhotoSaving}
+                    className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-semibold transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <FiX size={16} /> Cancel
+                  </button>
+                </>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-4">JPG or PNG. Max size 5MB.</p>
+          </div>
+        </div>
 
-                <div className="flex-1">
-                  <div className="text-sm text-gray-300 font-medium mb-1">{player?.full_name || 'Player'}</div>
-                  <div className="text-xs text-gray-500 mb-3">JPG, PNG — max 5MB</div>
-                  {photoFile ? (
-                    <div className="flex gap-2">
-                      <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                        onClick={uploadPhoto} disabled={uploadingPhoto}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-white"
-                        style={{ background:'linear-gradient(135deg,#22c55e,#14b8a6)' }}>
-                        {uploadingPhoto
-                          ? <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"/>
-                          : <FiCheck size={11}/>}
-                        Save photo
-                      </motion.button>
-                      <button onClick={cancelPhoto}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs bg-gray-800 text-gray-400 border border-gray-700">
-                        <FiX size={11}/>Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => fileRef.current?.click()}
-                      className="px-4 py-2 rounded-xl text-xs border border-gray-700 bg-gray-800/50 text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all">
-                      Change photo
-                    </button>
-                  )}
-                </div>
+        {/* Middle Section: Account Details */}
+        <div className="bg-gray-900/60 backdrop-blur-md rounded-3xl p-8 border border-gray-800 shadow-xl space-y-6">
+          <div className="flex items-center gap-3 border-b border-gray-800 pb-4 mb-2">
+            <FiUser className="text-[#00d0cb]" size={20} />
+            <h2 className="text-lg font-bold text-white">Profile Details</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Full Name</label>
+              <input 
+                type="text" 
+                name="full_name"
+                value={formData.full_name} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all"
+                placeholder="John Doe" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Phone</label>
+              <input 
+                type="tel" 
+                name="phone"
+                value={formData.phone} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all"
+                placeholder="+216 55 123 456" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Location</label>
+              <input 
+                type="text" 
+                name="address"
+                value={formData.address} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all"
+                placeholder="City, Country" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">System Info</label>
+              <div className="text-sm text-gray-500 bg-gray-800/30 px-4 py-3 rounded-xl border border-gray-800">
+                <span className="text-gray-400">Position:</span> {player?.position || '—'} <span className="mx-2">•</span> <span className="text-gray-400">Group:</span> {player?.group?.name || '—'}
               </div>
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Height (cm)</label>
+              <input 
+                type="number" 
+                name="height"
+                value={formData.height} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all"
+                placeholder="180" 
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Weight (kg)</label>
+              <input 
+                type="number" 
+                name="weight"
+                value={formData.weight} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all"
+                placeholder="75" 
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Bio / Notes</label>
+              <textarea 
+                rows={3} 
+                name="notes"
+                value={formData.notes} 
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all resize-none"
+                placeholder="Tell us about yourself..." 
+              />
+            </div>
+          </div>
+          
+          <div className="pt-6 border-t border-gray-800 flex justify-end">
+            <button 
+              type="button" 
+              onClick={handleSaveProfile}
+              disabled={isSaving || !hasChanges}
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:brightness-110 text-sm font-bold text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiSave size={16} />
+              )}
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
 
-            {/* Personal info */}
-            <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
-              <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <FiUser size={14} className="text-[#00d0cb]"/>Personal information
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Full name <span className="text-red-400">*</span></label>
-                  <input type="text" value={profileForm.full_name}
-                    onChange={e => { setProfileForm(p=>({...p,full_name:e.target.value})); setProfileChanged(true); }}
-                    className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
-                    placeholder="Your full name"/>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1.5">Position</label>
-                    <div className="px-4 py-3 bg-gray-800/30 border border-gray-700/30 rounded-xl text-sm text-gray-500 cursor-not-allowed">
-                      {player?.position || '—'}
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">Set by your coach</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1.5">Group</label>
-                    <div className="px-4 py-3 bg-gray-800/30 border border-gray-700/30 rounded-xl text-sm text-gray-500 cursor-not-allowed">
-                      {player?.group?.name || '—'}
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">Set by admin</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Phone</label>
-                  <input type="tel" value={profileForm.phone}
-                    onChange={e => { setProfileForm(p=>({...p,phone:e.target.value})); setProfileChanged(true); }}
-                    className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
-                    placeholder="+216 XX XXX XXX"/>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Location</label>
-                  <input type="text" value={profileForm.address}
-                    onChange={e => { setProfileForm(p=>({...p,address:e.target.value})); setProfileChanged(true); }}
-                    className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
-                    placeholder="City, Country"/>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Bio</label>
-                  <textarea rows={3} value={profileForm.notes}
-                    onChange={e => { setProfileForm(p=>({...p,notes:e.target.value})); setProfileChanged(true); }}
-                    className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none"
-                    placeholder="Tell something about yourself..."/>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-800">
-                <p className="text-xs text-gray-600">
-                  {profileChanged ? 'You have unsaved changes' : 'All changes saved'}
-                </p>
-                <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  onClick={handleSaveProfile}
-                  disabled={isSavingProfile || !profileChanged}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                  {isSavingProfile
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
-                    : <FiSave size={14}/>}
-                  Save changes
-                </motion.button>
+        {/* Bottom Section: Security */}
+        <form 
+          onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          className="bg-gray-900/60 backdrop-blur-md rounded-3xl p-8 border border-gray-800 shadow-xl space-y-6"
+        >
+          {/* Accessibility hidden username field for password managers to prevent Chrome DOM warnings */}
+          <input type="text" name="username" autoComplete="username" value={player?.user?.email || player?.user?.username || ''} readOnly style={{ display: 'none' }} />
+
+          <div className="flex items-center gap-3 border-b border-gray-800 pb-4 mb-2">
+            <FiLock className="text-[#902bd1]" size={20} />
+            <h2 className="text-lg font-bold text-white">Security & Password</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Current Password</label>
+              <div className="relative">
+                <input 
+                  type={showPwd.current ? "text" : "password"} 
+                  name="current_password"
+                  autoComplete="current-password"
+                  value={passwordData.current_password} 
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 pr-12 focus:outline-none focus:border-[#902bd1] focus:ring-1 focus:ring-[#902bd1] transition-all"
+                  placeholder="••••••••" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPwd(p => ({ ...p, current: !p.current }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPwd.current ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
               </div>
             </div>
-
-            {/* Academy info readonly */}
-            <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50">
-              <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-[#902bd1]"/>Academy info
-              </h2>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                {[
-                  { label:'Academy', value:player?.academy?.name || '—' },
-                  { label:'Status',  value:player?.status        || '—' },
-                  { label:'Height',  value:player?.height ? `${player.height} cm` : '—' },
-                  { label:'Weight',  value:player?.weight ? `${player.weight} kg` : '—' },
-                ].map((row,i) => (
-                  <div key={i} className="flex justify-between items-center p-2.5 rounded-xl bg-gray-800/30 border border-gray-700/30">
-                    <span className="text-gray-500">{row.label}</span>
-                    <span className="text-gray-300 font-medium">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-600 mt-3">
-                These fields are managed by your coach or academy admin.
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ══ SECURITY TAB ══ */}
-        {tab === 'security' && (
-          <motion.div variants={iV} className="space-y-5">
-
-            {/* Change password */}
-            <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
-              <h2 className="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <FiLock size={14} className="text-[#902bd1]"/>Change password
-              </h2>
-              <div className="space-y-4">
-
-                {/* Current */}
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Current password</label>
-                  <div className="relative">
-                    <input type={showPwd.current ? 'text' : 'password'}
-                      value={pwdForm.current_password}
-                      onChange={e => setPwdForm(p=>({...p,current_password:e.target.value}))}
-                      className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] pr-12"
-                      placeholder="••••••••"/>
-                    <button onClick={() => setShowPwd(p=>({...p,current:!p.current}))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                      {showPwd.current ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
-                    </button>
-                  </div>
-                </div>
-
-                {/* New */}
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">New password</label>
-                  <div className="relative">
-                    <input type={showPwd.new ? 'text' : 'password'}
-                      value={pwdForm.new_password}
-                      onChange={e => setPwdForm(p=>({...p,new_password:e.target.value}))}
-                      className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] pr-12"
-                      placeholder="••••••••"/>
-                    <button onClick={() => setShowPwd(p=>({...p,new:!p.new}))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                      {showPwd.new ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
-                    </button>
-                  </div>
-                  {pwdForm.new_password.length > 0 && (
-                    <div className="mt-2">
-                      <div className="flex gap-1 mb-1">
-                        {[1,2,3,4].map(i => (
-                          <div key={i} className="flex-1 h-1 rounded-full transition-all"
-                            style={{ background: i <= pwdStrength ? strengthInfo.color : '#1e293b' }}/>
-                        ))}
-                      </div>
-                      <div className="text-xs" style={{ color:strengthInfo.color }}>{strengthInfo.label}</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Confirm */}
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1.5">Confirm new password</label>
-                  <div className="relative">
-                    <input type={showPwd.confirm ? 'text' : 'password'}
-                      value={pwdForm.confirm_password}
-                      onChange={e => setPwdForm(p=>({...p,confirm_password:e.target.value}))}
-                      className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] pr-12"
-                      placeholder="••••••••"/>
-                    <button onClick={() => setShowPwd(p=>({...p,confirm:!p.confirm}))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                      {showPwd.confirm ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
-                    </button>
-                  </div>
-                  {pwdForm.confirm_password.length > 0 && (
-                    <div className="flex items-center gap-1.5 mt-1.5 text-xs"
-                      style={{ color: pwdForm.new_password === pwdForm.confirm_password ? '#4ade80' : '#f87171' }}>
-                      {pwdForm.new_password === pwdForm.confirm_password
-                        ? <><FiCheck size={11}/>Passwords match</>
-                        : <><FiX size={11}/>Passwords do not match</>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Requirements */}
-                <div className="p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
-                  <div className="text-xs text-gray-500 mb-2">Password requirements:</div>
-                  <div className="space-y-1">
-                    {[
-                      { label:'At least 8 characters', ok: pwdForm.new_password.length >= 8           },
-                      { label:'One uppercase letter',  ok: /[A-Z]/.test(pwdForm.new_password)         },
-                      { label:'One number',            ok: /[0-9]/.test(pwdForm.new_password)          },
-                      { label:'One special character', ok: /[^A-Za-z0-9]/.test(pwdForm.new_password)  },
-                    ].map((req,i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs"
-                        style={{ color: req.ok ? '#4ade80' : '#475569' }}>
-                        <div className="w-3 h-3 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ background: req.ok ? 'rgba(74,222,128,.2)' : 'rgba(71,85,105,.2)' }}>
-                          {req.ok && <FiCheck size={8}/>}
-                        </div>
-                        {req.label}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-5 pt-4 border-t border-gray-800">
-                <motion.button whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }}
-                  onClick={handleSavePassword} disabled={isSavingPwd}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
-                  style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                  {isSavingPwd
-                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
-                    : <FiLock size={14}/>}
-                  Update password
-                </motion.button>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">New Password</label>
+              <div className="relative">
+                <input 
+                  type={showPwd.new ? "text" : "password"} 
+                  name="new_password"
+                  autoComplete="new-password"
+                  value={passwordData.new_password} 
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 pr-12 focus:outline-none focus:border-[#902bd1] focus:ring-1 focus:ring-[#902bd1] transition-all"
+                  placeholder="••••••••" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPwd(p => ({ ...p, new: !p.new }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPwd.new ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
               </div>
             </div>
-
-            {/* Account info */}
-            <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50">
-              <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <div className="w-1 h-4 rounded-full bg-[#4fb0ff]"/>Account info
-              </h2>
-              <div className="space-y-2 text-xs">
-                {[
-                  { label:'Username', value: player?.user?.username || '—' },
-                  { label:'Email',    value: player?.user?.email    || '—' },
-                  { label:'Role',     value: player?.user?.role     || 'player' },
-                ].map((row,i) => (
-                  <div key={i} className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0">
-                    <span className="text-gray-500">{row.label}</span>
-                    <span className="text-gray-300">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-600 mt-3">
-                To change your email or username, contact your academy admin.
-              </p>
-            </div>
-
-            {/* Danger zone */}
-            <div className="bg-gray-900/70 rounded-2xl p-5 border border-red-500/20">
-              <h2 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
-                <FiAlertTriangle size={14}/>Danger zone
-              </h2>
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/5 border border-red-500/15">
-                <FiAlertTriangle size={13} className="text-red-400 flex-shrink-0"/>
-                <p className="text-xs text-gray-400">
-                  Account deletion is not available from this page. Contact your admin.
-                </p>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Confirm Password</label>
+              <div className="relative">
+                <input 
+                  type={showPwd.confirm ? "text" : "password"} 
+                  name="confirm_password"
+                  autoComplete="new-password"
+                  value={passwordData.confirm_password} 
+                  onChange={handlePasswordChange}
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 pr-12 focus:outline-none focus:border-[#902bd1] focus:ring-1 focus:ring-[#902bd1] transition-all"
+                  placeholder="••••••••" 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPwd(p => ({ ...p, confirm: !p.confirm }))}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPwd.confirm ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                </button>
               </div>
             </div>
-
-          </motion.div>
-        )}
+          </div>
+          
+          <div className="pt-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-gray-800">
+            <p className="text-xs text-gray-500">Min 8 characters required.</p>
+            <button 
+              type="button" 
+              onClick={handleSavePassword}
+              disabled={isSaving || !passwordData.current_password}
+              className="w-full md:w-auto px-8 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-gray-700"
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiLock size={16} />
+              )}
+              {isSaving ? 'Updating...' : 'Update Password'}
+            </button>
+          </div>
+        </form>
 
       </div>
-    </motion.div>
+    </div>
   );
 };
 

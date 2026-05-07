@@ -10,8 +10,13 @@ from .permissions import IsAdmin
 
 class AcademyView(APIView):
   
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsAdmin()]
 
     def get(self, request):
         academy = request.user.academy
@@ -29,7 +34,13 @@ class AcademyView(APIView):
             request.user.academy = academy
             request.user.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        print("❌ Academy Create Errors:", serializer.errors)
+        return Response({
+            "errors": serializer.errors,
+            "received_keys": list(request.data.keys()),
+            "content_type": request.content_type
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
         academy = request.user.academy
@@ -42,7 +53,13 @@ class AcademyView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        print("❌ Academy Update Errors:", serializer.errors)
+        return Response({
+            "errors": serializer.errors,
+            "received_keys": list(request.data.keys()),
+            "content_type": request.content_type
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AcademyDirectoryView(APIView):

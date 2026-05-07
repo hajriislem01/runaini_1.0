@@ -16,7 +16,8 @@ import PhoneVerificationModal from './modals/PhoneVerificationModal';
 
 const Settings = () => {
   const {
-    isLoading, isSubmitting, isImageUpdating,
+    isLoading, isSubmitting,
+    imageStates,
     showPassword, setShowPassword,
     showVerificationModal, setShowVerificationModal,
     verificationCode, setVerificationCode,
@@ -24,7 +25,8 @@ const Settings = () => {
     passwords, setPasswords,
     academyData, setAcademyData,
     preferences, setPreferences,
-    handleSubmit, handleImageUpload,
+    handleSubmit,
+    handleImageSelect, confirmImageUpload, cancelImageSelection,
     handlePhoneVerification, handleVerifyCode
   } = useSettingsData();
 
@@ -51,28 +53,32 @@ const Settings = () => {
           <SettingsHeader isSubmitting={isSubmitting} itemVariants={itemVariants} />
 
           <form id="settings-form" onSubmit={handleSubmit} className="space-y-8">
-            <AcademyInfoSection 
-              academyData={academyData} setAcademyData={setAcademyData}
-              handleImageUpload={handleImageUpload} isImageUpdating={isImageUpdating}
+            <AcademyInfoSection
+              academyData={academyData}
+              setAcademyData={setAcademyData}
+              imageStates={imageStates}
+              handleImageSelect={handleImageSelect}
+              confirmImageUpload={confirmImageUpload}
+              cancelImageSelection={cancelImageSelection}
               itemVariants={itemVariants}
             />
-            
-            <ContactInfoSection 
+
+            <ContactInfoSection
               academyData={academyData} setAcademyData={setAcademyData}
               itemVariants={itemVariants}
             />
-            
-            <FacilitiesSection 
+
+            <FacilitiesSection
               academyData={academyData} setAcademyData={setAcademyData}
               itemVariants={itemVariants}
             />
-            
-            <PreferencesSection 
+
+            <PreferencesSection
               preferences={preferences} setPreferences={setPreferences}
               itemVariants={itemVariants}
             />
-            
-            <PrivacySecuritySection 
+
+            <PrivacySecuritySection
               passwords={passwords} setPasswords={setPasswords}
               showPassword={showPassword} setShowPassword={setShowPassword}
               itemVariants={itemVariants}
@@ -81,7 +87,7 @@ const Settings = () => {
         </div>
       </div>
 
-      <PhoneVerificationModal 
+      <PhoneVerificationModal
         showVerificationModal={showVerificationModal} setShowVerificationModal={setShowVerificationModal}
         verificationStep={verificationStep} setVerificationStep={setVerificationStep}
         verificationCode={verificationCode} setVerificationCode={setVerificationCode}

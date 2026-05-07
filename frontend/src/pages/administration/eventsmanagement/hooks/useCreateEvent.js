@@ -80,8 +80,8 @@ export const useCreateEvent = () => {
       const payload = {
         title: formData.eventName,
         type: activeTab === 'matchFriendly' ? 'Match Friendly' : 'Tournament',
-        group: formData.group,
-        subgroup: formData.subgroup || null,
+        groups: formData.group ? [formData.group] : [],
+        subgroups: formData.subgroup ? [formData.subgroup] : [],
         date: `${formData.date}T${formData.time}:00Z`,
         location: formData.location,
         target_academy: formData.targetAcademy || null,

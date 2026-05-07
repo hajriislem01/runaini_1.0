@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiActivity, FiAlertTriangle, FiCheckCircle, FiInfo, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiX, FiActivity, FiAlertTriangle, FiCheckCircle, FiInfo, FiChevronDown, FiChevronUp, FiCalendar, FiCheck, FiTag, FiEdit3, FiUsers } from 'react-icons/fi';
 import { FaStar, FaRegStar, FaHeartbeat, FaGraduationCap } from 'react-icons/fa';
 import {
   Chart as ChartJS,
@@ -9,7 +9,7 @@ import {
   Title, Tooltip, Legend
 } from 'chart.js';
 import { Radar, Bar, Line } from 'react-chartjs-2';
-import API from '../api';
+import API from '../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, subMonths } from 'date-fns';
 
@@ -220,6 +220,21 @@ const CoachAnalysis = () => {
   const [noteTitle, setNoteTitle] = useState('');
   const [noteType,  setNoteType]  = useState('info');
 
+  const [showRangeDropdown,    setShowRangeDropdown]    = useState(false);
+  const [showGroupDropdown,    setShowGroupDropdown]    = useState(false);
+  const [showNoteTypeDropdown, setShowNoteTypeDropdown] = useState(false);
+
+  // Close menus on click outside
+  useEffect(() => {
+    const closeAll = () => {
+      setShowRangeDropdown(false);
+      setShowGroupDropdown(false);
+      setShowNoteTypeDropdown(false);
+    };
+    window.addEventListener('click', closeAll);
+    return () => window.removeEventListener('click', closeAll);
+  }, []);
+
   const noteColors = {
     info:    { bg:'bg-blue-500/10',  border:'border-blue-500/30',  title:'text-blue-300',  text:'text-blue-200'  },
     warning: { bg:'bg-red-500/10',   border:'border-red-500/30',   title:'text-red-300',   text:'text-red-200'   },
@@ -423,9 +438,19 @@ const CoachAnalysis = () => {
         return (
           <div key={p.id} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 p-4">
             <div className="flex items-center gap-4 flex-wrap">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 relative overflow-hidden"
                 style={{ background: color + '50', border: `1.5px solid ${color}` }}>
-                {p.full_name?.charAt(0)}
+                {p.profile_picture || p.photo_url ? (
+                  <img 
+                    src={p.profile_picture || p.photo_url} 
+                    alt="" 
+                    className="absolute inset-0 w-full h-full object-cover z-10"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : null}
+                <span className="relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
               </div>
               <div className="flex-1 min-w-32">
                 <div className="font-medium text-white text-sm">{p.full_name}</div>
@@ -511,7 +536,7 @@ const CoachAnalysis = () => {
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               {/* View toggle */}
-              <div className="flex bg-gray-800/50 rounded-xl p-1 border border-gray-700/50">
+              <div className="flex bg-gray-800/50 rounded-xl p-1 border border-gray-700/50 mr-2">
                 <button onClick={() => setActiveView('simple')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeView === 'simple' ? 'bg-[#4fb0ff] text-white' : 'text-gray-400 hover:text-white'}`}>
@@ -523,17 +548,71 @@ const CoachAnalysis = () => {
                   KPI Advanced
                 </button>
               </div>
-              <select value={monthsRange} onChange={e => setMonthsRange(+e.target.value)}
-                className="px-3 py-2 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]">
-                <option value={3}>3 months</option>
-                <option value={6}>6 months</option>
-                <option value={12}>12 months</option>
-              </select>
-              <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
-                className="px-3 py-2 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]">
-                <option value="">All groups</option>
-                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
+
+              {/* Luxury Range Filter */}
+              <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
+                <button 
+                  onClick={() => { setShowRangeDropdown(!showRangeDropdown); setShowGroupDropdown(false); }}
+                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[140px]"
+                >
+                  <FiCalendar className={monthsRange ? 'text-[#00d0cb]' : 'text-gray-500'} />
+                  <span className="font-medium">{monthsRange} months</span>
+                  <FiChevronDown className={`transition-transform duration-200 ${showRangeDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showRangeDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
+                    >
+                      {[3, 6, 12, 24].map(range => (
+                        <div key={range} 
+                          onClick={() => { setMonthsRange(range); setShowRangeDropdown(false); }} 
+                          className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
+                        >
+                          <span className="font-medium">{range} months</span>
+                          {monthsRange === range && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Luxury Group Filter */}
+              <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
+                <button 
+                  onClick={() => { setShowGroupDropdown(!showGroupDropdown); setShowRangeDropdown(false); }}
+                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[150px]"
+                >
+                  <FiUsers className={selectedGroup ? 'text-[#00d0cb]' : 'text-gray-500'} />
+                  <span className="font-medium truncate max-w-[100px]">
+                    {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : 'All groups'}
+                  </span>
+                  <FiChevronDown className={`transition-transform duration-200 ${showGroupDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showGroupDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 right-0 w-max min-w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
+                    >
+                      <div onClick={() => { setSelectedGroup(''); setShowGroupDropdown(false); }} className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                        <span className="font-medium">All groups</span>
+                        {!selectedGroup && <FiCheck className="text-[#00d0cb]" />}
+                      </div>
+                      {groups.map(g => (
+                        <div key={g.id} onClick={() => { setSelectedGroup(g.id); setShowGroupDropdown(false); }} className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                          <span className="font-medium">{g.name}</span>
+                          {Number(selectedGroup) === Number(g.id) && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -601,9 +680,19 @@ const CoachAnalysis = () => {
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                           sel ? 'text-white' : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:text-white'}`}
                         style={sel ? { background: color+'30', borderColor: color } : {}}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative overflow-hidden"
                           style={{ background: sel ? color : '#374151' }}>
-                          {p.full_name?.charAt(0)}
+                          {p.profile_picture || p.photo_url ? (
+                            <img 
+                              src={p.profile_picture || p.photo_url} 
+                              alt="" 
+                              className="absolute inset-0 w-full h-full object-cover z-10"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                          <span className="relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
                         </div>
                         <div>
                           <div style={{ color: sel ? color : undefined }}>{p.full_name}</div>
@@ -795,7 +884,7 @@ const CoachAnalysis = () => {
         )}
 
         {/* ── Private Notes ── */}
-        <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 overflow-hidden">
+        <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 relative overflow-visible">
           <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
             <div>
               <div className="text-sm font-medium text-white">Private notes</div>
@@ -823,12 +912,44 @@ const CoachAnalysis = () => {
             </AnimatePresence>
             <div className="border-t border-gray-700/50 pt-3">
               <div className="flex gap-2 mb-2">
-                <select value={noteType} onChange={e => setNoteType(e.target.value)}
-                  className="px-2 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs focus:outline-none">
-                  <option value="info">Note</option>
-                  <option value="warning">Warning</option>
-                  <option value="success">Positive</option>
-                </select>
+                <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
+                  <button 
+                    type="button"
+                    onClick={() => setShowNoteTypeDropdown(!showNoteTypeDropdown)}
+                    className="px-4 py-2 bg-gray-900/40 border border-gray-700/50 rounded-xl text-white text-xs flex items-center gap-3 hover:border-[#00d0cb]/40 transition-all min-w-[120px] shadow-sm"
+                  >
+                    <FiTag className="text-[#00d0cb]" />
+                    <span className="font-medium truncate">{noteType === 'info' ? 'Note' : noteType === 'warning' ? 'Warning' : 'Positive'}</span>
+                    <FiChevronDown className={`transition-transform duration-200 ${showNoteTypeDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showNoteTypeDropdown && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full mt-2 left-0 min-w-full w-[180px] z-[9999] bg-[#0c132a] border border-[#00d0cb]/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden p-2 space-y-1"
+                      >
+                        {[
+                          { id: 'info', name: 'Note', icon: <FiInfo className="text-blue-400" /> },
+                          { id: 'warning', name: 'Warning', icon: <FiAlertTriangle className="text-red-400" /> },
+                          { id: 'success', name: 'Positive', icon: <FiCheckCircle className="text-green-400" /> },
+                        ].map(opt => (
+                          <div 
+                            key={opt.id} 
+                            onClick={() => { setNoteType(opt.id); setShowNoteTypeDropdown(false); }} 
+                            className={`px-4 py-3 text-xs text-gray-300 hover:text-white hover:bg-[#00d0cb]/10 rounded-xl cursor-pointer transition-all flex items-center justify-between group ${noteType === opt.id ? 'bg-[#00d0cb]/10 text-[#00d0cb]' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              {opt.icon}
+                              <span className="font-medium">{opt.name}</span>
+                            </div>
+                            {noteType === opt.id && <FiCheck className="text-[#00d0cb]" />}
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <input placeholder="Title..." value={noteTitle} onChange={e => setNoteTitle(e.target.value)}
                   className="flex-1 px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00d0cb]"/>
               </div>

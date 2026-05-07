@@ -37,13 +37,22 @@ export const useEventDetail = (id) => {
     if (!event) return;
     const fetchPlayers = async () => {
       try {
-        const response = await API.get(`players/?group_id=${event.group}`);
+        let qs = '';
+        if (event.subgroups && event.subgroups.length > 0) {
+          qs = `?subgroup_id=${event.subgroups.join(',')}`;
+        } else if (event.groups && event.groups.length > 0) {
+          qs = `?group_id=${event.groups.join(',')}`;
+        }
+        
+        const response = await API.get(`players/${qs}`);
         const participantIds = event.participants.map(p => p.player);
         const available = response.data.filter(p => !participantIds.includes(p.id));
         setPlayers(available);
         setFilteredPlayers(available);
       } catch (error) {
         console.error('Failed to fetch players:', error);
+        setPlayers([]);
+        setFilteredPlayers([]);
       }
     };
     fetchPlayers();

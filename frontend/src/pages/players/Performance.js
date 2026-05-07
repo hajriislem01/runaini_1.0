@@ -10,7 +10,7 @@ import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
-import useReportPDF from '../../hooks/useReportPDF';
+import useReportPDF from '../coach/playermanagement/hooks/useReportPDF';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const scoreColor = (s) => {

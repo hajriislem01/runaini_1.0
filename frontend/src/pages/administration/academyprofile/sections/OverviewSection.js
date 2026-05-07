@@ -1,8 +1,9 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   FiMapPin, FiTarget, FiUsers, FiHome, FiAward,
   FiStar, FiShield, FiCalendar, FiFlag, FiActivity,
-  FiMail, FiGlobe, FiPhone, FiUser
+  FiMail, FiGlobe, FiPhone, FiUser, FiFacebook, FiInstagram, FiLink
 } from 'react-icons/fi';
 import { FaTshirt } from 'react-icons/fa';
 import { InfoItem, SectionCard } from '../components/ProfileUI';
@@ -19,7 +20,39 @@ const OverviewSection = ({ academy }) => {
             <InfoItem icon={<FiCalendar size={20} />} label="Founded" value={academy.founded || 'N/A'} />
             <InfoItem icon={<FiFlag size={20} />} label="Country" value={getCountryName(academy.country)} />
             <InfoItem icon={<FiMapPin size={20} />} label="City" value={academy.city || 'N/A'} />
-            <InfoItem icon={<FiActivity size={20} />} label="Colors" value={academy.colors || 'N/A'} />
+            <InfoItem icon={<FiActivity size={20} />} label="Brand Palette">
+              <div className="flex items-center gap-3 mt-2">
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="w-6 h-6 rounded-full border border-white/20 shadow-lg relative group"
+                  style={{ 
+                    backgroundColor: academy.primary_color || '#902bd1',
+                    boxShadow: `0 0 12px ${(academy.primary_color || '#902bd1')}50`
+                  }}
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Primary: {academy.primary_color}
+                  </div>
+                </motion.div>
+
+                {academy.secondary_color_active && (
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-6 h-6 rounded-full border border-white/20 shadow-lg relative group"
+                    style={{ 
+                      backgroundColor: academy.secondary_color || '#4fb0ff',
+                      boxShadow: `0 0 12px ${(academy.secondary_color || '#4fb0ff')}50`
+                    }}
+                  >
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Secondary: {academy.secondary_color}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </InfoItem>
 
             {academy.achievements && (
               <div className="md:col-span-2">
@@ -119,6 +152,14 @@ const OverviewSection = ({ academy }) => {
           <div className="space-y-3">
             <InfoItem icon={<FiFlag size={16} />} label="Country" value={getCountryName(academy.country)} />
             <InfoItem icon={<FiMapPin size={16} />} label="City" value={academy.city || 'N/A'} />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Social Media" icon={<FiLink size={20} />} delay={0.5}>
+          <div className="space-y-3">
+            <InfoItem icon={<FiGlobe className="text-[#10B981]" size={16} />} label="Website" value={academy.website} isLink={true} />
+            <InfoItem icon={<FiFacebook className="text-[#4fb0ff]" size={16} />} label="Facebook" value={academy.facebook} isLink={true} />
+            <InfoItem icon={<FiInstagram className="text-[#902bd1]" size={16} />} label="Instagram" value={academy.instagram} isLink={true} />
           </div>
         </SectionCard>
       </div>

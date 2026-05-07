@@ -30,7 +30,7 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiZap className="text-[#eab308]" />Event Type
                 </label>
                 <select name="type" value={filters.type} onChange={handleFilterChange}
@@ -42,7 +42,7 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiTarget className="text-[#22c55e]" />Status
                 </label>
                 <select name="status" value={filters.status} onChange={handleFilterChange}
@@ -55,7 +55,7 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiMapPin className="text-[#4fb0ff]" />Location
                 </label>
                 <input type="text" name="location" value={filters.location}
@@ -64,7 +64,7 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiUsers className="text-[#902bd1]" />Group
                 </label>
                 <select name="group" value={filters.group} onChange={handleFilterChange}
@@ -77,7 +77,7 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiCalendar className="text-[#00d0cb]" />Date
                 </label>
                 <input type="date" name="date" value={filters.date}

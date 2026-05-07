@@ -2,13 +2,14 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCreditCard, FiDownload, FiPrinter } from 'react-icons/fi';
 import { getStatusColor } from '../utils/paymentHelpers';
+import PaymentReceipt from '../components/PaymentReceipt';
 
 const PaymentDetailModal = ({ showModal, setShowModal, selectedPayment }) => {
   return (
     <AnimatePresence>
       {showModal && selectedPayment && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             className="bg-gray-900/90 backdrop-blur-sm rounded-2xl border border-gray-700 w-full max-w-lg p-6">
@@ -66,6 +67,7 @@ const PaymentDetailModal = ({ showModal, setShowModal, selectedPayment }) => {
               </button>
             </div>
           </motion.div>
+          <PaymentReceipt payment={selectedPayment} />
         </motion.div>
       )}
     </AnimatePresence>

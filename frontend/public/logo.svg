@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <!-- Main gradient: purple → blue → cyan -->
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#902bd1"/>
+      <stop offset="50%"  stop-color="#4fb0ff"/>
+      <stop offset="100%" stop-color="#00d0cb"/>
+    </linearGradient>
+
+    <!-- Icon inner glow -->
+    <radialGradient id="iconGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#00d0cb" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#902bd1" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Glow filter for icon -->
+    <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Subtle drop shadow for text -->
+    <filter id="textShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#902bd1" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- ── Icon: hexagon shield with lightning bolt ── -->
+  <!-- Hexagon background -->
+  <polygon
+    points="40,6 58,16 58,36 40,46 22,36 22,16"
+    fill="url(#brandGradient)"
+    filter="url(#glowFilter)"
+    opacity="0.95"
+  />
+  <!-- Inner glow overlay -->
+  <polygon
+    points="40,6 58,16 58,36 40,46 22,36 22,16"
+    fill="url(#iconGlow)"
+  />
+  <!-- Hexagon border highlight -->
+  <polygon
+    points="40,6 58,16 58,36 40,46 22,36 22,16"
+    fill="none"
+    stroke="rgba(255,255,255,0.35)"
+    stroke-width="1"
+  />
+
+  <!-- Lightning bolt (AI speed + energy) -->
+  <path
+    d="M43,13 L35,27 L40,27 L37,39 L47,24 L42,24 Z"
+    fill="#ffffff"
+    opacity="0.95"
+  />
+
+  <!-- Small circuit dots around icon (tech/AI feel) -->
+  <circle cx="18" cy="26" r="1.5" fill="#00d0cb" opacity="0.7"/>
+  <circle cx="62" cy="26" r="1.5" fill="#902bd1" opacity="0.7"/>
+  <circle cx="40" cy="50" r="1.5" fill="#4fb0ff" opacity="0.7"/>
+  <line x1="19.5" y1="26" x2="22" y2="26" stroke="#00d0cb" stroke-width="1" opacity="0.5"/>
+  <line x1="58" y1="26" x2="60.5" y2="26" stroke="#902bd1" stroke-width="1" opacity="0.5"/>
+  <line x1="40" y1="46" x2="40" y2="48.5" stroke="#4fb0ff" stroke-width="1" opacity="0.5"/>
+
+  <!-- ── Wordmark ── -->
+  <!-- "Run" -->
+  <text
+    x="72" y="35"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="url(#brandGradient)"
+    filter="url(#textShadow)"
+  >Run</text>
+
+  <!-- "Ai" accent in white/cyan -->
+  <text
+    x="116" y="35"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="#00d0cb"
+  >Ai</text>
+
+  <!-- "Ni" -->
+  <text
+    x="142" y="35"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="26"
+    font-weight="800"
+    letter-spacing="-0.5"
+    fill="url(#brandGradient)"
+    filter="url(#textShadow)"
+  >Ni</text>
+
+  <!-- Tagline -->
+  <text
+    x="72" y="52"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="10"
+    font-weight="400"
+    letter-spacing="2.5"
+    fill="#4fb0ff"
+    opacity="0.8"
+  >SPORTS ACADEMY AI</text>
+
+  <!-- Thin gradient underline below wordmark -->
+  <rect x="72" y="55" width="160" height="1.5" rx="1" fill="url(#brandGradient)" opacity="0.5"/>
+</svg>

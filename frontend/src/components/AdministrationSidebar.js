@@ -60,7 +60,7 @@ const AdministrationSidebar = () => {
         onClick={isMobileOpen ? closeMobile : openMobile}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="md:hidden fixed top-4 right-4 z-50 p-3 rounded-xl bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-lg border border-gray-700/70 text-white hover:bg-gray-800 transition-all shadow-lg shadow-black/20"
+        className="lg:hidden fixed top-4 right-4 z-50 p-3 rounded-xl bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-lg border border-gray-700/70 text-white hover:bg-gray-800 transition-all shadow-lg shadow-black/20"
         aria-label={isMobileOpen ? "Close menu" : "Open menu"}
       >
         {isMobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -76,7 +76,7 @@ const AdministrationSidebar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               onClick={closeMobile}
             />
 
@@ -86,7 +86,7 @@ const AdministrationSidebar = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 24, stiffness: 180 }}
-              className="md:hidden fixed left-0 top-0 h-full z-50 overflow-hidden"
+              className="lg:hidden fixed left-0 top-0 h-full z-50 overflow-hidden"
               style={{ width: sidebarWidth(isMobileCollapsed) }}
             >
               <div
@@ -226,67 +226,52 @@ const AdministrationSidebar = () => {
         )}
       </AnimatePresence>
 
-      {/* DESKTOP SIDEBAR - Enhanced with new design */}
+      {/* DESKTOP SIDEBAR - Enhanced with Notch integration */}
       <motion.div
         animate={{ width: isDesktopCollapsed ? 72 : 256 }}
         transition={{ duration: 0.35, ease: "easeInOut" }}
         className={`
-          hidden md:flex flex-col h-screen fixed left-0 top-0 z-40
-          overflow-hidden
+          hidden lg:flex flex-col h-screen fixed left-0 top-0 z-40
         `}
-        style={{
-          background: 'linear-gradient(180deg, #000000 0%, #0a0f2a 30%, #0f172a 70%, #000000 100%)'
-        }}
       >
-        {/* Header - Logo + Close button when expanded */}
-        <div className="relative p-4 pb-6 border-b border-gray-800/60">
-          {/* Close button - only visible when expanded */}
-          {!isDesktopCollapsed && (
-            <motion.button
-              onClick={toggleDesktop}
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white 
-                       p-3 rounded-lg hover:bg-gray-800/50 transition-colors"
-              aria-label="Collapse sidebar"
+        <div 
+          className="flex flex-col flex-1 w-full overflow-hidden border-r border-gray-700/50 relative z-10"
+          style={{
+            background: 'linear-gradient(180deg, #000000 0%, #0a0f2a 30%, #0f172a 70%, #000000 100%)'
+          }}
+        >
+          {/* Header - Logo area */}
+          <div className="relative p-4 pb-6 border-b border-gray-800/60">
+            <motion.div
+              className={`
+                flex items-center gap-3
+                ${isDesktopCollapsed ? 'justify-center' : ''}
+              `}
             >
-              <FiX size={20} />
-            </motion.button>
-          )}
-
-          {/* Logo area - clickable to expand when collapsed */}
-          <motion.div
-            className={`
-              flex items-center gap-3 cursor-pointer
-              ${isDesktopCollapsed ? 'justify-center' : ''}
-            `}
-            onClick={isDesktopCollapsed ? expandDesktop : undefined}
-          // whileHover={{ scale: isDesktopCollapsed ? 1.05 : 1.02 }}
-          >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d0cb] to-[#21547C] 
-                            flex items-center justify-center flex-shrink-0
-                            ${isDesktopCollapsed ? 'w-9 h-9' : 'w-10 h-10'}`}>
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-              ) : adminData?.logo_url ? (
-                <img src={adminData.logo_url} alt="Logo" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                <span className="text-white font-bold text-lg">{organizationName.charAt(0).toUpperCase() || 'R'}</span>
-              )}
-            </div>
-
-            {!isDesktopCollapsed && (
-              <div className="min-w-0">
-                <h1 className="text-white text-lg font-bold truncate max-w-[140px]">
-                  {organizationName}
-                </h1>
-                <p className="text-xs text-gray-300 font-medium">
-                  {roleLabel}
-                </p>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d0cb] to-[#21547C] 
+                              flex items-center justify-center flex-shrink-0
+                              ${isDesktopCollapsed ? 'w-9 h-9' : 'w-10 h-10'}`}>
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                ) : adminData?.logo_url ? (
+                  <img src={adminData.logo_url} alt="Logo" className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <span className="text-white font-bold text-lg">{organizationName.charAt(0).toUpperCase() || 'R'}</span>
+                )}
               </div>
-            )}
-          </motion.div>
-        </div>
+
+              {!isDesktopCollapsed && (
+                <div className="min-w-0">
+                  <h1 className="text-white text-lg font-bold truncate max-w-[140px]">
+                    {organizationName}
+                  </h1>
+                  <p className="text-xs text-gray-300 font-medium">
+                    {roleLabel}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </div>
 
         {/* Navigation */}
         <div className="flex flex-col gap-2 px-3 mt-4 flex-1">
@@ -404,10 +389,39 @@ const AdministrationSidebar = () => {
             <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none -z-10" />
           </motion.div>
         </div>
+        </div>
+        
+        {/* The Inline Notch */}
+        <div 
+          className="absolute top-1/2 right-0 translate-x-[14px] -translate-y-1/2 z-20 flex items-center justify-center cursor-pointer pointer-events-auto" 
+          onClick={toggleDesktop}
+        >
+          <motion.svg
+            width="15"
+            height="96"
+            viewBox="0 0 15 96"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="backdrop-blur-[12px]"
+          >
+            <path
+              d="M 1 0 C 1 24, 15 24, 15 48 C 15 72, 1 72, 1 96 Z"
+              className="fill-[#0c132a] stroke-gray-700/50"
+              strokeWidth="1"
+            />
+          </motion.svg>
+          <motion.div
+            animate={{ rotate: isDesktopCollapsed ? 0 : 180 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="absolute text-gray-400"
+          >
+            <FiChevronRight size={14} />
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* Content spacer */}
-      <div className={`hidden md:block transition-all duration-300 ease-in-out ${isDesktopCollapsed ? 'w-[72px]' : 'w-64'}`} />
+      <div className={`hidden lg:block transition-all duration-300 ease-in-out ${isDesktopCollapsed ? 'w-[72px]' : 'w-64'}`} />
     </>
   );
 };

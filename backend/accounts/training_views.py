@@ -38,18 +38,21 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
 
         if date_from:  queryset = queryset.filter(date__gte=date_from)
         if date_to:    queryset = queryset.filter(date__lte=date_to)
-        if category:   queryset = queryset.filter(category=category)
+        if category:   queryset = queryset.filter(category__contains=category)
         if group_id:   queryset = queryset.filter(groups__id=group_id)
 
         # Séances contenant un exercice pour un joueur spécifique
         if player_id:
-            # Filtrer les séances dont les exercises JSON contiennent ce player_id
+            # Filtrer les séances dont les exercises JSON contiennent ce player_id dans assigned_players
             all_sessions = queryset
             matching_ids = []
+            pid_int = int(player_id)
             for session in all_sessions:
                 for ex in (session.exercises or []):
                     try:
-                        if str(ex.get('assigned_to')) == str(player_id):
+                        assigned = ex.get('assigned_players', [])
+                        # Compatibility with old single assigned_to if any
+                        if str(ex.get('assigned_to')) == str(player_id) or pid_int in assigned or str(player_id) in assigned:
                             matching_ids.append(session.id)
                             break
                     except Exception:
@@ -136,7 +139,7 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
         for session in sessions:
             individual = [
                 ex for ex in (session.exercises or [])
-                if str(ex.get('assigned_to')) == str(player_id)
+                if str(ex.get('assigned_to')) == str(player_id) or (ex.get('assigned_players') and int(player_id) in [int(pid) for pid in ex.get('assigned_players', [])])
             ]
             if individual:
                 result.append({

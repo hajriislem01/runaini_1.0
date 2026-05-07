@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths, subMonths } from 'date-fns';
 import toast from 'react-hot-toast';
 import API from '../../../api';
+import { useAdminData } from '../../../../context/AdminContext';
 
 export const usePaymentManagement = () => {
+  const { adminData } = useAdminData();
   const [players, setPlayers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -46,19 +48,24 @@ export const usePaymentManagement = () => {
 
   useEffect(() => {
     fetchAll();
-  }, [currentMonth, selectedGroup]);
+  }, [currentMonth, selectedGroup, selectedSubgroup]); // eslint-disable-line
 
   const fetchAll = async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
-      if (selectedGroup) params.append('group', selectedGroup);
+      if (selectedGroup)    params.append('group',    selectedGroup);
+      if (selectedSubgroup) params.append('subgroup', selectedSubgroup);
+
+      const monthParam = `month=${currentMonth}`;
+      const groupParam = selectedGroup    ? `&group=${selectedGroup}`       : '';
+      const subParam   = selectedSubgroup ? `&subgroup=${selectedSubgroup}` : '';
 
       const [playersRes, groupsRes, paymentsRes, statsRes] = await Promise.all([
         API.get(`players/?${params}`),
         API.get('groups/'),
-        API.get(`payments/?month=${currentMonth}${selectedGroup ? `&group=${selectedGroup}` : ''}`),
-        API.get(`payments/stats/?month=${currentMonth}${selectedGroup ? `&group=${selectedGroup}` : ''}`)
+        API.get(`payments/?${monthParam}${groupParam}${subParam}`),
+        API.get(`payments/stats/?${monthParam}${groupParam}${subParam}`)
       ]);
 
       setPlayers(playersRes.data);
@@ -81,7 +88,12 @@ export const usePaymentManagement = () => {
   const filteredPlayers = useMemo(() => {
     let result = players;
     if (selectedSubgroup) {
-      result = result.filter(p => p.subgroup === parseInt(selectedSubgroup));
+      // The serializer returns subgroup as a nested object {id, name, group}
+      // so we must compare against p.subgroup?.id, not p.subgroup directly
+      result = result.filter(p => {
+        const sgId = typeof p.subgroup === 'object' ? p.subgroup?.id : p.subgroup;
+        return String(sgId) === String(selectedSubgroup);
+      });
     }
     return result;
   }, [players, selectedSubgroup]);
@@ -128,11 +140,20 @@ export const usePaymentManagement = () => {
         if (value !== null && value !== undefined && value !== '') {
           if (key === 'receipt' && value instanceof File) {
             formData.append(key, value);
+          } else if (key === 'amount') {
+            formData.append(key, parseFloat(value) || 0);
           } else if (key !== 'receipt') {
             formData.append(key, value);
           }
         }
       });
+
+      // Inject Academy ID if available from context
+      if (adminData?.id) {
+        formData.append('academy', adminData.id);
+      }
+
+      console.log("🚀 Submitting Payment Data:", Object.fromEntries(formData.entries()));
 
       const response = await API.post('payments/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -155,8 +176,17 @@ export const usePaymentManagement = () => {
       fetchAll();
       setActiveTab('overview');
     } catch (error) {
+      console.error("❌ Payment Error:", error.response?.data);
       if (error.response?.data?.non_field_errors) {
         toast.error('This player already has a payment for this month');
+      } else if (error.response?.data) {
+        // Show specific field errors if available
+        const errorData = error.response.data;
+        const firstErrorKey = Object.keys(errorData)[0];
+        const errorMessage = Array.isArray(errorData[firstErrorKey]) 
+          ? errorData[firstErrorKey][0] 
+          : JSON.stringify(errorData);
+        toast.error(`${firstErrorKey}: ${errorMessage}`);
       } else {
         toast.error('Failed to record payment');
       }

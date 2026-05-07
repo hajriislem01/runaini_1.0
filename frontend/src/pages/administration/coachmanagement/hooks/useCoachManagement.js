@@ -13,16 +13,18 @@ export const useCoachManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [groups, setGroups] = useState([]);
   const [subgroups, setSubgroups] = useState([]);
+  const [apiError, setApiError] = useState(null);
 
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
     username: '',
     email: '',
     password: '',
     phone: '',
     club: '',
     role: 'coach',
-    group: '',
-    subgroup: '',
+    assignments: [], // Array of objects: { group_id, full_access, subgroups: [] }
     specialization: '',
     years_of_experience: '',
     certification: '',
@@ -44,7 +46,10 @@ export const useCoachManagement = () => {
       setGroups(groupsRes.data);
       setSubgroups(subgroupsRes.data);
     } catch (error) {
-      toast.error('Failed to fetch data');
+      if (error.response && error.response.status >= 400) {
+        toast.error('Failed to fetch platform data');
+      }
+      console.error("Fetch Error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +66,8 @@ export const useCoachManagement = () => {
     setPasswordStrength(calculatePasswordStrength(password));
   };
 
-  const filteredSubgroups = subgroups.filter(
-    sub => String(sub.group) === String(formData.group)
+  const filteredSubgroups = (subgroups || []).filter(
+    sub => String(sub.group) === String(formData?.group)
   );
 
   const handleSubmit = async (e) => {
@@ -77,16 +82,28 @@ export const useCoachManagement = () => {
       return;
     }
 
+    setApiError(null);
     setIsLoading(true);
     try {
       if (editCoachId) {
         const payload = { ...formData };
-        if (!payload.password) delete payload.password;
-        const response = await API.put(`coaches/${editCoachId}/`, payload);
-        setCoaches(prev => prev.map(c => c.id === editCoachId ? response.data : c));
-        toast.success('Coach updated successfully');
+        if (!payload.password || payload.password.trim() === '') {
+          delete payload.password;
+        }
+        
+        console.log("📤 Final Payload sent to PATCH:", payload);
+        const response = await API.patch(`coaches/${editCoachId}/`, payload);
+        
+        if (response.status === 200 || response.status === 204) {
+          setCoaches(prev => prev.map(c => c.id === editCoachId ? response.data : c));
+          toast.success('Coach updated successfully');
+          resetForm();
+          setShowModal(false);
+        }
       } else {
         const payload = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           username: formData.username,
           email: formData.email,
           password: formData.password,
@@ -95,17 +112,36 @@ export const useCoachManagement = () => {
           specialization: formData.specialization,
           years_of_experience: formData.years_of_experience || 0,
           certification: formData.certification,
+          assignments: formData.assignments,
         };
-        await API.post('signup/coach/', payload);
-        toast.success('Coach created successfully');
-        await fetchAll();
+        const response = await API.post('signup/coach/', payload);
+        
+        if (response.status === 201 || response.status === 200) {
+          toast.success('Coach created successfully');
+          await fetchAll();
+          resetForm();
+          setShowModal(false);
+        }
       }
-      resetForm();
-      setShowModal(false);
     } catch (err) {
-      const msg = err.response?.data
-        ? JSON.stringify(err.response.data)
-        : 'Failed to save coach';
+      const data = err.response?.data;
+      let msg = 'Failed to save coach';
+      
+      if (data) {
+        if (typeof data === 'object') {
+          // Flatten multi-field errors for the global form alert
+          msg = Object.entries(data)
+            .map(([field, errors]) => {
+              const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+              const errorText = Array.isArray(errors) ? errors.join(', ') : errors;
+              return `${fieldName}: ${errorText}`;
+            })
+            .join(' | ');
+        } else if (typeof data === 'string') {
+          msg = data;
+        }
+      }
+      setApiError(msg);
       toast.error(msg);
     } finally {
       setIsLoading(false);
@@ -114,19 +150,26 @@ export const useCoachManagement = () => {
 
   const handleEdit = (coach) => {
     const firstGroup = coach.groups?.[0] ?? null;
+    const firstSubgroup = coach.subgroups?.[0] ?? null;
     setFormData({
+      first_name: coach.first_name || '',
+      last_name: coach.last_name || '',
       username: coach.username || '',
       email: coach.email || '',
       password: '',
       phone: coach.phone || '',
       club: coach.club || '',
       role: 'coach',
-      group: firstGroup ? String(firstGroup.id) : '',
-      subgroup: '',
+      assignments: (coach.groups || []).map(g => ({
+        group_id:    g.id,
+        full_access: g.full_access || false,
+        subgroups:   (coach.subgroups || []).filter(s => s.group === g.id).map(s => s.id)
+      })),
       specialization: coach.coach_profile?.specialization || '',
       years_of_experience: coach.coach_profile?.years_of_experience || '',
       certification: coach.coach_profile?.certification || '',
     });
+    setApiError(null);
     setEditCoachId(coach.id);
     setShowModal(true);
   };
@@ -144,10 +187,11 @@ export const useCoachManagement = () => {
 
   const resetForm = () => {
     setFormData({
-      username: '', email: '', password: '', phone: '', club: '',
-      role: 'coach', group: '', subgroup: '',
+      first_name: '', last_name: '', username: '', email: '', password: '', phone: '', club: '',
+      role: 'coach', assignments: [],
       specialization: '', years_of_experience: '', certification: '',
     });
+    setApiError(null);
     setPasswordStrength(0);
     setEditCoachId(null);
     setShowPassword(false);
@@ -157,6 +201,8 @@ export const useCoachManagement = () => {
     const term = searchTerm.toLowerCase();
     return (
       coach.username?.toLowerCase().includes(term) ||
+      coach.first_name?.toLowerCase().includes(term) ||
+      coach.last_name?.toLowerCase().includes(term) ||
       coach.email?.toLowerCase().includes(term) ||
       coach.club?.toLowerCase().includes(term)
     );
@@ -165,7 +211,8 @@ export const useCoachManagement = () => {
   return {
     coaches, isLoading, showModal, setShowModal, searchTerm, setSearchTerm,
     showPassword, setShowPassword, passwordStrength, editCoachId,
-    groups, subgroups, formData, setFormData, filteredSubgroups,
+    groups, subgroups, formData, setFormData,
+    apiError,
     handleChange, handlePasswordChange, handleSubmit, handleEdit, handleDelete,
     resetForm, filteredCoaches
   };

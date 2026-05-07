@@ -1,106 +1,81 @@
 import { Link } from 'react-router-dom';
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaYoutube } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { FaTwitter, FaLinkedin, FaGithub, FaInstagram } from 'react-icons/fa';
+import { FiArrowRight } from 'react-icons/fi';
 
-const Footer = () => {
-  return (
-    <footer className="bg-gray-950 border-t border-gray-800">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="grid md:grid-cols-4 gap-8 lg:gap-12"
-        >
-          {/* Brand Column */}
-          <div className="space-y-5">
-            <motion.div whileHover={{ scale: 1.02 }} className="inline-block">
-              <Link to="/" className="text-2xl font-bold flex items-center">
-                <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-                  RUN
-                </span>
-                <span className="text-white ml-1">AINI</span>
-              </Link>
-            </motion.div>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              Transform your team's performance with AI-driven insights and advanced analytics
-            </p>
-          </div>
+const P = '#902bd1';
+const B = '#4fb0ff';
+const T = '#00d0cb';
 
-          {/* Platform Links */}
-          <div>
-            <h5 className="text-white font-semibold mb-5 text-lg">Platform</h5>
-            <ul className="space-y-3">
-              {['Features', 'Pricing', 'Security'].map((item) => (
-                <motion.li key={item} whileHover={{ x: 5 }}>
-                  <Link 
-                    to={`/${item.toLowerCase()}`} 
-                    className="group flex items-center text-gray-400 hover:text-blue-400 transition-colors text-sm"
-                  >
-                    <span className="w-1 h-1 bg-blue-600 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {item}
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
+const cols = [
+  { title: 'Platform', links: [{ t:'Home', p:'/' }, { t:'Plans & Pricing', p:'/pricing' }, { t:'Blog', p:'/blog' }, { t:'About', p:'/about' }] },
+  { title: 'Product',  links: [{ t:'Admin Dashboard', p:'/login' }, { t:'Coach Suite', p:'/login' }, { t:'Player Portal', p:'/login' }, { t:'Sign Up Free', p:'/signup' }] },
+  { title: 'Legal',    links: [{ t:'Privacy Policy', p:'#' }, { t:'Terms of Service', p:'#' }, { t:'Cookie Policy', p:'#' }] },
+];
 
-          {/* Legal Links */}
-          <div>
-            <h5 className="text-white font-semibold mb-5 text-lg">Legal</h5>
-            <ul className="space-y-3">
-              {['Privacy', 'Terms', 'Cookies'].map((item) => (
-                <motion.li key={item} whileHover={{ x: 5 }}>
-                  <Link 
-                    to={`/${item.toLowerCase()}`} 
-                    className="group flex items-center text-gray-400 hover:text-blue-400 transition-colors text-sm"
-                  >
-                    <span className="w-1 h-1 bg-blue-600 rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {item} Policy
-                  </Link>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
+const socials = [
+  { icon: FaTwitter,   label: 'Twitter',   href: '#' },
+  { icon: FaLinkedin,  label: 'LinkedIn',  href: '#' },
+  { icon: FaInstagram, label: 'Instagram', href: '#' },
+  { icon: FaGithub,    label: 'GitHub',    href: '#' },
+];
 
-          {/* Social & Contact */}
-          <div>
-            <h5 className="text-white font-semibold mb-5 text-lg">Connect</h5>
-            <div className="flex space-x-3">
-              {[
-                { icon: <FaFacebook />, label: 'Facebook' },
-                { icon: <FaTwitter />, label: 'Twitter' },
-                { icon: <FaInstagram />, label: 'Instagram' },
-                { icon: <FaLinkedin />, label: 'LinkedIn' },
-                { icon: <FaYoutube />, label: 'YouTube' },
-              ].map((social) => (
-                <motion.a
-                  key={social.label}
-                  href="#"
-                  whileHover={{ y: -3 }}
-                  className="text-gray-400 hover:text-white p-2.5 rounded-full bg-gray-900 hover:bg-gradient-to-br from-blue-600 to-blue-400 transition-all shadow-sm hover:shadow-blue-500/20"
-                  aria-label={social.label}
-                >
-                  {social.icon}
-                </motion.a>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Copyright */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="border-t border-gray-800 mt-8 pt-8 text-center"
-        >
-          <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} RUNAINI. All rights reserved.
+const Footer = () => (
+  <footer style={{ background:'#000000', borderTop:'1px solid rgba(144,43,209,0.2)' }}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+      <div className="grid md:grid-cols-4 gap-12">
+        {/* Brand */}
+        <div className="md:col-span-1">
+          <Link to="/" className="text-2xl font-extrabold inline-flex mb-4">
+            <span style={{ background:`linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>RUN</span>
+            <span className="text-white">AI</span>
+            <span style={{ color: T }}>NI</span>
+          </Link>
+          <p className="text-gray-500 text-sm leading-relaxed mb-5">
+            The complete football management platform — built for admins, coaches, and players who demand more.
           </p>
-        </motion.div>
+          {/* Social */}
+          <div className="flex gap-2">
+            {socials.map(s => (
+              <motion.a key={s.label} href={s.href} aria-label={s.label}
+                whileHover={{ y:-3, scale:1.1 }} className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-500 hover:text-white transition-colors"
+                style={{ background:'rgba(144,43,209,0.1)', border:'1px solid rgba(144,43,209,0.2)' }}>
+                <s.icon size={15} />
+              </motion.a>
+            ))}
+          </div>
+        </div>
+
+        {/* Columns */}
+        {cols.map(col => (
+          <div key={col.title}>
+            <h5 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">{col.title}</h5>
+            <ul className="space-y-2.5">
+              {col.links.map(l => (
+                <motion.li key={l.t} whileHover={{ x:4 }}>
+                  <Link to={l.p} className="text-gray-500 hover:text-white text-sm transition-colors flex items-center gap-1 group">
+                    <FiArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: T }} />
+                    {l.t}
+                  </Link>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-    </footer>
-  );
-};
+
+      {/* Bottom bar */}
+      <div className="mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3"
+        style={{ borderTop:'1px solid rgba(144,43,209,0.1)' }}>
+        <p className="text-gray-600 text-xs">
+          © {new Date().getFullYear()} RunAiNi. All rights reserved.
+        </p>
+        <p className="text-gray-700 text-xs flex items-center gap-1">
+          Crafted with precision for football's elite ⚽
+        </p>
+      </div>
+    </div>
+  </footer>
+);
 
 export default Footer;

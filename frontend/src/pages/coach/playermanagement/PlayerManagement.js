@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiSearch, FiUsers, FiFilter, FiX,
   FiChevronLeft, FiChevronRight,
-  FiActivity, FiTarget, FiFileText,
+  FiActivity, FiTarget, FiFileText, FiChevronDown, FiCheck,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,9 +12,10 @@ import {
   CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import API from '../api';
+import API from '../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, addMonths, subMonths } from 'date-fns';
+import PlayerReportHistoryModal from './modals/PlayerReportHistoryModal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -147,338 +148,33 @@ const StarRating = ({ value=0, onChange, max=10 }) => {
   );
 };
 
-// ─── Score Bar (History modal) ────────────────────────────────────────────────
-const ScoreBar = ({ label, value, color }) => (
-  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
-    <span style={{ fontSize:12, color:'#94a3b8', width:110, flexShrink:0 }}>{label}</span>
-    <div style={{ flex:1, height:5, background:'#0f172a', borderRadius:99, overflow:'hidden' }}>
-      <div style={{ width:`${(value/10)*100}%`, height:'100%', background:color, borderRadius:99 }}/>
-    </div>
-    <span style={{ fontSize:12, fontWeight:700, color, width:28, textAlign:'right', flexShrink:0 }}>
-      {parseFloat(value).toFixed(1)}
-    </span>
-  </div>
-);
-
-const HealthBadge = ({ ok, label }) => (
-  <span style={{
-    fontSize:11, padding:'3px 8px', borderRadius:99,
-    background: ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-    color:      ok ? '#4ade80'              : '#f87171',
-    border:     ok ? '1px solid rgba(34,197,94,0.25)' : '1px solid rgba(239,68,68,0.25)',
-  }}>{label}</span>
-);
-
-// ─── PlayerReportHistory Modal ────────────────────────────────────────────────
-const PlayerReportHistory = ({ player, onClose }) => {
-  const [reports, setReports]         = useState([]);
-  const [isLoading, setIsLoading]     = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (!player) return;
-    (async () => {
-      setIsLoading(true);
-      try {
-        const res = await API.get(`reports/player-history/?player=${player.id}`);
-        const sorted = [...res.data].sort((a,b) => a.month.localeCompare(b.month));
-        setReports(sorted);
-        setActiveIndex(sorted.length - 1);
-      } catch { toast.error('Failed to load reports'); }
-      finally  { setIsLoading(false); }
-    })();
-  }, [player]);
-
-  const report = reports[activeIndex];
-
-  const progData = {
-    labels: reports.map(r => {
-      const [y,m] = r.month.split('-');
-      return new Date(+y,+m-1).toLocaleDateString('en',{month:'short',year:'2-digit'});
-    }),
-    datasets: [
-      {
-        label:'Overall',
-        data: reports.map(r => parseFloat(r.overall_score.toFixed(1))),
-        borderColor:'#4fb0ff', backgroundColor:'rgba(79,176,255,0.08)',
-        fill:true, tension:0.4, borderWidth:2,
-        pointBackgroundColor: reports.map((_,i) => i===activeIndex ? '#fff' : '#4fb0ff'),
-        pointBorderColor:     reports.map((_,i) => i===activeIndex ? '#4fb0ff' : 'transparent'),
-        pointBorderWidth:     reports.map((_,i) => i===activeIndex ? 2 : 0),
-        pointRadius:          reports.map((_,i) => i===activeIndex ? 6 : 3),
-      },
-      {
-        label:'Technical',
-        data: reports.map(r => parseFloat(r.technical_avg.toFixed(1))),
-        borderColor:'#f59e0b', borderDash:[4,4], backgroundColor:'transparent',
-        tension:0.4, borderWidth:1.5, pointRadius:2, pointBackgroundColor:'#f59e0b',
-      },
-    ],
-  };
-  const progOpts = {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:false }, tooltip:{ mode:'index' } },
-    onClick:(_,els) => { if (els.length) setActiveIndex(els[0].index); },
-    scales:{
-      x:{ grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#475569', font:{ size:11 } } },
-      y:{ min:0, max:10, grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#475569', font:{ size:11 } } },
-    },
-  };
-
-  const attPct = report && report.attendance_total > 0
-    ? Math.round((report.attendance_present/report.attendance_total)*100) : 0;
-
-  const fmtMonth = (m) => {
-    if (!m) return '';
-    const [y,mo] = m.split('-');
-    return new Date(+y,+mo-1).toLocaleDateString('en',{month:'long',year:'numeric'});
-  };
-
-  return (
-    <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-      className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-start justify-center z-[60] p-4 overflow-y-auto"
-      onClick={e => { if (e.target===e.currentTarget) onClose(); }}>
-      <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }}
-        exit={{ scale:0.95, opacity:0 }}
-        className="w-full max-w-3xl my-8 rounded-2xl border border-gray-800 overflow-hidden"
-        style={{ background:'#0f172a' }}>
-
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-800"
-          style={{ background:'linear-gradient(135deg,rgba(144,43,209,0.08),rgba(79,176,255,0.08))' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-              {player.full_name?.charAt(0)}
-            </div>
-            <div>
-              <div className="text-white font-semibold text-base">{player.full_name}</div>
-              <div className="text-xs text-gray-500">
-                {player.position} · {player.group?.name||'—'} ·{' '}
-                <span style={{ color:'#4fb0ff' }}>{reports.length} reports</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="text-xs px-3 py-2 rounded-lg text-white flex items-center gap-1"
-              style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-              <FiFileText size={12}/>Export PDF
-            </button>
-            <button onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 hover:text-white flex items-center justify-center">
-              <FiX size={16}/>
-            </button>
-          </div>
-        </div>
-
-        {/* Month tabs */}
-        {reports.length > 0 && (
-          <div className="flex gap-2 px-5 py-3 border-b border-gray-800 overflow-x-auto">
-            {reports.map((r,i) => (
-              <button key={r.month} onClick={() => setActiveIndex(i)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border"
-                style={i===activeIndex
-                  ? { background:'rgba(79,176,255,0.15)', borderColor:'#4fb0ff', color:'#4fb0ff' }
-                  : { background:'#1e293b', borderColor:'#1e293b', color:'#64748b' }}>
-                {fmtMonth(r.month)}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="p-5">
-          {/* Loading */}
-          {isLoading && (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#4fb0ff]"/>
-            </div>
-          )}
-
-          {/* No reports */}
-          {!isLoading && reports.length===0 && (
-            <div className="text-center py-16">
-              <FiFileText className="mx-auto text-4xl text-gray-600 mb-3"/>
-              <div className="text-gray-400 text-sm">No evaluations yet for {player.full_name}</div>
-              <div className="text-gray-600 text-xs mt-1">Use the "Evaluate" button to add a monthly report</div>
-            </div>
-          )}
-
-          {/* Report content */}
-          {!isLoading && report && (
-            <AnimatePresence mode="wait">
-              <motion.div key={report.month}
-                initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-                exit={{ opacity:0, y:-6 }} transition={{ duration:0.15 }}>
-
-                {/* Score cards */}
-                <div className="grid grid-cols-5 gap-2 mb-4">
-                  {[
-                    { label:'Overall',   val:report.overall_score,  color:'#4fb0ff', bg:'rgba(79,176,255,0.1)',  border:'rgba(79,176,255,0.2)'  },
-                    { label:'Technical', val:report.technical_avg,  color:'#4fb0ff', bg:'rgba(79,176,255,0.06)', border:'rgba(79,176,255,0.12)' },
-                    { label:'Tactical',  val:report.tactical_avg,   color:'#f59e0b', bg:'rgba(245,158,11,0.06)', border:'rgba(245,158,11,0.12)' },
-                    { label:'Physical',  val:report.physical_avg,   color:'#22c55e', bg:'rgba(34,197,94,0.06)',  border:'rgba(34,197,94,0.12)'  },
-                    { label:'Mental',    val:report.mental_avg,     color:'#a855f7', bg:'rgba(168,85,247,0.06)', border:'rgba(168,85,247,0.12)' },
-                  ].map(s => (
-                    <div key={s.label} className="rounded-xl p-3 text-center"
-                      style={{ background:s.bg, border:`1px solid ${s.border}` }}>
-                      <div className="text-xl font-bold" style={{ color:s.color }}>
-                        {parseFloat(s.val||0).toFixed(1)}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">{s.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pillar scores */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  {[
-                    { key:'technical_scores', label:'Technical', color:'#4fb0ff' },
-                    { key:'tactical_scores',  label:'Tactical',  color:'#f59e0b' },
-                    { key:'physical_scores',  label:'Physical',  color:'#22c55e' },
-                    { key:'mental_scores',    label:'Mental',    color:'#a855f7' },
-                  ].map(pillar => (
-                    <div key={pillar.key} className="rounded-xl p-3" style={{ background:'#1e293b' }}>
-                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                        {pillar.label}
-                      </div>
-                      {Object.entries(report[pillar.key]||{}).map(([k,v]) => (
-                        <ScoreBar key={k} label={k} value={v} color={pillar.color}/>
-                      ))}
-                      {Object.keys(report[pillar.key]||{}).length===0 && (
-                        <div className="text-xs text-gray-600">No scores recorded</div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Health + Attendance */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="rounded-xl p-3" style={{ background:'#1e293b' }}>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-                      <FaHeartbeat style={{ fontSize:11, color:'#ef4444' }}/>Health & Academic
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      <HealthBadge ok={!report.is_injured} label={report.is_injured?'Injured':'Not injured'}/>
-                      <HealthBadge ok={report.medical_cert_valid} label={report.medical_cert_valid?'Medical cert. valid':'No medical cert.'}/>
-                      {report.fatigue_level && <HealthBadge ok={report.fatigue_level<=2} label={`Fatigue ${report.fatigue_level}/5`}/>}
-                      {report.sleep_quality && <HealthBadge ok={report.sleep_quality>=3} label={`Sleep ${report.sleep_quality}/5`}/>}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {report.school_grade_avg!=null && (
-                        <div className="rounded-lg p-2 text-center" style={{ background:'#0f172a' }}>
-                          <div className="text-base font-bold" style={{ color:'#a855f7' }}>{parseFloat(report.school_grade_avg).toFixed(1)}</div>
-                          <div className="text-xs text-gray-500">Grade /20</div>
-                        </div>
-                      )}
-                      {report.school_attendance!=null && (
-                        <div className="rounded-lg p-2 text-center" style={{ background:'#0f172a' }}>
-                          <div className="text-base font-bold" style={{ color:'#22c55e' }}>{parseFloat(report.school_attendance).toFixed(0)}%</div>
-                          <div className="text-xs text-gray-500">School att.</div>
-                        </div>
-                      )}
-                      {report.school_behaviour!=null && (
-                        <div className="rounded-lg p-2 text-center" style={{ background:'#0f172a' }}>
-                          <div className="text-base font-bold" style={{ color:'#4fb0ff' }}>{report.school_behaviour}</div>
-                          <div className="text-xs text-gray-500">Behaviour</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl p-3" style={{ background:'#1e293b' }}>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                      Attendance — {attPct}%
-                    </div>
-                    <div className="text-xl font-bold" style={{ color:'#00d0cb' }}>
-                      {report.attendance_present}
-                      <span className="text-sm font-normal text-gray-500"> / {report.attendance_total} sessions</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {[...Array(report.attendance_total||0)].map((_,i) => (
-                        <div key={i} className="w-3 h-3 rounded-full"
-                          style={{ background: i<report.attendance_present ? '#22c55e' : '#ef4444' }}/>
-                      ))}
-                    </div>
-                    <div className="flex gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>Present
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>Absent
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Text fields */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  {[
-                    { label:'Strength',    val:report.strength,   color:'#22c55e' },
-                    { label:'To improve',  val:report.to_improve, color:'#f59e0b' },
-                    { label:'Objective — next month', val:report.objective, color:'#4fb0ff' },
-                    { label:'Coach comment', val:report.comment,  color:'#94a3b8' },
-                  ].filter(f => f.val).map(f => (
-                    <div key={f.label} className="rounded-xl p-3" style={{ background:'#1e293b' }}>
-                      <div className="text-xs font-semibold mb-1.5" style={{ color:f.color }}>{f.label}</div>
-                      <div className="text-sm text-gray-300 leading-relaxed">{f.val}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Progression chart */}
-                {reports.length > 1 && (
-                  <div className="rounded-xl p-3" style={{ background:'#1e293b' }}>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                      Progression — click a point to view that month
-                    </div>
-                    <div style={{ position:'relative', width:'100%', height:140 }}>
-                      <Line data={progData} options={progOpts}/>
-                    </div>
-                    <div className="flex gap-4 mt-2">
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="inline-block w-3 h-0.5 bg-[#4fb0ff]"></span>Overall
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
-                        <span className="inline-block w-3 h-0.5 border-t border-dashed border-[#f59e0b]"></span>Technical
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-
-        {/* Footer navigation */}
-        {reports.length > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-800">
-            <button onClick={() => setActiveIndex(i => Math.max(0,i-1))}
-              disabled={activeIndex===0}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 bg-gray-800 border border-gray-700">
-              <FiChevronLeft size={14}/>Previous month
-            </button>
-            <span className="text-xs text-gray-500">{activeIndex+1} / {reports.length}</span>
-            <button onClick={() => setActiveIndex(i => Math.min(reports.length-1,i+1))}
-              disabled={activeIndex===reports.length-1}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-gray-400 hover:text-white disabled:opacity-30 bg-gray-800 border border-gray-700">
-              Next month<FiChevronRight size={14}/>
-            </button>
-          </div>
-        )}
-      </motion.div>
-    </motion.div>
-  );
-};
-
 // ═══════════════════════════════════════════════════════════════════════════════
-//  CoachPlayers — main component
+//  PlayerManagement — main component
 // ═══════════════════════════════════════════════════════════════════════════════
-const CoachPlayers = () => {
+const PlayerManagement = () => {
   const navigate = useNavigate();
   const [players,   setPlayers]   = useState([]);
   const [groups,    setGroups]    = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedSubgroup, setSelectedSubgroup] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [search,    setSearch]    = useState('');
+
+  const [showGroupDropdown, setShowGroupDropdown] = useState(false);
+  const [showSubgroupDropdown, setShowSubgroupDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+
+  // Close menus on click outside
+  useEffect(() => {
+    const closeAll = () => {
+      setShowGroupDropdown(false);
+      setShowSubgroupDropdown(false);
+      setShowStatusDropdown(false);
+    };
+    window.addEventListener('click', closeAll);
+    return () => window.removeEventListener('click', closeAll);
+  }, []);
 
   // Evaluation modal
   const [showEvalModal,  setShowEvalModal]  = useState(false);
@@ -521,10 +217,18 @@ const CoachPlayers = () => {
   };
 
   const filteredPlayers = players.filter(p => {
-    const mg = !selectedGroup || p.group?.id===parseInt(selectedGroup);
+    const mg = !selectedGroup || Number(p.group?.id) === Number(selectedGroup);
+    const msub = !selectedSubgroup || Number(p.subgroup?.id) === Number(selectedSubgroup);
+    const mstat = !selectedStatus || p.status === selectedStatus;
     const ms = !search || p.full_name?.toLowerCase().includes(search.toLowerCase()) || p.position?.toLowerCase().includes(search.toLowerCase());
-    return mg && ms;
+    return mg && msub && mstat && ms;
   });
+
+  const handleGroupChange = (val) => {
+    setSelectedGroup(val);
+    setSelectedSubgroup(''); // Reset subgroup when group changes
+    setShowGroupDropdown(false);
+  };
 
   // ── Evaluation ────────────────────────────────────────────────────────────
   const openEvalModal = (player) => {
@@ -678,27 +382,151 @@ const CoachPlayers = () => {
         </motion.div>
 
         {/* Filters */}
-        <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50 mb-8">
-          <h2 className="text-xl font-bold mb-5 flex items-center gap-3">
-            <FiFilter className="text-[#4fb0ff]"/>
-            <span className="bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] bg-clip-text text-transparent">Filter Players</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Filter by Group</label>
-              <select value={selectedGroup} onChange={e=>setSelectedGroup(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00d0cb]">
-                <option value="">All Groups</option>
-                {groups.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Search Players</label>
-              <div className="relative">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"/>
-                <input type="text" placeholder="Search by name or position..."
-                  value={search} onChange={e=>setSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"/>
+        <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50 mb-8 relative z-[50]">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
+            <h2 className="text-xl font-bold flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-[#902bd1] to-[#00d0cb] shadow-lg shadow-[#00d0cb]/10">
+                <FiFilter className="text-white" />
+              </div>
+              <span className="bg-gradient-to-r from-[#902bd1] to-[#00d0cb] bg-clip-text text-transparent uppercase tracking-wider">Player Filters</span>
+            </h2>
+            
+            <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+              {/* 1. Group Filter */}
+              <div className="relative flex-1 min-w-[200px]" onClick={e => e.stopPropagation()}>
+                <button 
+                  onClick={() => { setShowGroupDropdown(!showGroupDropdown); setShowSubgroupDropdown(false); setShowStatusDropdown(false); }}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white outline-none transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <FiUsers className={`${selectedGroup ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
+                    <span className="text-sm font-medium truncate">
+                      {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : 'All Groups'}
+                    </span>
+                  </div>
+                  <FiChevronDown className={`transition-transform duration-200 ${showGroupDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showGroupDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
+                    >
+                      <div onClick={() => handleGroupChange('')} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                        <div className="flex items-center gap-3">
+                           <FiFilter className="text-gray-500 group-hover:text-[#00d0cb]" />
+                           <span className="font-medium">All Groups</span>
+                        </div>
+                        {!selectedGroup && <FiCheck className="text-[#00d0cb]" />}
+                      </div>
+                      {groups.map(g => (
+                        <div key={g.id} onClick={() => handleGroupChange(g.id)} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                             <FiUsers className="text-gray-500 group-hover:text-[#00d0cb]" />
+                             <span className="font-medium">{g.name}</span>
+                          </div>
+                          {Number(selectedGroup) === Number(g.id) && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 2. Sub-group Filter */}
+              <div className="relative flex-1 min-w-[200px]" onClick={e => e.stopPropagation()}>
+                <button 
+                  disabled={!selectedGroup}
+                  onClick={() => { setShowSubgroupDropdown(!showSubgroupDropdown); setShowGroupDropdown(false); setShowStatusDropdown(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white outline-none transition-all group ${!selectedGroup ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <FiTarget className={`${selectedSubgroup ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
+                    <span className="text-sm font-medium truncate">
+                      {selectedSubgroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.subgroups?.find(s => Number(s.id) === Number(selectedSubgroup))?.name : 'All Subgroups'}
+                    </span>
+                  </div>
+                  <FiChevronDown className={`transition-transform duration-200 ${showSubgroupDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showSubgroupDropdown && selectedGroup && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
+                    >
+                      <div onClick={() => { setSelectedSubgroup(''); setShowSubgroupDropdown(false); }} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                        <div className="flex items-center gap-3">
+                           <FiFilter className="text-gray-500 group-hover:text-[#00d0cb]" />
+                           <span className="font-medium">All Subgroups</span>
+                        </div>
+                        {!selectedSubgroup && <FiCheck className="text-[#00d0cb]" />}
+                      </div>
+                      {groups.find(g => Number(g.id) === Number(selectedGroup))?.subgroups?.map(sub => (
+                        <div key={sub.id} onClick={() => { setSelectedSubgroup(sub.id); setShowSubgroupDropdown(false); }} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                             <FiTarget className="text-gray-500 group-hover:text-[#00d0cb]" />
+                             <span className="font-medium">{sub.name}</span>
+                          </div>
+                          {Number(selectedSubgroup) === Number(sub.id) && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 3. Status Filter */}
+              <div className="relative flex-1 min-w-[180px]" onClick={e => e.stopPropagation()}>
+                <button 
+                  onClick={() => { setShowStatusDropdown(!showStatusDropdown); setShowGroupDropdown(false); setShowSubgroupDropdown(false); }}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white outline-none transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <FiActivity className={`${selectedStatus ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
+                    <span className="text-sm font-medium truncate">
+                      {selectedStatus || 'All Status'}
+                    </span>
+                  </div>
+                  <FiChevronDown className={`transition-transform duration-200 ${showStatusDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showStatusDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
+                    >
+                      {[
+                        { id: '', name: 'All Status', icon: <FiFilter className="text-gray-400" /> },
+                        { id: 'Active', name: 'Active', icon: <FiActivity className="text-green-400" /> },
+                        { id: 'Injured', name: 'Injured', icon: <FiActivity className="text-red-400" /> },
+                        { id: 'Inactive', name: 'Inactive', icon: <FiActivity className="text-gray-400" /> },
+                      ].map(opt => (
+                        <div key={opt.id} onClick={() => { setSelectedStatus(opt.id); setShowStatusDropdown(false); }} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                             {opt.icon}
+                             <span className="font-medium">{opt.name}</span>
+                          </div>
+                          {selectedStatus === opt.id && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* 4. Search */}
+              <div className="relative flex-[1.5] min-w-[250px]">
+                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#00d0cb] transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search by name, position..."
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]/30 transition-all shadow-inner"
+                />
               </div>
             </div>
           </div>
@@ -721,68 +549,88 @@ const CoachPlayers = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-gray-900/30 divide-y divide-gray-700/50">
-                  {filteredPlayers.length>0 ? filteredPlayers.map((p,i) => (
-                    <motion.tr key={p.id||i}
-                      initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
-                      transition={{ delay:i*0.05 }}
-                      className="hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center border-2 border-gray-600 flex-shrink-0">
-                            <span className="text-white font-semibold text-sm">{p.full_name?.charAt(0)?.toUpperCase()||'P'}</span>
+                  {filteredPlayers.length > 0 ? filteredPlayers.map((p, i) => (
+                    <motion.tr key={p.id || i}
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="hover:bg-gray-800/40 transition-colors duration-200">
+                      <td className="px-6 py-4 whitespace-nowrap group cursor-pointer" 
+                          onClick={() => navigate(`/coach/player-profile/${p.id}`)}>
+                        <div className="flex items-center group-hover:translate-x-1 transition-transform duration-300">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center border-2 border-gray-700/50 flex-shrink-0 shadow-lg group-hover:shadow-[#4fb0ff]/20 overflow-hidden relative">
+                            {p.profile_picture || p.photo_url ? (
+                              <img 
+                                src={p.profile_picture || p.photo_url} 
+                                alt="" 
+                                className="absolute inset-0 w-full h-full object-cover z-10"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            ) : null}
+                            <span className="text-white font-bold text-sm relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
                           </div>
-                          <div>
-                            <div className="text-sm font-medium text-white">{p.full_name}</div>
-                            <div className="text-xs text-gray-400">{p.phone||'—'}</div>
+                          <div className="ml-3">
+                            <div className="text-sm font-bold text-white group-hover:text-[#4fb0ff] transition-colors">{p.full_name}</div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">View Profile</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-3 py-1.5 text-sm font-semibold rounded-xl bg-gradient-to-r ${posColor(p.position)} text-white`}>
-                          {p.position||'Unknown'}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r ${posColor(p.position)} text-white shadow-sm`}>
+                          {p.position || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1.5 text-sm font-medium bg-gray-800 text-gray-300 rounded-xl border border-gray-700/50">
-                          {p.group?.name||'—'}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-3 py-1.5 text-xs font-semibold bg-gray-800/60 text-gray-300 rounded-xl border border-gray-700/50">
+                          {p.group?.name || '—'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-400 text-sm">{p.subgroup?.name||'—'}</td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm font-medium ${statusColor(p.status)}`}>{p.status||'—'}</span>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-400 text-xs font-medium">{p.subgroup?.name || '—'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-800/40 border border-gray-700/30 ${statusColor(p.status)}`}>
+                          {p.status || '—'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2 flex-wrap">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-1.5 flex-wrap">
                           {/* Evaluate */}
-                          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
-                            onClick={() => openEvalModal(p)}
-                            className="inline-flex items-center gap-1 px-3 py-2 text-white rounded-xl text-xs font-medium"
-                            style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                            <FaStar style={{ fontSize:11 }}/>Evaluate
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); openEvalModal(p); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 text-white rounded-xl text-[11px] font-bold shadow-md transition-all border-none"
+                            style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}
+                            title="Monthly Evaluation">
+                            <FaStar size={10} />Evaluate
                           </motion.button>
-                          {/* History ✅ */}
-                          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
-                            onClick={() => { setHistoryPlayer(p); setShowHistoryModal(true); }}
-                            className="inline-flex items-center gap-1 px-3 py-2 bg-gray-800 text-white rounded-xl text-xs font-medium border border-gray-700/50">
-                            <FiFileText size={12}/>History
+                          
+                          {/* History */}
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); setHistoryPlayer(p); setShowHistoryModal(true); }}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-gray-300 rounded-xl text-[11px] font-bold border border-gray-700 hover:text-white hover:bg-gray-700 transition-all"
+                            title="Report History">
+                            <FiFileText size={12} />History
                           </motion.button>
-                          {/* Best position */}
-                          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
-                            onClick={() => openPredictModal(p)}
-                            className="inline-flex items-center gap-1 px-3 py-2 text-white rounded-xl text-xs font-medium"
-                            style={{ background:'linear-gradient(135deg,#f59e0b,#ef4444)' }}>
-                            <FiTarget size={12}/>Best position
-                          </motion.button>
+                          
                           {/* Analysis */}
-                          <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
-                            onClick={() => navigate('/coach/analysis')}
-                            className="inline-flex items-center gap-1 px-3 py-2 bg-gray-800 text-white rounded-xl text-xs font-medium border border-gray-700/50">
-                            <FiActivity size={12}/>Analysis
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); navigate('/coach/analysis'); }}
+                            className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#00d0cb] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
+                            title="Deep KPI Analysis">
+                            <FiActivity size={16} />
+                          </motion.button>
+
+                          {/* Best position */}
+                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); openPredictModal(p); }}
+                            className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#f59e0b] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
+                            title="Position Predictor">
+                            <FaMagic size={14} />
                           </motion.button>
                         </div>
                       </td>
                     </motion.tr>
                   )) : (
+
                     <tr>
                       <td colSpan="6" className="px-6 py-16 text-center">
                         <FiUsers className="mx-auto text-4xl text-gray-500 mb-4"/>
@@ -801,7 +649,7 @@ const CoachPlayers = () => {
       {/* ══════════════════ HISTORY MODAL ══════════════════ */}
       <AnimatePresence>
         {showHistoryModal && historyPlayer && (
-          <PlayerReportHistory
+          <PlayerReportHistoryModal
             player={historyPlayer}
             onClose={() => { setShowHistoryModal(false); setHistoryPlayer(null); }}
           />
@@ -819,8 +667,18 @@ const CoachPlayers = () => {
               <form onSubmit={handleSubmitEval}>
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white font-bold text-lg">
-                      {evalPlayer.full_name?.charAt(0)}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white font-bold text-lg relative overflow-hidden">
+                      {evalPlayer.profile_picture || evalPlayer.photo_url ? (
+                        <img 
+                          src={evalPlayer.profile_picture || evalPlayer.photo_url} 
+                          alt="" 
+                          className="absolute inset-0 w-full h-full object-cover z-10"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
+                      <span className="relative z-0">{evalPlayer.full_name?.charAt(0)?.toUpperCase()}</span>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-white">{evalPlayer.full_name}</div>
@@ -1261,4 +1119,4 @@ const CoachPlayers = () => {
   );
 };
 
-export default CoachPlayers;
+export default PlayerManagement;

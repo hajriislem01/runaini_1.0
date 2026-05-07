@@ -14,7 +14,7 @@ const CoachManagement = () => {
   const {
     coaches, isLoading, showModal, setShowModal, searchTerm, setSearchTerm,
     showPassword, setShowPassword, passwordStrength, editCoachId,
-    groups, filteredSubgroups, formData, setFormData,
+    groups, subgroups, formData, setFormData, apiError,
     handleChange, handlePasswordChange, handleSubmit, handleEdit, handleDelete,
     resetForm, filteredCoaches
   } = useCoachManagement();
@@ -25,7 +25,6 @@ const CoachManagement = () => {
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         <CoachHeader
@@ -56,10 +55,12 @@ const CoachManagement = () => {
           handleChange={handleChange} handlePasswordChange={handlePasswordChange}
           handleSubmit={handleSubmit} showPassword={showPassword} setShowPassword={setShowPassword}
           passwordStrength={passwordStrength} resetForm={resetForm}
-          groups={groups} filteredSubgroups={filteredSubgroups}
+          groups={groups} subgroups={subgroups}
+          apiError={apiError}
         />
 
       </div>
+      <Toaster position="top-right" containerStyle={{ zIndex: 10000 }} />
     </motion.div>
   );
 };

@@ -74,7 +74,7 @@ const CreateEvent = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Event Name */}
               <div>
-                <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                   <FiZap className="text-[#eab308]" />
                   {activeTab === 'matchFriendly' ? 'Match Name' : 'Tournament Name'}
                 </label>
@@ -88,7 +88,7 @@ const CreateEvent = () => {
               {/* Group & Subgroup */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiUsers className="text-[#4fb0ff]" />Group
                   </label>
                   <div className="relative">
@@ -109,7 +109,7 @@ const CreateEvent = () => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiUsers className="text-[#902bd1]" />Subgroup
                   </label>
                   <div className="relative">
@@ -133,7 +133,7 @@ const CreateEvent = () => {
               {/* Dynamic field */}
               {activeTab === 'matchFriendly' ? (
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiTarget className="text-[#22c55e]" />Target Academy (Optional)
                   </label>
                   <input type="text" name="targetAcademy" value={formData.targetAcademy}
@@ -142,7 +142,7 @@ const CreateEvent = () => {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiUsers className="text-[#eab308]" />Number of Participants
                   </label>
                   <input type="number" name="numParticipants" value={formData.numParticipants}
@@ -155,7 +155,7 @@ const CreateEvent = () => {
               {/* Date & Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiCalendar className="text-[#00d0cb]" />Date
                   </label>
                   <input type="date" name="date" value={formData.date} onChange={handleChange}
@@ -163,7 +163,7 @@ const CreateEvent = () => {
                   {errors.date && <p className="text-red-400 text-sm mt-2">• {errors.date}</p>}
                 </div>
                 <div>
-                  <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                  <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiCalendar className="text-[#902bd1]" />Time
                   </label>
                   <input type="time" name="time" value={formData.time} onChange={handleChange}
@@ -174,7 +174,7 @@ const CreateEvent = () => {
 
               {/* Location */}
               <div>
-                <label className="block text-gray-300 font-medium mb-2 flex items-center gap-2">
+                <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                   <FiMapPin className="text-[#4fb0ff]" />Location
                 </label>
                 <input type="text" name="location" value={formData.location}

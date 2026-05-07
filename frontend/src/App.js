@@ -9,47 +9,51 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // ── Pages publiques ────────────────────────────────────────────────────────────
-import Home           from './pages/Home';
-import SignupForm     from './pages/SignupForm';
+import Home from './pages/Home';
+import SignupForm from './pages/SignupForm';
 import ForgotPassword from './pages/ForgotPassword';
-import LoginForm      from './pages/LoginForm';
-import NotFound       from './pages/NotFound';
-import PricingPage    from './pages/PricingPage';
+import LoginForm from './pages/LoginForm';
+import NotFound from './pages/NotFound';
+import PricingPage from './pages/PricingPage';
+import BlogPage from './pages/BlogPage';
+import AboutPage from './pages/AboutPage';
 
 // ── Administration ─────────────────────────────────────────────────────────────
-import AdministrationLayout    from './layouts/AdministrationLayout';
+import AdministrationLayout from './layouts/AdministrationLayout';
 import AdministrationDashboard from './pages/administration/administrationdashboard/AdministrationDashboard';
-import PlayerManagement        from './pages/administration/playermanagement/PlayerManagement';
-import PlayerProfileDesktop    from './pages/administration/playermanagement/PlayerProfile';
-import CoachManagement         from './pages/administration/coachmanagement/CoachManagement';
-import AgendaManagement        from './pages/administration/agendamanagement/AgendaManagement';
-import PaymentManagement       from './pages/administration/paymentmanagement/PaymentManagement';
-import Settings                from './pages/administration/settings/Settings';
-import Profile                 from './pages/administration/academyprofile/Profile';
-import Contact                 from './pages/administration/contact/Contact';
-import EventsManagement        from './pages/administration/eventsmanagement/EventsManagement';
-import CreateEvent             from './pages/administration/eventsmanagement/CreateEvent';
-import EventDetail             from './pages/administration/eventsmanagement/EventDetail';
+import PlayerManagement from './pages/administration/playermanagement/PlayerManagement';
+import PlayerProfileDesktop from './pages/administration/playermanagement/PlayerProfile';
+import CoachManagement from './pages/administration/coachmanagement/CoachManagement';
+import AdminCoachProfile from './pages/administration/coachmanagement/AdminCoachProfile';
+import AgendaManagement from './pages/administration/agendamanagement/AgendaManagement';
+import PaymentManagement from './pages/administration/paymentmanagement/PaymentManagement';
+import Settings from './pages/administration/settings/Settings';
+import Profile from './pages/administration/academyprofile/Profile';
+import Contact from './pages/administration/contact/Contact';
+import EventsManagement from './pages/administration/eventsmanagement/EventsManagement';
+import CreateEvent from './pages/administration/eventsmanagement/CreateEvent';
+import EventDetail from './pages/administration/eventsmanagement/EventDetail';
 
 // ── Coach ──────────────────────────────────────────────────────────────────────
-import CoachLayout    from './layouts/CoachLayout';
+import CoachLayout from './layouts/CoachLayout';
 import CoachDashboard from './pages/coach/CoachDashboard';
-import CoachPlayers   from './pages/coach/CoachPlayers';
-import CoachMatches   from './pages/coach/CoachMatches';
-import VideoAnalysis  from './pages/coach/VideoAnalysis';
+import CoachPlayerManagement from './pages/coach/playermanagement/PlayerManagement';
+// import CoachMatches   from './pages/coach/CoachMatches'; // Removed
+import VideoAnalysis from './pages/coach/VideoAnalysis';
 import CreateTraining from './pages/coach/CreateTraining';
-import CoachAgenda    from './pages/coach/CoachAgenda';
-import CoachProfile   from './pages/coach/CoachProfile';
-import CoachSettings  from './pages/coach/CoachSettings';
-import CoachAnalysis  from './pages/coach/CoachAnalysis';
+import CoachAgenda from './pages/coach/CoachAgenda';
+import CoachProfile from './pages/coach/CoachProfile';
+import CoachSettings from './pages/coach/CoachSettings';
+import CoachAnalysis from './pages/coach/playermanagement/CoachAnalysis';
+import CoachPlayerProfile from './pages/coach/playermanagement/CoachPlayerProfile';
 
 // ── Player ─────────────────────────────────────────────────────────────────────
-import PlayerLayout     from './layouts/PlayerLayout';
+import PlayerLayout from './layouts/PlayerLayout';
 import PlayersDashboard from './pages/players/PlayersDashboard';
-import Training         from './pages/players/Training';
-import Performance      from './pages/players/Performance';
-import PlayerProfile    from './pages/players/PlayerProfile';
-import PlayerSettings   from './pages/players/PlayerSettings';
+import Training from './pages/players/Training';
+import Performance from './pages/players/Performance';
+import PlayerProfile from './pages/players/PlayerProfile';
+import PlayerSettings from './pages/players/PlayerSettings';
 
 // ── Layout wrapper ─────────────────────────────────────────────────────────────
 function Layout({ children }) {
@@ -66,7 +70,7 @@ function Layout({ children }) {
     <div className="min-h-screen flex flex-col bg-[#0a0a0a]">
       <ScrollToTop />
       {!isFullScreen && <Navbar />}
-      <main className={`flex-grow ${(!isFullScreen && pathname !== '/') ? 'mt-16' : ''}`}>
+      <main className="flex-grow">
         {children}
       </main>
       {!isFullScreen && <Footer />}
@@ -78,7 +82,7 @@ function Layout({ children }) {
 function App() {
   const [players, setPlayers] = useState([]);
   const [coaches, setCoaches] = useState([]);
-  const [events,  setEvents]  = useState(() => {
+  const [events, setEvents] = useState(() => {
     try { return JSON.parse(localStorage.getItem('events') || '[]'); }
     catch { return []; }
   });
@@ -87,11 +91,11 @@ function App() {
   useEffect(() => {
     const handleStorage = (e) => {
       if (e.key === 'events') {
-        try { setEvents(JSON.parse(e.newValue || '[]')); } catch {}
+        try { setEvents(JSON.parse(e.newValue || '[]')); } catch { }
       }
     };
     const handleFocus = () => {
-      try { setEvents(JSON.parse(localStorage.getItem('events') || '[]')); } catch {}
+      try { setEvents(JSON.parse(localStorage.getItem('events') || '[]')); } catch { }
     };
     window.addEventListener('storage', handleStorage);
     window.addEventListener('focus', handleFocus);
@@ -138,13 +142,15 @@ function App() {
               <Routes>
 
                 {/* ── Public ───────────────────────────────────────────── */}
-                <Route path="*"                element={<NotFound />} />
-                <Route path="/"                element={<Home />} />
-                <Route path="/signup"          element={<SignupForm />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/signup" element={<SignupForm />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/pricing"         element={<PricingPage />} />
-                <Route path="/login"           element={<LoginForm />} />
-                <Route path="/logout"          element={<LogoutRedirect />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/logout" element={<LogoutRedirect />} />
 
                 {/* ── Administration (protégé admin) ────────────────────── */}
                 <Route path="/administration" element={
@@ -153,33 +159,34 @@ function App() {
                   <Route element={<AdministrationLayout />}>
                     <Route index element={
                       <AdministrationDashboard players={players} coaches={coaches} events={events} />
-                    }/>
+                    } />
                     <Route path="dashboard" element={
                       <AdministrationDashboard players={players} coaches={coaches} events={events} />
-                    }/>
-                    <Route path="profile"            element={<Profile />} />
-                    <Route path="player-management"  element={
+                    } />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="player-management" element={
                       <PlayerManagement players={players} setPlayers={setPlayers} />
-                    }/>
+                    } />
                     <Route path="player-profile/:id" element={<PlayerProfileDesktop />} />
-                    <Route path="coach-management"   element={
+                    <Route path="coach-management" element={
                       <CoachManagement coaches={coaches} setCoaches={setCoaches} />
-                    }/>
-                    <Route path="events-management"  element={<EventsManagement />} />
-                    <Route path="create-event"       element={<CreateEvent />} />
-                    <Route path="event/:id"          element={<EventDetail />} />
-                    <Route path="agenda-management"  element={
+                    } />
+                    <Route path="coach-profile/:id" element={<AdminCoachProfile />} />
+                    <Route path="events-management" element={<EventsManagement />} />
+                    <Route path="create-event" element={<CreateEvent />} />
+                    <Route path="event/:id" element={<EventDetail />} />
+                    <Route path="agenda-management" element={
                       <AgendaManagement
                         events={events} addEvent={addEvent}
                         updateEvent={updateEvent} deleteEvent={deleteEvent}
                         players={players} coaches={coaches}
                       />
-                    }/>
+                    } />
                     <Route path="payment-management" element={
                       <PaymentManagement players={players} />
-                    }/>
+                    } />
                     <Route path="settings" element={<Settings />} />
-                    <Route path="contact"  element={<Contact />} />
+                    <Route path="contact" element={<Contact />} />
                   </Route>
                 </Route>
 
@@ -188,15 +195,16 @@ function App() {
                   <ProtectedRoute allowedRoles={['coach']} />
                 }>
                   <Route element={<CoachLayout />}>
-                    <Route index            element={<CoachDashboard />} />
+                    <Route index element={<CoachDashboard />} />
                     <Route path="dashboard" element={<CoachDashboard />} />
-                    <Route path="players"   element={<CoachPlayers />} />
-                    <Route path="training"  element={<CreateTraining />} />
-                    <Route path="agenda"    element={<CoachAgenda />} />
-                    <Route path="matches"   element={<CoachMatches />} />
-                    <Route path="profile"   element={<CoachProfile />} />
-                    <Route path="settings"  element={<CoachSettings />} />
-                    <Route path="analysis"  element={<CoachAnalysis />} />
+                    <Route path="players" element={<CoachPlayerManagement />} />
+                    <Route path="training" element={<CreateTraining />} />
+                    <Route path="agenda" element={<CoachAgenda />} />
+                    <Route path="matches" element={<Navigate to="/coach/dashboard" replace />} />
+                    <Route path="profile" element={<CoachProfile />} />
+                    <Route path="settings" element={<CoachSettings />} />
+                    <Route path="analysis" element={<CoachAnalysis />} />
+                    <Route path="player-profile/:id" element={<CoachPlayerProfile />} />
                     <Route path="video/:id" element={<VideoAnalysis />} />
                   </Route>
                 </Route>
@@ -206,13 +214,11 @@ function App() {
                   <ProtectedRoute allowedRoles={['player']} />
                 }>
                   <Route element={<PlayerLayout />}>
-                    <Route index              element={<PlayersDashboard />} />
-                    <Route path="training"    element={<Training />} />
+                    <Route index element={<PlayersDashboard />} />
+                    <Route path="training" element={<Training />} />
                     <Route path="performance" element={<Performance />} />
-                    <Route path="profile"     element={<PlayerProfile />} />
-                    <Route path="settings"    element={<PlayerSettings />} />
-                    <Route path="feedback"    element={<Navigate to="/players/performance" replace />} />
-                    <Route path="analysis"    element={<Navigate to="/players/performance" replace />} />
+                    <Route path="profile" element={<PlayerProfile />} />
+                    <Route path="settings" element={<PlayerSettings />} />
                   </Route>
                 </Route>
 

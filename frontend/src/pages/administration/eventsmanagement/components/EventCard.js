@@ -39,10 +39,26 @@ const EventCard = ({ event, navigate, handleComplete, handleDelete }) => {
           </div>
           <div className="flex items-center gap-3 text-gray-300">
             <FiUsers className="text-[#902bd1] flex-shrink-0" />
-            <span className="text-sm">
-              {event.group_name}
-              {event.subgroup_name && <span className="text-gray-400"> • {event.subgroup_name}</span>}
-            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {(!event.groups_detail?.length && !event.subgroups_detail?.length) ? (
+                <span className="text-sm">All Academy</span>
+              ) : (
+                <>
+                  {(event.groups_detail || [])
+                    .filter(g => !event.subgroups_detail?.some(s => s.group_name === g.name))
+                    .map(g => (
+                    <span key={`g-${g.id}`} className="px-2 py-0.5 text-[9px] font-bold rounded-lg bg-gradient-to-r from-[#00d0cb]/20 to-[#4fb0ff]/20 text-[#00d0cb] border border-[#00d0cb]/30 uppercase tracking-widest">
+                      {g.name}
+                    </span>
+                  ))}
+                  {(event.subgroups_detail || []).map(s => (
+                    <span key={`s-${s.id}`} className="px-2 py-0.5 text-[9px] font-bold rounded-lg bg-gradient-to-r from-[#902bd1]/20 to-[#4fb0ff]/20 text-[#902bd1] border border-[#902bd1]/30 uppercase tracking-widest">
+                      {s.group_name} {'>'} {s.name}
+                    </span>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
           {event.target_academy && (
             <div className="flex items-center gap-3 text-gray-300">

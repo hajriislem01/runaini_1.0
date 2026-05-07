@@ -5,7 +5,7 @@ import { FiX, FiPlus, FiCheck } from 'react-icons/fi';
 const GroupModal = ({
   showGroupModal, setShowGroupModal, resetGroupForm, handleGroupSubmit,
   isEditingGroup, groupForm, setGroupForm, coaches, addSubgroup, 
-  removeSubgroup, handleSubgroupChange
+  removeSubgroup, handleSubgroupChange, apiError
 }) => {
   if (!showGroupModal) return null;
 
@@ -42,6 +42,15 @@ const GroupModal = ({
             </div>
 
             <form onSubmit={handleGroupSubmit} className="space-y-5">
+              {apiError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-200 text-sm font-medium"
+                >
+                  {apiError}
+                </motion.div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Group Name *</label>
                 <input
@@ -54,21 +63,7 @@ const GroupModal = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Coach</label>
-                <select
-                  value={groupForm.coach}
-                  onChange={(e) => setGroupForm(prev => ({ ...prev, coach: e.target.value }))}
-                  className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
-                >
-                  <option value="" className="bg-gray-800">Select coach (optional)</option>
-                  {coaches.map((coach) => (
-                    <option key={coach.id} value={coach.id} className="bg-gray-800">
-                      {coach.username || coach.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
 
               <div>
                 <div className="flex items-center justify-between mb-2">

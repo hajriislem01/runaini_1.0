@@ -8,7 +8,21 @@ class Academy(models.Model):
     founded = models.CharField(max_length=4, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
-    colors = models.CharField(max_length=100, blank=True, null=True)
+    primary_color = models.CharField(max_length=7, default='#902bd1')
+    secondary_color = models.CharField(max_length=7, default='#4fb0ff')
+    secondary_color_active = models.BooleanField(default=True)
+    color_3 = models.CharField(max_length=7, default='#00d0cb')
+    color_3_active = models.BooleanField(default=False)
+    color_4 = models.CharField(max_length=7, default='#180033')
+    color_4_active = models.BooleanField(default=False)
+    header_text_color = models.CharField(max_length=7, default='#ffffff')
+    gradient_angle = models.IntegerField(default=135)
+    border_radius_style = models.CharField(
+        max_length=20,
+        choices=[('Sharp', 'Sharp'), ('Rounded', 'Rounded'), ('Extra Rounded', 'Extra Rounded')],
+        default='Rounded'
+    )
+
     philosophy = models.TextField(blank=True, null=True)
     achievements = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='academy/logos/', blank=True, null=True)
@@ -47,10 +61,18 @@ class CustomUser(AbstractUser):
         ('player', 'Player'),
     )
 
+    username = models.CharField(
+        max_length=150,
+        unique=False,
+        help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+    )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='admin')
     phone = models.CharField(max_length=20, blank=True, null=True)
     club = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     # ✅ Lien vers l'académie
     academy = models.ForeignKey(
@@ -61,8 +83,11 @@ class CustomUser(AbstractUser):
         related_name='users'
     )
 
+    class Meta:
+        unique_together = [['username', 'academy']]
+
     def __str__(self):
-        return f"{self.username} ({self.role})"
+        return f"{self.email} ({self.role})"
 
 
 class CoachProfile(models.Model):
@@ -83,19 +108,41 @@ class CoachProfile(models.Model):
     notes = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to='coach_photos/', null=True, blank=True)
     bio   = models.TextField(blank=True)
+
+    # ✅ New M2M Permissions (Centralized)
+    assigned_groups = models.ManyToManyField(
+        'Group',
+        related_name='assigned_coaches',
+        blank=True,
+        help_text="Groups this coach can access."
+    )
+    assigned_subgroups = models.ManyToManyField(
+        'SubGroup',
+        related_name='assigned_coaches',
+        blank=True,
+        help_text="Specific subgroups this coach can access."
+    )
+    full_access_groups = models.ManyToManyField(
+        'Group',
+        related_name='full_access_coaches',
+        blank=True,
+        help_text="Groups where this coach has access to ALL subgroups."
+    )
+
     def __str__(self):
         return f"Coach Profile: {self.user.username}"
 
 
 class Group(models.Model):
     name = models.CharField(max_length=100)
-    coach = models.ForeignKey(
-        CoachProfile,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="groups"
-    )
+    # Legacy coach assignment (Commented out for safety)
+    # coach = models.ForeignKey(
+    #     'CoachProfile',
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    #     related_name="managed_groups"
+    # )
     # ✅ Lien vers l'académie
     academy = models.ForeignKey(
         Academy,
@@ -105,6 +152,7 @@ class Group(models.Model):
         related_name='groups'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
 
     class Meta:
         # ✅ Nom unique par académie
@@ -121,6 +169,16 @@ class SubGroup(models.Model):
         on_delete=models.CASCADE,
         related_name="subgroups"
     )
+    # Legacy coach assignment (Commented out for safety)
+    # coach = models.ForeignKey(
+    #     'CoachProfile',
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True,
+    #     related_name="managed_subgroups_legacy"
+    # )
+    # Note: Assignments are now managed via CoachProfile M2M fields
+
 
     class Meta:
         constraints = [
@@ -157,15 +215,17 @@ class PlayerProfile(models.Model):
         related_name='player_profile'
     )
     full_name = models.CharField(max_length=100)
-    height = models.DecimalField(max_digits=5, decimal_places=2)
-    weight = models.DecimalField(max_digits=5, decimal_places=2)
-    position = models.CharField(max_length=20, choices=POSITION_CHOICES)
+    height = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    position = models.CharField(max_length=20, choices=POSITION_CHOICES, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
 
     group = models.ForeignKey(
         Group,
         on_delete=models.PROTECT,
-        related_name="players"
+        related_name="players",
+        null=True,
+        blank=True
     )
     subgroup = models.ForeignKey(
         SubGroup,
@@ -201,6 +261,7 @@ class Event(models.Model):
     TYPE_CHOICES = [
         ('Match Friendly', 'Match Friendly'),
         ('Tournament', 'Tournament'),
+        ('Meeting', 'Meeting'),
     ]
 
     STATUS_CHOICES = [
@@ -218,17 +279,27 @@ class Event(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     winner = models.CharField(max_length=200, blank=True, null=True)
 
-    group = models.ForeignKey(
+    groups = models.ManyToManyField(
         'Group',
-        on_delete=models.CASCADE,
-        related_name='events'
-    )
-    subgroup = models.ForeignKey(
-        'SubGroup',
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         related_name='events'
+    )
+    subgroups = models.ManyToManyField(
+        'SubGroup',
+        blank=True,
+        related_name='events'
+    )
+    target_coaches = models.ManyToManyField(
+        'CoachProfile',
+        blank=True,
+        related_name='targeted_events',
+        help_text="Specifically targeted coaches."
+    )
+    target_players = models.ManyToManyField(
+        'PlayerProfile',
+        blank=True,
+        related_name='targeted_events',
+        help_text="Specifically targeted players."
     )
     academy = models.ForeignKey(
         'Academy',
@@ -451,7 +522,7 @@ class TrainingSession(models.Model):
     # ── Détails ───────────────────────────────────────────────────────────────
     title       = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    category    = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='technical')
+    category    = models.JSONField(default=list, blank=True) # stores ["technical", "physical", etc]
     level       = models.CharField(max_length=1,  choices=LEVEL_CHOICES,    default='B')
     location    = models.CharField(max_length=200, blank=True, default='Main Field')
  
@@ -502,12 +573,12 @@ class TrainingSession(models.Model):
     @property
     def individual_exercises(self):
         """Exercices assignés à un joueur spécifique"""
-        return [ex for ex in (self.exercises or []) if ex.get('assigned_to') != 'all']
+        return [ex for ex in (self.exercises or []) if ex.get('assigned_players') and len(ex.get('assigned_players', [])) > 0]
  
     @property
     def group_exercises(self):
         """Exercices pour tout le groupe"""
-        return [ex for ex in (self.exercises or []) if ex.get('assigned_to') == 'all']
+        return [ex for ex in (self.exercises or []) if not ex.get('assigned_players') or len(ex.get('assigned_players', [])) == 0]
     
 
 class ExerciseTemplate(models.Model):
@@ -559,3 +630,22 @@ class ExerciseTemplate(models.Model):
  
     def __str__(self):
         return f"{self.name} ({self.category})"
+
+class Notification(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='notifications'
+    )
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    event_id = models.CharField(max_length=50, blank=True, null=True)
+    event_type = models.CharField(max_length=20, choices=[('session', 'Training Session'), ('event', 'Agenda Event')], default='session')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.email}: {self.title}"

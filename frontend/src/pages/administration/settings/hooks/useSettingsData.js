@@ -7,9 +7,15 @@ import { toastStyles } from '../utils/settingsConstants';
 export const useSettingsData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isImageUpdating, setIsImageUpdating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
+  // Independent image states for Select -> Preview -> Confirm flow
+  const [imageStates, setImageStates] = useState({
+    logo: { file: null, preview: null, isUpdating: false },
+    home_kit: { file: null, preview: null, isUpdating: false },
+    away_kit: { file: null, preview: null, isUpdating: false },
+  });
+
   // Verification Modal State
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
@@ -41,9 +47,101 @@ export const useSettingsData = () => {
   const { adminData, isLoading: isGlobalLoading, updateAdminData } = useAdminData();
 
   useEffect(() => {
-    if (adminData) setAcademyData(adminData);
+    if (adminData) {
+      setAcademyData(adminData);
+      // Synchronize image states with database content initially
+      setImageStates(prev => ({
+        logo: { ...prev.logo, preview: adminData.logo_url || null },
+        home_kit: { ...prev.home_kit, preview: adminData.home_kit_url || null },
+        away_kit: { ...prev.away_kit, preview: adminData.away_kit_url || null },
+      }));
+    }
     if (!isGlobalLoading) setIsLoading(false);
   }, [adminData, isGlobalLoading]);
+
+  const handleImageSelect = (file, fieldName) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file', toastStyles.error);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB', toastStyles.error);
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImageStates(prev => ({
+      ...prev,
+      [fieldName]: { ...prev[fieldName], file, preview: previewUrl }
+    }));
+  };
+
+  const cancelImageSelection = (fieldName) => {
+    const originalUrlField = `${fieldName}_url`;
+    setImageStates(prev => ({
+      ...prev,
+      [fieldName]: { 
+        file: null, 
+        preview: adminData?.[originalUrlField] || null, 
+        isUpdating: false 
+      }
+    }));
+  };
+
+  const confirmImageUpload = async (fieldName) => {
+    const state = imageStates[fieldName];
+    if (!state.file) return;
+
+    setImageStates(prev => ({
+      ...prev,
+      [fieldName]: { ...prev[fieldName], isUpdating: true }
+    }));
+
+    try {
+      const formData = new FormData();
+      const skipFields = ['logo', 'home_kit', 'away_kit', 'logo_url', 'home_kit_url', 'away_kit_url', 'id', 'created_at', 'updated_at'];
+      
+      Object.entries(academyData).forEach(([key, value]) => {
+        if (skipFields.includes(key) || value === null || value === undefined) return;
+        formData.append(key, value);
+      });
+
+      formData.append(fieldName, state.file);
+
+      const method = adminData ? 'put' : 'post';
+      const response = await API[method]('academy/', formData);
+
+      const urlField = `${fieldName}_url`;
+      const updatedData = { ...adminData, ...response.data };
+      
+      setAcademyData(updatedData);
+      setImageStates(prev => ({
+        ...prev,
+        [fieldName]: { file: null, preview: response.data[urlField], isUpdating: false }
+      }));
+      updateAdminData(updatedData);
+
+      toast.success('Image updated successfully!', toastStyles.success);
+    } catch (error) {
+      console.error(`❌ ${fieldName} Upload Error:`, error.response?.data);
+      cancelImageSelection(fieldName);
+      const data = error.response?.data;
+      const errorData = data?.errors || data;
+      if (typeof errorData === 'object' && errorData !== null) {
+        const firstErrorKey = Object.keys(errorData)[0];
+        const errorMessage = Array.isArray(errorData[firstErrorKey]) ? errorData[firstErrorKey][0] : JSON.stringify(errorData);
+        toast.error(`${firstErrorKey}: ${errorMessage}`, toastStyles.error);
+      } else {
+        toast.error('Failed to upload image', toastStyles.error);
+      }
+    } finally {
+      setImageStates(prev => ({
+        ...prev,
+        [fieldName]: { ...prev[fieldName], isUpdating: false }
+      }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,62 +160,25 @@ export const useSettingsData = () => {
         formData.append(key, value);
       });
 
-      const response = await API.put('academy/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const method = adminData ? 'put' : 'post';
+      const response = await API[method]('academy/', formData);
 
-      setAcademyData(response.data);
-      updateAdminData(response.data);
-      toast.success('Settings updated successfully!', toastStyles.success);
+      const updatedData = response.data;
+      setAcademyData(updatedData);
+      updateAdminData(updatedData);
+      toast.success(adminData ? 'Settings updated successfully!' : 'Academy created successfully!', toastStyles.success);
     } catch (error) {
-      toast.error('Failed to update settings', toastStyles.error);
+      const data = error.response?.data;
+      const errorData = data?.errors || data;
+      if (typeof errorData === 'object' && errorData !== null) {
+        const firstErrorKey = Object.keys(errorData)[0];
+        const errorMessage = Array.isArray(errorData[firstErrorKey]) ? errorData[firstErrorKey][0] : JSON.stringify(errorData);
+        toast.error(`${firstErrorKey}: ${errorMessage}`, toastStyles.error);
+      } else {
+        toast.error('Failed to update settings', toastStyles.error);
+      }
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleImageUpload = async (file, fieldName) => {
-    if (!file || isImageUpdating) return;
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload a valid image file', toastStyles.error);
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB', toastStyles.error);
-      return;
-    }
-
-    setIsImageUpdating(true);
-    const previewUrl = URL.createObjectURL(file);
-    const urlField = `${fieldName}_url`;
-    setAcademyData(prev => ({ ...prev, [urlField]: previewUrl }));
-
-    try {
-      const formData = new FormData();
-      formData.append(fieldName, file);
-
-      const response = await API.put('academy/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      const updatedData = {
-        ...adminData,
-        ...response.data,
-        [urlField]: response.data[urlField] || previewUrl
-      };
-      
-      setAcademyData(prev => ({
-        ...prev,
-        [urlField]: response.data[urlField] || previewUrl
-      }));
-      updateAdminData(updatedData);
-
-      toast.success('Image updated successfully!', toastStyles.success);
-    } catch (error) {
-      setAcademyData(prev => ({ ...prev, [urlField]: null }));
-      toast.error('Failed to upload image', toastStyles.error);
-    } finally {
-      setIsImageUpdating(false);
     }
   };
 
@@ -150,7 +211,8 @@ export const useSettingsData = () => {
   };
 
   return {
-    isLoading, isSubmitting, isImageUpdating,
+    isLoading, isSubmitting,
+    imageStates,
     showPassword, setShowPassword,
     showVerificationModal, setShowVerificationModal,
     verificationCode, setVerificationCode,
@@ -158,7 +220,8 @@ export const useSettingsData = () => {
     passwords, setPasswords,
     academyData, setAcademyData,
     preferences, setPreferences,
-    handleSubmit, handleImageUpload,
+    handleSubmit,
+    handleImageSelect, confirmImageUpload, cancelImageSelection,
     handlePhoneVerification, handleVerifyCode
   };
 };

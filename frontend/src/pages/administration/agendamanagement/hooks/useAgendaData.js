@@ -4,10 +4,32 @@ import toast from 'react-hot-toast';
 import API from '../../../api';
 import { eventTypes } from '../utils/agendaConstants';
 
+// Pure normalizer — no hook dependencies, safe at module scope
+const normalizeTraining = (t) => ({
+  id: `training_${t.id}`,
+  _id: t.id,
+  _isTraining: true,
+  title: t.title,
+  type: 'Training',
+  date: `${t.date}T${t.start_time}`,
+  end_time: t.end_time,
+  location: t.location || '',
+  group: t.groups_detail?.[0]?.id || null,
+  group_name: t.groups_detail?.map(g => g.name).join(', ') || '—',
+  coach_name: t.coach_name || '',
+  category: t.category || 'technical',
+  level: t.level || 'B',
+  duration_minutes: t.duration_minutes,
+  participants_count: t.participants_count,
+  exercise_count: t.exercise_count,
+  recurrence: t.recurrence,
+});
+
 export const useAgendaData = () => {
   const [events, setEvents] = useState([]);
   const [groups, setGroups] = useState([]);
   const [coaches, setCoaches] = useState([]);
+  const [players, setPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [showEventModal, setShowEventModal] = useState(false);
@@ -22,32 +44,40 @@ export const useAgendaData = () => {
   const [eventToDelete, setEventToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Detail view states
+  const [detailSession, setDetailSession] = useState(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
   const [eventForm, setEventForm] = useState({
     title: '',
-    type: 'training',
-    subType: 'physique-A',
+    type: 'meeting',
     date: format(new Date(), 'yyyy-MM-dd'),
     startTime: '10:00',
-    endTime: '12:00',
+    endTime: '11:00',
     location: '',
     description: '',
     assignedGroups: [],
     assignedSubgroups: [],
-    coachId: '',
+    targetCoaches: [],
+    targetPlayers: [],
   });
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [eventsRes, groupsRes, coachesRes] = await Promise.all([
+        const [eventsRes, groupsRes, coachesRes, playersRes, trainingsRes] = await Promise.all([
           API.get('events/'),
           API.get('groups/'),
-          API.get('coaches/')
+          API.get('coaches/'),
+          API.get('players/'),
+          API.get('trainings/'),
         ]);
-        setEvents(eventsRes.data);
+        const normalizedTrainings = (trainingsRes.data || []).map(normalizeTraining);
+        setEvents([...eventsRes.data, ...normalizedTrainings]);
         setGroups(groupsRes.data);
         setCoaches(coachesRes.data);
+        setPlayers(playersRes.data);
       } catch (error) {
         toast.error('Failed to load agenda data');
       } finally {
@@ -68,26 +98,22 @@ export const useAgendaData = () => {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setEventForm(prev => ({ ...prev, [name]: value }));
-    if (name === 'type') {
-      setEventForm(prev => ({
-        ...prev,
-        subType: value === 'training' ? 'physique-A' :
-          value === 'match' ? eventTypes.match[0] : eventTypes.meeting[0]
-      }));
-    }
   };
 
   const handleGroupToggle = (groupId) => {
     setEventForm(prev => {
       const isSelected = prev.assignedGroups.includes(groupId);
-      const group = groupsWithSubgroups.find(g => g.id === groupId);
       return {
         ...prev,
         assignedGroups: isSelected
           ? prev.assignedGroups.filter(id => id !== groupId)
           : [...prev.assignedGroups, groupId],
+        // Remove subgroups if parent group is deselected
         assignedSubgroups: isSelected
-          ? prev.assignedSubgroups.filter(sub => !group?.subgroups?.some(s => s.id === sub))
+          ? prev.assignedSubgroups.filter(subId => {
+            const sub = groupsWithSubgroups.find(g => g.id === groupId)?.subgroups.find(s => s.id === subId);
+            return !sub;
+          })
           : prev.assignedSubgroups
       };
     });
@@ -102,28 +128,56 @@ export const useAgendaData = () => {
     }));
   };
 
+  const handleCoachToggle = (coachId) => {
+    setEventForm(prev => ({
+      ...prev,
+      targetCoaches: prev.targetCoaches.includes(coachId)
+        ? prev.targetCoaches.filter(id => id !== coachId)
+        : [...prev.targetCoaches, coachId]
+    }));
+  };
+
+  const handlePlayerToggle = (playerId) => {
+    setEventForm(prev => ({
+      ...prev,
+      targetPlayers: prev.targetPlayers.includes(playerId)
+        ? prev.targetPlayers.filter(id => id !== playerId)
+        : [...prev.targetPlayers, playerId]
+    }));
+  };
+
   const validateEventForm = () => {
     if (!eventForm.title?.trim()) { toast.error('Please enter an event title'); return false; }
     if (!eventForm.date) { toast.error('Please select a date'); return false; }
     if (!eventForm.startTime) { toast.error('Please select a start time'); return false; }
     if (!eventForm.endTime) { toast.error('Please select an end time'); return false; }
-    if (eventForm.assignedGroups.length === 0) { toast.error('Please select at least one group'); return false; }
+
+    const audienceSelected =
+      eventForm.assignedGroups.length > 0 ||
+      eventForm.assignedSubgroups.length > 0 ||
+      eventForm.targetCoaches.length > 0 ||
+      eventForm.targetPlayers.length > 0;
+
+    if (!audienceSelected) {
+      toast.error('Please select at least one target audience (Group, Coach, or Player)');
+      return false;
+    }
     return true;
   };
 
   const resetForm = () => {
     setEventForm({
       title: '',
-      type: 'training',
-      subType: 'physique-A',
+      type: 'meeting',
       date: format(new Date(), 'yyyy-MM-dd'),
       startTime: '10:00',
-      endTime: '12:00',
+      endTime: '11:00',
       location: '',
       description: '',
       assignedGroups: [],
       assignedSubgroups: [],
-      coachId: '',
+      targetCoaches: [],
+      targetPlayers: [],
     });
     setSelectedEvent(null);
     setShowEventModal(false);
@@ -137,12 +191,16 @@ export const useAgendaData = () => {
     try {
       const payload = {
         title: eventForm.title,
-        type: eventForm.type === 'match' ? 'Match Friendly' : 'Tournament',
+        type: eventForm.type === 'match' ? 'Match Friendly' :
+          eventForm.type === 'tournament' ? 'Tournament' :
+            eventForm.type === 'meeting' ? 'Meeting' : 'Meeting',
         date: `${eventForm.date}T${eventForm.startTime}:00Z`,
         location: eventForm.location || '',
         description: eventForm.description || '',
-        group: eventForm.assignedGroups[0],
-        subgroup: eventForm.assignedSubgroups[0] || null,
+        groups: (eventForm.assignedGroups || []).filter(id => !!id),
+        subgroups: (eventForm.assignedSubgroups || []).filter(id => !!id),
+        target_coaches: (eventForm.targetCoaches || []).filter(id => !!id),
+        target_players: (eventForm.targetPlayers || []).filter(id => !!id),
         status: 'open'
       };
 
@@ -158,8 +216,13 @@ export const useAgendaData = () => {
       }
       resetForm();
     } catch (error) {
-      console.error('Error saving event:', error.response?.data);
-      toast.error('Failed to save event');
+      console.error('Error saving event:', error.response?.data || error);
+      if (error.response?.data) {
+        const errorDetails = JSON.stringify(error.response.data);
+        toast.error(`Failed to save event: ${errorDetails}`);
+      } else {
+        toast.error('Failed to save event');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -170,22 +233,29 @@ export const useAgendaData = () => {
     setSelectedEvent(event);
     setEventForm({
       title: event.title,
-      type: event.type === 'Tournament' ? 'match' : 'training',
-      subType: 'physique-A',
+      type: event.type === 'Tournament' ? 'match' : 'meeting', // Simplified
       date: format(eventDate, 'yyyy-MM-dd'),
       startTime: format(eventDate, 'HH:mm'),
-      endTime: format(eventDate, 'HH:mm'),
+      endTime: format(eventDate, 'HH:mm'), // Should be handled by backend if stored
       location: event.location || '',
       description: event.description || '',
-      assignedGroups: [event.group],
-      assignedSubgroups: event.subgroup ? [event.subgroup] : [],
-      coachId: '',
+      assignedGroups: event.groups || [],
+      assignedSubgroups: event.subgroups || [],
+      targetCoaches: event.target_coaches || [],
+      targetPlayers: event.target_players || [],
     });
     setShowEventModal(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!eventToDelete) return;
+    // Training sessions are coach-owned and read-only for admin
+    if (eventToDelete._isTraining) {
+      toast.error('Coach training sessions cannot be deleted from the admin agenda.');
+      setShowDeleteConfirm(false);
+      setEventToDelete(null);
+      return;
+    }
     try {
       await API.delete(`events/${eventToDelete.id}/`);
       setEvents(prev => prev.filter(e => e.id !== eventToDelete.id));
@@ -201,8 +271,12 @@ export const useAgendaData = () => {
   const filteredEvents = useMemo(() => {
     if (selectedGroups.length === 0 && selectedSubgroups.length === 0) return events;
     return events.filter(event => {
-      const matchGroup = selectedGroups.length === 0 || selectedGroups.includes(event.group);
-      const matchSubgroup = selectedSubgroups.length === 0 || selectedSubgroups.includes(event.subgroup);
+      const eventGroups = event._isTraining ? (event.group ? [event.group] : []) : (event.groups || []);
+      const eventSubgroups = event._isTraining ? (event.subgroup ? [event.subgroup] : []) : (event.subgroups || []);
+
+      const matchGroup = selectedGroups.length === 0 || eventGroups.some(g => selectedGroups.includes(g));
+      const matchSubgroup = selectedSubgroups.length === 0 || eventSubgroups.some(s => selectedSubgroups.includes(s));
+
       return matchGroup && matchSubgroup;
     });
   }, [events, selectedGroups, selectedSubgroups]);
@@ -233,6 +307,28 @@ export const useAgendaData = () => {
     });
   }, [currentDate, filteredEvents]);
 
+  const handleOpenDetail = async (session) => {
+    setDetailSession(session);
+    setIsDetailLoading(true);
+    try {
+      let response;
+      if (session._isTraining) {
+        const id = String(session.id).startsWith('training_') ? session.id.split('_')[1] : session.id;
+        response = await API.get(`trainings/${id}/`);
+      } else {
+        response = await API.get(`events/${session.id}/`);
+      }
+      if (response.data) {
+        setDetailSession({ ...session, ...response.data });
+      }
+    } catch (error) {
+      console.error('Error fetching session details:', error);
+      toast.error('Failed to load session details.');
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
   const handleDayClick = (date) => {
     setSelectedDay(date);
     setShowDayEventsModal(true);
@@ -246,15 +342,18 @@ export const useAgendaData = () => {
   };
 
   return {
-    events, setEvents, groupsWithSubgroups, coaches, isLoading,
+    events, setEvents, groupsWithSubgroups, coaches, players, isLoading,
     showEventModal, setShowEventModal, selectedEvent, setSelectedEvent,
     currentDate, setCurrentDate, selectedGroups, setSelectedGroups,
     selectedSubgroups, setSelectedSubgroups, selectedDay, setSelectedDay,
     showDayEventsModal, setShowDayEventsModal, expandedGroup, setExpandedGroup,
     showDeleteConfirm, setShowDeleteConfirm, eventToDelete, setEventToDelete,
     isSubmitting, eventForm, setEventForm,
-    handleFormChange, handleGroupToggle, handleSubgroupToggle, resetForm,
+    handleFormChange, handleGroupToggle, handleSubgroupToggle,
+    handleCoachToggle, handlePlayerToggle, resetForm,
     handleSubmit, handleEditEvent, handleConfirmDelete, handleDayClick, createEventForDay,
-    filteredEvents, stats, calendarDays
+    filteredEvents, stats, calendarDays,
+    // Detail view
+    detailSession, setDetailSession, isDetailLoading, handleOpenDetail
   };
 };

@@ -98,8 +98,12 @@ const PlayersTab = ({
                 >
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap group cursor-pointer" onClick={() => navigate(`/administration/player-profile/${player.id}`)}>
                     <div className="flex items-center group-hover:scale-105 transition-transform duration-300">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center mr-3 shadow-lg group-hover:shadow-[#4fb0ff]/50">
-                        <FiUser className="text-white text-lg" />
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center mr-3 shadow-lg group-hover:shadow-[#4fb0ff]/50 overflow-hidden">
+                        {player.profile_picture ? (
+                          <img src={player.profile_picture} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <FiUser className="text-white text-lg" />
+                        )}
                       </div>
                       <div>
                         <div className="text-sm md:text-base font-medium text-white group-hover:text-[#4fb0ff] transition-colors">{player.full_name}</div>

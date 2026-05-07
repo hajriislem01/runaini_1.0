@@ -32,6 +32,9 @@ const PlayerManagement = () => {
     API_URL, authToken, fetchPlayers, fetchGroups
   } = usePlayerManagement();
 
+  const [apiError, setApiError] = React.useState(null);
+  const [groupApiError, setGroupApiError] = React.useState(null);
+
   // Reset Player Form
   const resetForm = useCallback(() => {
     setFormData({
@@ -43,12 +46,14 @@ const PlayerManagement = () => {
     setEditPlayerId(null);
     setShowPassword(false);
     setErrors({});
+    setApiError(null);
   }, [setFormData, setPasswordStrength, setEditPlayerId, setShowPassword, setErrors]);
 
   // Reset Group Form
   const resetGroupForm = useCallback(() => {
     setGroupForm({ id: '', name: '', subgroups: [''], coach: '' });
     setIsEditingGroup(false);
+    setGroupApiError(null);
   }, [setGroupForm, setIsEditingGroup]);
 
   // Handle Input Change for Player Form
@@ -125,35 +130,71 @@ const PlayerManagement = () => {
       }
     }
 
+    const basePayload = { ...formData };
+    
+    // IMPORTANT: During update, only include password if explicitly provided
+    if (editPlayerId && (!formData.password || !formData.password.trim())) {
+      delete basePayload.password;
+    }
+
     const payload = {
-      ...formData,
+      ...basePayload,
       group: groupId || formData.group || null,
       subgroup: subgroupId || formData.subgroup || null,
       height: formData.height === '' || formData.height == null ? 0 : Number(formData.height),
       weight: formData.weight === '' || formData.weight == null ? 0 : Number(formData.weight)
     };
 
+    // DEBUG: Verify exactly what is being sent to the API
+    console.log("Update Payload:", payload);
+
     try {
+      setApiError(null);
+      let response;
       if (editPlayerId) {
-        await axios.put(`${API_URL}/players/${editPlayerId}/`, payload, {
+        response = await axios.put(`${API_URL}/players/${editPlayerId}/`, payload, {
           headers: { 'Authorization': `Token ${authToken}` }
         });
-        addNotification('Player updated successfully');
+        if (response.status === 200 || response.status === 204) {
+          addNotification('Player updated successfully');
+          setShowModal(false);
+          resetForm();
+          fetchPlayers();
+          fetchGroups();
+        }
       } else {
-        await axios.post(`${API_URL}/players/signup/`, payload, {
+        response = await axios.post(`${API_URL}/players/signup/`, payload, {
           headers: { 'Authorization': `Token ${authToken}` }
         });
-        addNotification('Player added successfully');
+        if (response.status === 201 || response.status === 200) {
+          addNotification('Player added successfully');
+          setShowModal(false);
+          resetForm();
+          fetchPlayers();
+          fetchGroups();
+        }
       }
-      setShowModal(false);
-      resetForm();
-      fetchPlayers();
-      fetchGroups();
     } catch (error) {
       console.error('Error saving player:', error);
       const data = error.response?.data;
-      const errMsg = (data && (data.error || data.detail || (typeof data === 'string' ? data : null))) || error.message || 'Failed to save player';
-      addNotification(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg), 'error');
+      let errMsg = 'Failed to save player';
+
+      if (data) {
+        if (typeof data === 'object') {
+          // Standard DRF error parsing
+          errMsg = Object.entries(data)
+            .map(([field, errors]) => {
+              const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+              const errorText = Array.isArray(errors) ? errors.join(', ') : errors;
+              return `${fieldName}: ${errorText}`;
+            })
+            .join(' | ');
+        } else if (typeof data === 'string') {
+          errMsg = data;
+        }
+      }
+      setApiError(errMsg);
+      addNotification(errMsg, 'error');
     }
   };
 
@@ -219,6 +260,7 @@ const PlayerManagement = () => {
     if (!name) return addNotification('Group name is required', 'error');
 
     try {
+      setGroupApiError(null);
       const coachProfileId = await getCoachProfileId(coachId);
       let groupResponse;
       if (isEditingGroup && groupForm.id && !String(groupForm.id).startsWith('local-')) {
@@ -241,15 +283,33 @@ const PlayerManagement = () => {
           await axios.post(`${API_URL}/subgroups/`, { name: sgName, group: groupResponse.data.id }, { headers: { 'Authorization': `Token ${authToken}` } });
         }
       }
-      fetchGroups();
-      addNotification(isEditingGroup ? 'Group updated' : 'Group created');
+      if (groupResponse && (groupResponse.status === 200 || groupResponse.status === 201 || groupResponse.status === 204)) {
+        fetchGroups();
+        addNotification(isEditingGroup ? 'Group updated' : 'Group created');
+        setShowGroupModal(false);
+        resetGroupForm();
+      }
     } catch (error) {
       console.error('Error saving group:', error);
-      const errorMsg = error.response?.data?.error || error.response?.data?.detail || 'Failed to save group';
-      addNotification(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg), 'error');
+      const data = error.response?.data;
+      let errorMsg = 'Failed to save group';
+      
+      if (data) {
+        if (typeof data === 'object') {
+          errorMsg = Object.entries(data)
+            .map(([field, errors]) => {
+              const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+              const errorText = Array.isArray(errors) ? errors.join(', ') : errors;
+              return `${fieldName}: ${errorText}`;
+            })
+            .join(' | ');
+        } else if (typeof data === 'string') {
+          errorMsg = data;
+        }
+      }
+      setGroupApiError(errorMsg);
+      addNotification(errorMsg, 'error');
     }
-    setShowGroupModal(false);
-    resetGroupForm();
   };
 
   const handleEditGroup = (group) => {
@@ -355,8 +415,6 @@ const PlayerManagement = () => {
       animate="visible"
       variants={containerVariants}
     >
-      <NotificationToast notifications={notifications} />
-
       <div className="max-w-7xl mx-auto">
         <PlayerHeader
           activeTab={activeTab} playersCount={players.length} groupsCount={groups.length}
@@ -400,12 +458,14 @@ const PlayerManagement = () => {
         formData={formData} handleChange={handleChange} handleGroupChangeInForm={handleGroupChangeInForm} handlePasswordChange={handlePasswordChange}
         errors={errors} showPassword={showPassword} setShowPassword={setShowPassword} passwordStrength={passwordStrength}
         groupOptionsForPlayer={groupOptionsForPlayer} subgroupOptionsForPlayer={subgroupOptionsForPlayer}
+        apiError={apiError}
       />
 
       <GroupModal
         showGroupModal={showGroupModal} setShowGroupModal={setShowGroupModal} resetGroupForm={resetGroupForm} handleGroupSubmit={handleGroupSubmit}
         isEditingGroup={isEditingGroup} groupForm={groupForm} setGroupForm={setGroupForm} coaches={coaches} addSubgroup={addSubgroup}
         removeSubgroup={removeSubgroup} handleSubgroupChange={handleSubgroupChange}
+        apiError={groupApiError}
       />
 
       <GroupDetailModal
@@ -413,6 +473,9 @@ const PlayerManagement = () => {
         viewingGroupPlayers={viewingGroupPlayers} availablePlayersForViewingGroup={availablePlayersForViewingGroup}
         handleRemovePlayerFromGroup={handleRemovePlayerFromGroup} handleAddPlayerToGroup={handleAddPlayerToGroup}
       />
+
+      {/* Moved to bottom for better z-index stacking context */}
+      <NotificationToast notifications={notifications} />
 
     </motion.div>
   );

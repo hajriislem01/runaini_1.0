@@ -4,7 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
-from django.db import IntegrityError
+from django.db import transaction, IntegrityError
 from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup, Academy
 from .serializers import PlayerProfileSerializer
 from .permissions import IsAdmin
@@ -107,13 +107,14 @@ class CoachSignupView(APIView):
                 academy=request.user.academy
             )
 
-            coach_profile = CoachProfile.objects.create(
-                user=user,
-                specialization=data.get("specialization", ""),
-                years_of_experience=data.get("years_of_experience", 0),
-                certification=data.get("certification", ""),
-                notes=data.get("notes", "")
-            )
+            # ✅ The Profile is ALREADY created by the post_save signal in signals.py
+            # Just update it with the extra data
+            coach_profile = user.coach_profile
+            coach_profile.specialization = data.get("specialization", "")
+            coach_profile.years_of_experience = data.get("years_of_experience", 0)
+            coach_profile.certification = data.get("certification", "")
+            coach_profile.notes = data.get("notes", "")
+            coach_profile.save()
 
             # ✅ Assigne le groupe au coach
             group_id = data.get("group")
@@ -134,6 +135,7 @@ class PlayerSignupView(APIView):
 
     def post(self, request):
         data = request.data
+        print(f"📥 [PlayerSignupView] Received Data: {data}")
         required_fields = ['username', 'email', 'password', 'full_name']
 
         if not all(field in data for field in required_fields):
@@ -143,62 +145,71 @@ class PlayerSignupView(APIView):
             )
 
         try:
-            user = CustomUser.objects.create(
-                username=data["username"],
-                email=data["email"],
-                password=make_password(data["password"]),
-                role="player",
-                first_name=data.get("first_name", ""),
-                last_name=data.get("last_name", ""),
-                phone=data.get("phone", ""),
-                academy=request.user.academy  # ✅ hérite l'académie de l'admin
-            )
+            with transaction.atomic():
+                user = CustomUser.objects.create(
+                    username=data["username"],
+                    email=data["email"],
+                    password=make_password(data["password"]),
+                    role="player",
+                    first_name=data.get("first_name", ""),
+                    last_name=data.get("last_name", ""),
+                    phone=data.get("phone", ""),
+                    academy=request.user.academy
+                )
 
-            # Group — doit appartenir à la même académie
-            group_instance = None
-            group_id = data.get("group")
-            if group_id:
-                try:
-                    group_instance = Group.objects.get(
-                        id=group_id,
-                        academy=request.user.academy  # ✅ sécurité
-                    )
-                except Group.DoesNotExist:
-                    return Response({"error": "Invalid group"}, status=400)
+                # Fetch Group & SubGroup
+                group_instance = None
+                group_id = data.get("group")
+                if group_id:
+                    try:
+                        group_instance = Group.objects.get(
+                            id=group_id,
+                            academy=request.user.academy
+                        )
+                    except Group.DoesNotExist:
+                        raise Exception("Invalid group: Group does not exist in your academy")
 
-            # SubGroup optionnel
-            subgroup_instance = None
-            subgroup_id = data.get("subgroup")
-            if subgroup_id:
-                try:
-                    subgroup_instance = SubGroup.objects.get(id=subgroup_id)
-                except SubGroup.DoesNotExist:
-                    return Response({"error": "Invalid subgroup"}, status=400)
+                subgroup_instance = None
+                subgroup_id = data.get("subgroup")
+                if subgroup_id:
+                    try:
+                        subgroup_instance = SubGroup.objects.get(id=subgroup_id)
+                    except SubGroup.DoesNotExist:
+                        raise Exception("Invalid subgroup")
 
-            player = PlayerProfile.objects.create(
-                user=user,
-                full_name=data["full_name"],
-                height=data.get("height", 0),
-                weight=data.get("weight", 0),
-                position=data.get("position", "Midfielder"),
-                status=data.get("status", "Active"),
-                group=group_instance,
-                subgroup=subgroup_instance,
-                phone=data.get("phone", ""),
-                address=data.get("address", ""),
-                notes=data.get("notes", ""),
-                academy=request.user.academy  # ✅ hérite l'académie de l'admin
-            )
+                # Mapping & Profile Update
+                # post_save signal created the profile, we retrieve it here
+                player = user.player_profile
+                player.full_name = data["full_name"]
+                
+                # Careful mapping of decimal fields to avoid NULL errors or bad formats
+                def clean_decimal(val):
+                    if val is None or str(val).strip() == "":
+                        return None
+                    try:
+                        return float(val)
+                    except (ValueError, TypeError):
+                        return None
 
-            serializer = PlayerProfileSerializer(player)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                player.height = clean_decimal(data.get("height"))
+                player.weight = clean_decimal(data.get("weight"))
+                player.position = data.get("position") or "Midfielder"
+                player.status = data.get("status") or "Active"
+                player.group = group_instance
+                player.subgroup = subgroup_instance
+                player.phone = data.get("phone", "")
+                player.address = data.get("address", "")
+                player.notes = data.get("notes", "")
+                player.academy = request.user.academy
+                
+                print(f"🛠️ [PlayerSignupView] Saving Profile: H={player.height}, W={player.weight}, G={player.group}")
+                player.save()
 
-        except IntegrityError:
-            return Response(
-                {"error": "Username or email already exists"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                serializer = PlayerProfileSerializer(player)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         except Exception as e:
+            print(f"❌ [PlayerSignupView] Error: {str(e)}")
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST

@@ -1,317 +1,550 @@
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { FiArrowRight, FiPlay, FiUsers, FiClipboard, FiTarget, FiActivity, FiCloud, FiLock } from 'react-icons/fi';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import {
+  FiArrowRight, FiUsers, FiClipboard, FiTarget, FiActivity,
+  FiZap, FiBell, FiBarChart2, FiShield, FiCheck, FiLayers,
+} from 'react-icons/fi';
+import { FaTrophy, FaBrain } from 'react-icons/fa';
 
-const FootballMarquee = () => {
-  const teams = [
-    { id: 1, name: 'Real Madrid', logo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg' },
-    { id: 2, name: 'Barcelona', logo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg' },
-    { id: 3, name: 'Manchester United', logo: 'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg' },
-    { id: 4, name: 'Liverpool', logo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg' },
-    { id: 5, name: 'Esperance Sportive', logo: 'https://images.seeklogo.com/logo-png/4/2/esperance-sportive-de-tunis-logo-png_seeklogo-49164.png' },
+/* ── Brand tokens ─────────────────────────────────────────── */
+const P = '#902bd1';
+const B = '#4fb0ff';
+const T = '#00d0cb';
+const G = '#00f5ff'; // Cyber Cyan
+const BG = 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)';
+
+/* ── Animated SVG pitch backdrop ────────────────────────── */
+const PitchSVG = () => (
+  <svg className="absolute inset-0 w-full h-full opacity-[0.04]" viewBox="0 0 900 600" preserveAspectRatio="xMidYMid slice">
+    <rect x="50" y="40" width="800" height="520" fill="none" stroke="white" strokeWidth="2" />
+    <line x1="450" y1="40" x2="450" y2="560" stroke="white" strokeWidth="1.5" />
+    <circle cx="450" cy="300" r="80" fill="none" stroke="white" strokeWidth="1.5" />
+    <circle cx="450" cy="300" r="4" fill="white" />
+    <rect x="50" y="200" width="130" height="200" fill="none" stroke="white" strokeWidth="1.5" />
+    <rect x="720" y="200" width="130" height="200" fill="none" stroke="white" strokeWidth="1.5" />
+    <rect x="50" y="250" width="60" height="100" fill="none" stroke="white" strokeWidth="1.5" />
+    <rect x="790" y="250" width="60" height="100" fill="none" stroke="white" strokeWidth="1.5" />
+    <circle cx="180" cy="300" r="3" fill="white" />
+    <circle cx="720" cy="300" r="3" fill="white" />
+  </svg>
+);
+
+
+
+/* ── Typing effect ───────────────────────────────────────── */
+const words = ['Academies Football.', 'Administrations.', 'Coaches & Players.',];
+function TypedWord() {
+  const [idx, setIdx] = useState(0);
+  const [displayed, setDisplayed] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    const target = words[idx];
+    const speed = deleting ? 50 : 100;
+    const delay = deleting && displayed.length === 0 ? 600 : speed;
+    const t = setTimeout(() => {
+      if (!deleting) {
+        setDisplayed(target.slice(0, displayed.length + 1));
+        if (displayed.length + 1 === target.length) setTimeout(() => setDeleting(true), 1400);
+      } else {
+        setDisplayed(displayed.slice(0, -1));
+        if (displayed.length === 0) { setDeleting(false); setIdx((idx + 1) % words.length); }
+      }
+    }, delay);
+    return () => clearTimeout(t);
+  }, [displayed, deleting, idx]);
+  return (
+    <span style={{ background: `linear-gradient(90deg,${P},${B},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+      {displayed}<span className="cursor-blink" style={{ WebkitTextFillColor: T }}>|</span>
+    </span>
+  );
+}
+
+/* ── Stat counter ────────────────────────────────────────── */
+function StatCard({ value, label, color, delay }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }} className="glass-card rounded-2xl p-6 text-center">
+      <div className="text-4xl font-extrabold mb-1" style={{ color }}>{value}</div>
+      <div className="text-sm text-gray-400 font-medium">{label}</div>
+    </motion.div>
+  );
+}
+
+/* ── 3D tilt card ────────────────────────────────────────── */
+function TiltCard({ children, className = '' }) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const handle = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientY - r.top) / r.height - 0.5) * 10;
+    const y = ((e.clientX - r.left) / r.width - 0.5) * -10;
+    setTilt({ x, y });
+  };
+  return (
+    <motion.div className={className} style={{ transformStyle: 'preserve-3d' }}
+      animate={{ rotateX: tilt.x, rotateY: tilt.y }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      onMouseMove={handle} onMouseLeave={() => setTilt({ x: 0, y: 0 })}>
+      {children}
+    </motion.div>
+  );
+}
+
+/* ── Feature pill ────────────────────────────────────────── */
+const FeaturePill = ({ icon: Icon, label }) => (
+  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+    style={{ background: 'rgba(144,43,209,0.15)', border: '1px solid rgba(144,43,209,0.3)', color: B }}>
+    <Icon size={12} />{label}
+  </div>
+);
+
+/* ── Data Particles ───────────────────────────────────────── */
+const DataParticles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(20)].map((_, i) => (
+      <motion.div key={i} className="absolute w-1 h-1 rounded-full"
+        style={{ background: G, left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, opacity: 0.2 }}
+        animate={{
+          y: [0, -100, 0],
+          opacity: [0.2, 0.5, 0.2],
+          scale: [1, 1.5, 1]
+        }}
+        transition={{
+          duration: 5 + Math.random() * 5,
+          repeat: Infinity,
+          delay: Math.random() * 5
+        }}
+      />
+    ))}
+  </div>
+);
+
+/* ── Performance Trend Chart ───────────────────────────────── */
+const PerformanceTrend = () => (
+  <svg viewBox="0 0 200 60" className="w-full h-full">
+    <motion.path
+      d="M 0,50 L 40,45 L 80,48 L 120,20 L 160,25 L 200,10"
+      fill="none"
+      stroke={G}
+      strokeWidth="2"
+      initial={{ pathLength: 0 }}
+      whileInView={{ pathLength: 1 }}
+      transition={{ duration: 4, ease: "easeInOut" }}
+    />
+    <motion.path
+      d="M 0,50 L 40,45 L 80,48 L 120,20 L 160,25 L 200,10 V 60 H 0 Z"
+      fill={`url(#grad-${G})`}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 0.1 }}
+      transition={{ delay: 1.5, duration: 1 }}
+    />
+    <defs>
+      <linearGradient id={`grad-${G}`} x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style={{ stopColor: G, stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: G, stopOpacity: 0 }} />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+/* ══ HOME ════════════════════════════════════════════════════ */
+const Home = () => {
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const yParallax = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
+  const opacityHero = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  const pillars = [
+    {
+      role: 'Admin', icon: FiShield, color: P,
+      tagline: 'Total Command',
+      desc: 'Orchestrate your entire academy from one war room. Manage players, coaches, events, payments and real-time group notifications.',
+      features: ['Multi-Group & Subgroup Targeting', 'Real-Time Notification Engine', 'Payment & Subscription Tracking', 'Match & Tournament Scheduling', 'Role-Based Access Control'],
+      pills: [{ icon: FiBell, label: 'Smart Alerts' }, { icon: FiUsers, label: 'Squad Management' }],
+    },
+    {
+      role: 'Coach', icon: FiClipboard, color: B,
+      tagline: 'Elite Intelligence',
+      desc: 'Build champions with a six-pillar evaluation engine, AI position predictor, KPI radar charts and a structured training architecture.',
+      features: ['6-Pillar Monthly Evaluation', 'AI Position Predictor', 'KPI Radar & Progression Charts', 'PDF Report Export', 'Video Analysis Suite'],
+      pills: [{ icon: FaBrain, label: 'AI Predictor' }, { icon: FiBarChart2, label: 'KPI Analytics' }],
+    },
+    {
+      role: 'Player', icon: FiTarget, color: T,
+      tagline: 'Personal Excellence',
+      desc: 'Every player owns their journey. Track performance history, receive personalized training, and stay connected with your squad.',
+      features: ['Personal Performance Dashboard', 'Training Session Access', 'Event Notifications & RSVP', 'Progress History Timeline', 'Coach Feedback Visibility'],
+      pills: [{ icon: FiActivity, label: 'Live Stats' }, { icon: FaTrophy, label: 'Achievements' }],
+    },
   ];
 
-  // Duplicate for seamless loop
-  const duplicatedTeams = [...teams, ...teams, ...teams];
+  const features = [
+    { icon: FiBell, title: 'Real-Time Notification Engine', desc: 'Group and subgroup-aware alerts fire the instant an admin creates an event. Coaches and players are notified with context — match name, group, time — without lifting a finger.', color: P },
+    { icon: FaBrain, title: 'AI Position Predictor', desc: 'Our ML engine scores 24+ physical and tactical criteria to predict each player\'s optimal position with confidence rankings. One click updates their official profile.', color: B },
+    { icon: FiBarChart2, title: '6-Pillar Evaluation System', desc: 'Coaches score players across Technical, Tactical, Physical, Mental, Health, and Academic pillars monthly. Auto-calculated averages and trend lines expose every weakness before it becomes a problem.', color: T },
+    { icon: FiZap, title: 'Hierarchical Squad Architecture', desc: 'Structure your academy into Groups and Subgroups. Events, notifications, and participants are resolved automatically based on this hierarchy. Zero manual filtering.', color: P },
+  ];
+
+  const iV = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } };
+  const cV = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.12 } } };
 
   return (
-    <div className="relative overflow-hidden py-6 md:py-8">
-      <div className="flex animate-marquee whitespace-nowrap">
-        {duplicatedTeams.map((team, index) => (
-          <motion.div
-            key={`${team.id}-${index}`}
-            className="inline-flex flex-col items-center mx-4 md:mx-8 lg:mx-12"
-            whileHover={{ scale: 1.1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24">
-              <img
-                src={team.logo}
-                alt={team.name}
-                className="w-full h-full object-contain filter drop-shadow-lg"
-                loading="lazy"
-              />
-            </div>
-            <h3 className="mt-2 text-xs md:text-sm font-medium text-blue-400">
-              {team.name}
-            </h3>
+    <div style={{ background: BG }} className="text-white overflow-hidden relative">
+
+      {/* ══ HERO ══════════════════════════════════════════════ */}
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <PitchSVG />
+        {/* Grid overlay */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(rgba(79,176,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(79,176,255,0.5) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
+        {/* Scanline */}
+        <div className="absolute left-0 right-0 h-px opacity-20 animate-scanline"
+          style={{ background: `linear-gradient(90deg, transparent, ${T}, transparent)` }} />
+
+        <motion.div style={{ y: yParallax, opacity: opacityHero }}
+          className="relative z-10 text-center px-4 max-w-6xl mx-auto pt-32 lg:pt-0">
+
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-sm font-medium mb-6 sm:mb-8 animate-glow-pulse"
+            style={{ background: 'rgba(144,43,209,0.2)', border: `1px solid rgba(144,43,209,0.4)`, color: B }}>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: T }} />
+            The Future of Football Management — Built Today
           </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-};      
 
-      
-const Home = () => {
-  const ref = useRef(null);
-      const {scrollYProgress} = useScroll({target: ref, offset: ["start start", "end start"] });
-      const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+          {/* Title */}
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-4xl sm:text-6xl md:text-8xl font-extrabold leading-[1.1] mb-6 tracking-tight">
+            <span className="text-white">Built for</span>
+            <br />
+            <TypedWord />
+          </motion.h1>
 
-      return (
-      <div className="bg-gradient-to-br from-gray-950 to-blue-950 text-gray-100 overflow-hidden">
-        {/* Parallax Hero Section */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <motion.div
-            style={{ y }}
-            className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"
-          />
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+            RunAiNi unifies your Admin war room, Coach intelligence suite, and Player portal into one seamless ecosystem. From squad notifications to AI-driven evaluations — every feature is production-ready.
+          </motion.p>
 
-          <div className="relative z-10 text-center px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h1 className="text-5xl md:text-8xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Football Intelligence
-                </span>
-              </h1>
+          {/* CTAs */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none">
+            <Link to="/signup" className="w-full sm:w-auto">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-white text-base animate-gradient"
+                style={{ background: `linear-gradient(135deg,${P},${B},${T})`, backgroundSize: '200% 200%' }}>
+                <FiZap size={18} /> Start Your Academy Free
+              </motion.button>
+            </Link>
+            <Link to="/pricing" className="w-full sm:w-auto">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
+                className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold text-gray-300 border text-base transition-all hover:text-white"
+                style={{ borderColor: 'rgba(144,43,209,0.4)', background: 'rgba(12,19,42,0.6)' }}>
+                View Plans <FiArrowRight size={16} />
+              </motion.button>
+            </Link>
+          </motion.div>
 
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-xl md:text-2xl text-gray-400 max-w-4xl mx-auto mb-12"
-              >
-                AI-powered platform combining advanced analytics, team management, and player development tools for modern football organizations
-              </motion.p>
-
-              <div className="flex flex-col md:flex-row justify-center gap-6">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/signup"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold flex items-center gap-3 hover:shadow-2xl transition-all"
-                  >
-                    <FiArrowRight className="text-xl" />
-                    Start Free Trial
-                  </Link>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link
-                    to="/demo"
-                    className="bg-white/5 border border-white/10 px-8 py-4 rounded-2xl font-semibold flex items-center gap-2 hover:bg-white/10 transition-all"
-                  >
-                    <FiPlay className="text-xl" />
-                    Interactive Demo
-                  </Link>
-                </motion.div>
+          {/* Proof pills */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}
+            className="flex flex-wrap justify-center gap-3 mt-10">
+            {[{ icon: FiCheck, t: 'No credit card required' }, { icon: FiCheck, t: '3 user roles included' }, { icon: FiCheck, t: 'Full feature access' }].map(p => (
+              <div key={p.t} className="flex items-center gap-1.5 text-sm text-gray-500">
+                <FiCheck size={14} style={{ color: T }} />{p.t}
               </div>
-            </motion.div>
-          </div>
-        </section>
+            ))}
+          </motion.div>
+        </motion.div>
 
-        {/* Core Features Grid */}
-        <section className="relative py-24" ref={ref}>
-          <div className="max-w-7xl mx-auto px-4">
-            {/* Marquee Section */}
-            <div className="relative mb-24">
-              
-              <FootballMarquee />
-            </div>
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-40"
+          style={{ background: 'linear-gradient(to top, #000000, transparent)' }} />
+      </section>
 
-            <motion.h2
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-              className="text-4xl font-bold text-center mb-20"
-            >
-              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Comprehensive Platform
-              </span>
-              <br />
-              <span className="text-2xl text-gray-400">Three Pillars of Success</span>
+      {/* ══ STATS ═════════════════════════════════════════════ */}
+      <section className="py-16 px-4 relative">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { value: '6', label: 'Evaluation Pillars', color: P, delay: 0 },
+            { value: '24+', label: 'KPI Criteria', color: B, delay: 0.1 },
+            { value: '3', label: 'User Spaces', color: T, delay: 0.2 },
+            { value: '100%', label: 'Real-Time', color: P, delay: 0.3 },
+          ].map(s => <StatCard key={s.label} {...s} />)}
+        </div>
+      </section>
+
+      {/* ══ THREE PILLARS ══════════════════════════════════════ */}
+      <section className="py-24 px-4 relative">
+        <div className="max-w-7xl mx-auto">
+          <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cV}>
+            <motion.p variants={iV} className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: T }}>
+              Three-Space Architecture
+            </motion.p>
+            <motion.h2 variants={iV} className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+              One Platform. <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Three Superpowers.</span>
             </motion.h2>
+            <motion.p variants={iV} className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Admin command, Coach intelligence, and Player excellence — each role has its own dedicated, feature-rich workspace.
+            </motion.p>
+          </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "Administration Suite",
-                  icon: <FiUsers className="w-12 h-12" />,
-                  color: "from-blue-600 to-blue-400",
-                  features: [
-                    "Player Database Management",
-                    "Financial Tracking & Reporting",
-                    "Advanced Access Controls",
-                    "Team Scheduling & Logistics"
-                  ],
-                  stats: "250+ Clubs Managed"
-                },
-                {
-                  title: "Coaching Intelligence",
-                  icon: <FiClipboard className="w-12 h-12" />,
-                  color: "from-purple-600 to-purple-400",
-                  features: [
-                    "AI Training Recommendations",
-                    "Video Analysis Suite",
-                    "Real-time Performance Dashboards",
-                    "Player Development Tracking"
-                  ],
-                  stats: "10k+ Sessions Analyzed"
-                },
-                {
-                  title: "Player Portal",
-                  icon: <FiTarget className="w-12 h-12" />,
-                  color: "from-green-600 to-green-400",
-                  features: [
-                    "Personal Performance Metrics",
-                    "Custom Training Programs",
-                    "Video Feedback System",
-                    "Biometric Progress Tracking"
-                  ],
-                  stats: "45% Average Improvement"
-                }
-              ].map((role, index) => (
-                <motion.div
-                  key={role.title}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ delay: index * 0.2 }}
-                  className="bg-white/5 backdrop-blur-lg p-8 rounded-3xl border border-white/10 hover:border-white/20 transition-all"
-                >
-                  <div className={`bg-gradient-to-r ${role.color} p-4 rounded-2xl w-fit mb-6`}>
-                    {role.icon}
+          <div className="grid md:grid-cols-3 gap-6">
+            {pillars.map((p, i) => (
+              <TiltCard key={p.role} className="glass-card rounded-2xl p-8 flex flex-col h-full">
+                <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}>
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 animate-glow-pulse"
+                    style={{ background: `linear-gradient(135deg,${p.color}40,${p.color}20)`, border: `1px solid ${p.color}40` }}>
+                    <p.icon size={26} style={{ color: p.color }} />
                   </div>
-                  <h3 className="text-2xl font-bold mb-6">{role.title}</h3>
-                  <ul className="space-y-4 mb-8">
-                    {role.features.map((feature) => (
-                      <motion.li
-                        key={feature}
-                        whileHover={{ x: 10 }}
-                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all"
-                      >
-                        <div className="h-2 w-2 bg-blue-400 rounded-full" />
-                        <span className="text-gray-300">{feature}</span>
-                      </motion.li>
+                  <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: p.color }}>{p.role} Space</div>
+                  <h3 className="text-2xl font-extrabold text-white mb-3">{p.tagline}</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-5">{p.desc}</p>
+                  {/* Features */}
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {p.features.map(f => (
+                      <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                        <FiCheck size={13} style={{ color: p.color, flexShrink: 0 }} />{f}
+                      </li>
                     ))}
                   </ul>
-                  <div className="text-sm text-blue-400 font-semibold">
-                    {role.stats}
+                  {/* Pills */}
+                  <div className="flex gap-2 flex-wrap">
+                    {p.pills.map(pl => <FeaturePill key={pl.label} icon={pl.icon} label={pl.label} />)}
                   </div>
+                </motion.div>
+              </TiltCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ NEW: PRO ECOSYSTEM ═════════════════════════════════ */}
+      <section className="py-24 px-4 relative overflow-hidden bg-black/40">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6">Built for the <span style={{ color: G }}>Elite Circuit.</span></h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto font-medium">A unified architecture serving three distinct user worlds in perfect synchronization.</p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: 'Admin Command',
+                desc: 'The master control room for academy operations. Manage structure, hierarchy, and financials.',
+                features: ['Multi-Group Hierarchies', 'Dynamic Notification Engine', 'Staff Permissions', 'Payment Management'],
+                color: B,
+                icon: FiLayers
+              },
+              {
+                title: 'Coach Intelligence',
+                desc: 'Empowering technical directors with data-driven decision tools and advanced scheduling.',
+                features: ['6-Pillar Evaluation System', 'KPI Radar Analytics', 'Training Session Creator', 'Video Analysis Suite'],
+                color: P,
+                icon: FiZap
+              },
+              {
+                title: 'Player Performance',
+                desc: 'Individualized tracking that transforms potential into professional-grade performance.',
+                features: ['Live Performance History', 'Injury & Health Logs', 'Personalized Training Plans', 'Report History Archives'],
+                color: T,
+                icon: FiUsers
+              }
+            ].map((space, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="glass-card rounded-[2.5rem] p-10 relative group border border-white/5 hover:border-white/10 transition-all">
+                <div className="absolute -top-10 -right-10 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-all duration-700 group-hover:scale-110">
+                  <space.icon size={220} />
+                </div>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-black/40" style={{ background: `${space.color}15`, border: `1px solid ${space.color}30` }}>
+                  <space.icon size={26} style={{ color: space.color }} />
+                </div>
+                <h3 className="text-2xl font-extrabold text-white mb-5">{space.title}</h3>
+                <p className="text-gray-400 text-sm mb-8 leading-relaxed font-medium">{space.desc}</p>
+                <div className="space-y-4">
+                  {space.features.map(f => (
+                    <div key={f} className="flex items-center gap-3 text-xs font-bold text-gray-300 uppercase tracking-tight">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: space.color }} /> {f}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ SECTION 4: PRECISION ANALYTICS ══════════════════════ */}
+      <section className="py-40 px-4 relative overflow-hidden bg-black/40 border-y border-white/5">
+        <DataParticles />
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center relative z-10">
+          <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 border border-white/10 bg-white/5 backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full animate-ping" style={{ background: G }} />
+              Live Intelligence
+            </div>
+            <h2 className="text-6xl md:text-8xl font-black text-white mb-10 leading-[0.85] tracking-tighter">
+              Precision <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient-x">
+                Analytics.
+              </span>
+            </h2>
+            <p className="text-gray-400 text-xl mb-12 leading-relaxed font-medium max-w-xl">
+              Our proprietary KPI engine cross-references physical performance with technical growth. Experience the future of talent identification.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-6 sm:gap-12">
+              {[
+                { label: 'Data Points Sync', val: '2.4M+', trend: '+15%' },
+                { label: 'Evaluation Metrics', val: '42', trend: 'Live' },
+                { label: 'System Uptime', val: '99.9%', trend: 'Stable' },
+                { label: 'AI Prediction', val: '98.8%', trend: 'High' },
+              ].map((stat, i) => (
+                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className="group cursor-default relative">
+                  <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-0 group-hover:h-12 transition-all duration-500" style={{ background: G }} />
+                  <div className="text-2xl sm:text-4xl font-black text-white group-hover:translate-x-2 transition-transform duration-500 flex items-baseline gap-2">
+                    {stat.val}
+                    <span className="text-[10px] text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity">{stat.trend}</span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-gray-500 uppercase font-black tracking-widest mt-2">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
+          </motion.div>
 
-        {/* Advanced Analytics Section */}
-        <section className="py-24 bg-gradient-to-r from-blue-900/50 to-purple-900/50">
-          <div className="max-w-7xl mx-auto px-4">
-            <motion.div
-              className="grid lg:grid-cols-2 gap-16 items-center"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-            >
-              <div className="space-y-8">
-                <h2 className="text-4xl font-bold">
-                  <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    AI-Powered Insights
-                  </span>
-                </h2>
+          <div className="space-y-8">
+            <TiltCard>
+              <div className="bg-[#050811]/90 backdrop-blur-2xl rounded-[2.5rem] sm:rounded-[2.9rem] p-6 sm:p-12 shadow-2xl relative overflow-hidden border border-white/5">
+                <motion.div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -skew-x-12 pointer-events-none"
+                  animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
 
-                <div className="space-y-8">
-                  <motion.div
-                    whileHover={{ x: 10 }}
-                    className="p-6 bg-white/5 rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <FiActivity className="w-8 h-8 text-purple-400" />
-                      <h3 className="text-xl font-semibold">Real-time Match Analysis</h3>
-                    </div>
-                    <p className="text-gray-400">
-                      Live tracking of 25+ performance metrics including passes, shots, tackles,
-                      and positioning with automatic heatmap generation.
-                    </p>
-                  </motion.div>
+                <div className="flex justify-between items-center mb-10">
+                  <div className="font-black text-white text-base sm:text-xl tracking-tight">Technical Radar v4.2</div>
+                  <FiActivity className="text-cyan-400 animate-pulse" size={24} />
+                </div>
 
-                  <motion.div
-                    whileHover={{ x: 10 }}
-                    className="p-6 bg-white/5 rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <FiCloud className="w-8 h-8 text-blue-400" />
-                      <h3 className="text-xl font-semibold">Cloud Video Library</h3>
-                    </div>
-                    <p className="text-gray-400">
-                      Secure storage and analysis of match footage with AI-powered highlight
-                      detection and collaborative annotation tools.
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ x: 10 }}
-                    className="p-6 bg-white/5 rounded-xl border border-white/10 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      <FiLock className="w-8 h-8 text-green-400" />
-                      <h3 className="text-xl font-semibold">Military-grade Security</h3>
-                    </div>
-                    <p className="text-gray-400">
-                      End-to-end encryption, GDPR compliance, and role-based access controls
-                      to protect sensitive team data.
-                    </p>
-                  </motion.div>
+                <div className="aspect-square relative flex items-center justify-center scale-90 sm:scale-100">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-[0.1]">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="absolute border border-white rounded-full" style={{ width: i * 20 + '%', height: i * 20 + '%' }} />
+                    ))}
+                  </div>
+                  <motion.svg className="w-full h-full relative z-10 overflow-visible" viewBox="0 0 100 100">
+                    <motion.polygon initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }} transition={{ duration: 4 }}
+                      points="50,15 85,35 75,75 50,85 25,75 15,35" fill="rgba(0,245,255,0.08)" stroke={G} strokeWidth="1.2" />
+                    {[
+                      { x: 50, y: 15, label: 'Speed' }, { x: 85, y: 35, label: 'Control' }, { x: 75, y: 75, label: 'Power' },
+                      { x: 50, y: 85, label: 'Vision' }, { x: 25, y: 75, label: 'Health' }, { x: 15, y: 35, label: 'Tactics' }
+                    ].map((pt, i) => (
+                      <g key={i}>
+                        <circle cx={pt.x} cy={pt.y} r="1.5" fill={G} className="animate-pulse" />
+                        <text x={pt.x} y={pt.y - 6} textAnchor="middle" fill="#9ca3af" fontSize="3.5" fontWeight="900" className="uppercase tracking-widest">{pt.label}</text>
+                      </g>
+                    ))}
+                  </motion.svg>
                 </div>
               </div>
+            </TiltCard>
 
-              <div className="relative aspect-video bg-gray-800 rounded-3xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="p-8 bg-white/10 backdrop-blur-sm rounded-full"
-                  >
-                    <FiPlay className="w-16 h-16 text-white" />
-                  </motion.div>
+            <div className="grid grid-cols-2 gap-8">
+              <TiltCard className="glass-card rounded-[2rem] p-8">
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Live Performance</div>
+                <div className="h-20">
+                  <PerformanceTrend />
                 </div>
+              </TiltCard>
+              <TiltCard className="glass-card rounded-[2rem] p-8 flex flex-col justify-center text-center">
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">System Uptime</div>
+                <div className="text-3xl font-black text-white">99.98%</div>
+                <div className="text-[10px] text-cyan-400 font-bold mt-1">Operational</div>
+              </TiltCard>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ══ FEATURE DEEP DIVE ══════════════════════════════════ */}
+      <section className="py-24 px-4 relative">
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: `radial-gradient(${B} 1px,transparent 1px)`, backgroundSize: '40px 40px' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cV}>
+            <motion.p variants={iV} className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: B }}>
+              What Makes RunAiNi Different
+            </motion.p>
+            <motion.h2 variants={iV} className="text-4xl md:text-5xl font-extrabold text-white">
+              Engineered for <span style={{ background: `linear-gradient(90deg,${B},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Elite Performance</span>
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {features.map((f, i) => (
+              <motion.div key={f.title} initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }}>
+                <TiltCard className="glass-card rounded-2xl p-7 h-full">
+                  <div className="flex items-start gap-5">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${f.color}20`, border: `1px solid ${f.color}40` }}>
+                      <f.icon size={22} style={{ color: f.color }} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+                    </div>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ CTA BANNER ════════════════════════════════════════ */}
+      <section className="py-12 md:py-24 px-4 relative">
+        <div className="max-w-4xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="rounded-[2rem] p-8 md:p-16 text-center relative overflow-hidden animate-glow-pulse"
+            style={{ background: `linear-gradient(135deg,${P}22,${B}15,${T}10)`, border: `1px solid ${P}40` }}>
+            <div className="absolute inset-0 opacity-5">
+              <PitchSVG />
+            </div>
+            <div className="relative z-10">
+              <p className="text-[10px] md:text-sm font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: T }}>Ready to Dominate?</p>
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
+                Your Academy.<br />
+                <span style={{ background: `linear-gradient(90deg,${P},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Fully Digitized.
+                </span>
+              </h2>
+              <p className="text-gray-400 mb-10 max-w-lg mx-auto text-sm md:text-lg leading-relaxed">
+                Join academies already managing players, tracking performance, and winning more with RunAiNi.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-xs sm:max-w-none mx-auto">
+                <Link to="/signup" className="w-full sm:w-auto">
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+                    className="w-full px-8 py-4 rounded-xl font-bold text-white text-sm md:text-base shadow-lg shadow-purple-500/20"
+                    style={{ background: `linear-gradient(135deg,${P},${B})` }}>
+                    Start Free — No Card Required
+                  </motion.button>
+                </Link>
+                <Link to="/pricing" className="w-full sm:w-auto">
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+                    className="w-full px-8 py-4 rounded-xl font-semibold text-gray-300 border text-sm md:text-base transition-all hover:text-white"
+                    style={{ borderColor: `${B}40`, background: 'rgba(12,19,42,0.5)' }}>
+                    See Pricing →
+                  </motion.button>
+                </Link>
               </div>
-            </motion.div>
-          </div>
-        </section>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Stats Section */}
-        <section className="py-24">
-          <div className="max-w-7xl mx-auto px-4">
-            <motion.div
-              className="grid md:grid-cols-4 gap-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-            >
-              {[
-                { metric: "Player Progress", value: "↑62%", desc: "Average performance improvement" },
-                { metric: "Analysis Speed", value: "10x", desc: "Faster than traditional methods" },
-                { metric: "Data Points", value: "1M+", desc: "Collected per match" },
-                { metric: "Accuracy", value: "98.7%", desc: "AI prediction rate" }
-              ].map((stat) => (
-                <motion.div
-                  key={stat.metric}
-                  whileHover={{ y: -10 }}
-                  className="p-8 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-all"
-                >
-                  <div className="text-4xl font-bold mb-2 text-blue-400">{stat.value}</div>
-                  <div className="text-xl font-semibold mb-2">{stat.metric}</div>
-                  <div className="text-gray-400 text-sm">{stat.desc}</div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-      </div>
-      );
+    </div>
+  );
 };
 
-      export default Home;
+export default Home;

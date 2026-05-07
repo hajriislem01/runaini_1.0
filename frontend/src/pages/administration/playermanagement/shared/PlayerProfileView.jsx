@@ -1,234 +1,309 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  FiArrowLeft, FiUser, FiPhone, FiMail,
-  FiCalendar, FiActivity, FiUsers, FiGrid, FiTrendingUp, FiHeart
+  FiArrowLeft, FiUser, FiPhone, FiMail, FiMapPin,
+  FiCalendar, FiUsers, FiGrid, FiActivity, FiEdit2,
 } from 'react-icons/fi';
-import { FaFutbol } from 'react-icons/fa';
+import { FaMedal, FaFutbol } from 'react-icons/fa';
 
-const PlayerProfileView = ({ player, stats, onBack }) => {
+// ─── Position colour helper ────────────────────────────────────────────────────
+const posColor = (pos) => {
+  if (!pos) return '#4fb0ff';
+  const p = pos.toLowerCase();
+  if (p.includes('keeper') || p.includes('goal')) return '#f59e0b';
+  if (p.includes('defend'))  return '#22c55e';
+  if (p.includes('mid'))     return '#4fb0ff';
+  if (p.includes('forward') || p.includes('attack')) return '#ef4444';
+  return '#4fb0ff';
+};
+
+// ─── Status colour helper ──────────────────────────────────────────────────────
+const statusStyle = (status) => {
+  if (status === 'Active')   return 'bg-green-500/20 text-green-400 border-green-500/30 shadow-[0_0_12px_rgba(34,197,94,.25)]';
+  if (status === 'Injured')  return 'bg-amber-500/20  text-amber-400  border-amber-500/30';
+  return 'bg-red-500/20 text-red-400 border-red-500/30';
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+const PlayerProfileView = ({ player, onBack }) => {
   if (!player) return null;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
+  const cV = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
+  const iV = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } }
-  };
+  // Resolve nested objects from serializer
+  const groupName    = typeof player.group    === 'object' ? player.group?.name    : player.group;
+  const subgroupName = typeof player.subgroup === 'object' ? player.subgroup?.name : player.subgroup;
+  const email        = player.user?.email || player.email;
+  const photoSrc     = player.profile_picture || player.photo_url;
+
+  // Name: use full_name — it might include a space so we grab the first char safely
+  const displayName  = player.full_name || player.name || 'Unnamed Player';
+
+  // Physical stats — only shown when actually populated
+  const hasPhysical  = player.height || player.weight || player.foot;
+  const hasContact   = email || player.phone || player.address;
+  const hasGroup     = groupName || subgroupName;
 
   return (
-    <motion.div
-      className="w-full text-white"
-      initial="hidden" animate="visible" variants={containerVariants}
-    >
-      <div className="max-w-6xl mx-auto">
-        {/* Top Actions */}
-        <motion.div variants={itemVariants} className="flex flex-wrap justify-between items-center mb-8 gap-4">
-          {onBack ? (
-            <button onClick={onBack}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-              <FiArrowLeft className="text-xl" />
-              <span className="font-medium">Go Back</span>
-            </button>
-          ) : (
-            <div></div> /* Empty div to keep flex space-between rendering correctly */
-          )}
-        </motion.div>
+    <motion.div className="min-h-screen text-white p-4 sm:p-6 md:p-8"
+      style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
+      initial="hidden" animate="visible" variants={cV}>
 
-        {/* Hero Section */}
-        <motion.div variants={itemVariants} className="relative mb-8 pt-8 md:pt-16">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#902bd1]/20 to-[#4fb0ff]/20 rounded-3xl blur-3xl -z-10"></div>
-          <div className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl p-6 md:p-8 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+      {/* ══ HERO BANNER ══ */}
+      <div className="shadow-xl p-6 md:p-8 mb-6 md:mb-8 relative overflow-hidden border border-gray-700/50" 
+           style={{ background: 'var(--main-gradient)', borderRadius: 'var(--dashboard-radius)' }}>
+        {/* Decoration blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
+          <div className="absolute -bottom-12 -left-12 w-72 h-72 rounded-full bg-white/5" />
+        </div>
 
-            {/* Glowing borders top-right and bottom-left for aesthetic */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#4fb0ff]/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#902bd1]/20 rounded-full blur-3xl"></div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 w-full">
 
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
-              {/* Avatar */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="relative w-32 h-32 md:w-40 md:h-40 rounded-full p-1"
-                style={{ background: 'linear-gradient(135deg, #902bd1, #00d0cb, #4fb0ff)' }}
-              >
-                <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden border-4 border-[#0a0a0a]">
-                  {player.profile_picture ? (
-                    <img src={player.profile_picture} alt={player.full_name || player.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <FiUser className="text-5xl text-gray-400" />
-                  )}
-                </div>
-                {/* Status Indicator */}
-                {(player.status) && (
-                  <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-[#0a0a0a] ${player.status === 'Active' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <div className="w-32 h-32 md:w-40 md:h-40 overflow-hidden border-4 shadow-xl"
+                style={{ 
+                  borderColor: 'rgba(255,255,255,.2)',
+                  borderRadius: 'var(--dashboard-radius)'
+                }}>
+                {photoSrc ? (
+                  <img src={photoSrc} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-5xl font-bold uppercase"
+                       style={{ background: 'rgba(255,255,255,.1)', color: 'var(--header-text-color)' }}>
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
                 )}
-              </motion.div>
+              </div>
+              {/* Status dot */}
+              {player.status && (
+                <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-4 border-[#0a0f2a] ${
+                  player.status === 'Active' ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,.7)]' :
+                  player.status === 'Injured' ? 'bg-amber-500' : 'bg-red-500'
+                }`} />
+              )}
+            </div>
 
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left mt-2">
-                <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3">
-                  {player.full_name || player.name || 'Unnamed Player'}
-                </h1>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
-                  <span className="px-4 py-1.5 rounded-full bg-[#4fb0ff]/20 text-[#4fb0ff] border border-[#4fb0ff]/30 font-semibold shadow-[0_0_10px_rgba(79,176,255,0.2)]">
-                    {player.position || 'No Position'}
+            {/* Name & meta */}
+            <div className="flex-1 mt-2 md:mt-0">
+              <p className="text-xs uppercase tracking-widest mb-1 font-semibold" style={{ color: 'var(--header-text-color)', opacity: 0.7 }}>
+                Player Profile — Detailed View
+              </p>
+              <div className="flex items-center gap-3 flex-wrap mb-2">
+                <h1 className="text-2xl md:text-3xl font-extrabold" style={{ color: 'var(--header-text-color)' }}>{displayName}</h1>
+                <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold"
+                  style={{ background: 'var(--header-text-color)', color: '#000', opacity: 0.9, borderRadius: 'var(--dashboard-radius)' }}>
+                  <FaMedal style={{ fontSize: 11 }} />PLAYER
+                </span>
+              </div>
+
+              {/* Inline badges */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {player.position && (
+                  <span className="flex items-center gap-1 px-3 py-1 text-sm font-bold border"
+                    style={{ borderRadius: 'var(--dashboard-radius)', backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)', color: 'var(--header-text-color)' }}>
+                    <FaFutbol style={{ fontSize: 11 }} />{player.position}
                   </span>
-                  {player.status && (
-                     <span className={`px-4 py-1.5 rounded-full border font-semibold ${player.status === 'Active' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
-                      {player.status}
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-400 max-w-2xl leading-relaxed">
-                  {player.bio || 'Dedicated academy player striving for excellence both on and off the pitch. Representing the core values of the team.'}
-                </p>
+                )}
+                {player.status && (
+                  <span className={`px-3 py-1 text-sm font-semibold border ${statusStyle(player.status)}`} style={{ borderRadius: 'var(--dashboard-radius)' }}>
+                    {player.status}
+                  </span>
+                )}
+                {groupName && (
+                  <span className="flex items-center gap-1 px-3 py-1 text-sm font-medium border"
+                    style={{ borderRadius: 'var(--dashboard-radius)', backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)', color: 'var(--header-text-color)' }}>
+                    <FiUsers size={12} />{groupName}
+                    {subgroupName && <span className="opacity-70 ml-1">/ {subgroupName}</span>}
+                  </span>
+                )}
               </div>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Dashboard Grid */}
+            {/* Back */}
+            {onBack && (
+              <div className="flex gap-2 self-center mt-4 md:mt-0">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white shadow-lg flex-shrink-0 transition-all bg-gradient-to-r from-[#902bd1] to-[#4fb0ff]"
+                  style={{ borderRadius: 'var(--dashboard-radius)' }}>
+                  <FiArrowLeft size={15} />Go Back
+                </motion.button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ══ CONTENT ══ */}
+      <div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* Left Column (Primary Stats - 4 cards) */}
-          <div className="lg:col-span-2 grid grid-cols-2 gap-4 md:gap-6">
-            <motion.div variants={itemVariants} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 rounded-3xl hover:border-gray-500/50 transition-colors">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-[#902bd1]/20 to-[#00d0cb]/20 rounded-xl">
-                  <FiActivity className="text-2xl text-[#00d0cb]" />
-                </div>
-                <h3 className="text-gray-400 font-medium whitespace-nowrap">Matches</h3>
-              </div>
-              <p className="text-3xl md:text-5xl font-bold text-white">{stats?.matches ?? '-'}</p>
-            </motion.div>
+          {/* ── LEFT COLUMN ── */}
+          <motion.div variants={iV} className="space-y-5">
 
-            <motion.div variants={itemVariants} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 rounded-3xl hover:border-gray-500/50 transition-colors">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-[#4fb0ff]/20 to-[#902bd1]/20 rounded-xl">
-                  <FaFutbol className="text-2xl text-[#4fb0ff]" />
-                </div>
-                <h3 className="text-gray-400 font-medium whitespace-nowrap">Goals</h3>
-              </div>
-              <p className="text-3xl md:text-5xl font-bold text-white">{stats?.goals ?? '-'}</p>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 rounded-3xl hover:border-gray-500/50 transition-colors">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl">
-                  <FiTrendingUp className="text-2xl text-green-400" />
-                </div>
-                <h3 className="text-gray-400 font-medium whitespace-nowrap">Attendance</h3>
-              </div>
-              <p className="text-3xl md:text-5xl font-bold text-white">{stats?.attendance ? `${stats.attendance}%` : '-'}</p>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 rounded-3xl hover:border-gray-500/50 transition-colors">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-gradient-to-br from-red-500/20 to-rose-500/20 rounded-xl">
-                  <FiHeart className="text-2xl text-red-400" />
-                </div>
-                <h3 className="text-gray-400 font-medium whitespace-nowrap">Health</h3>
-              </div>
-              <p className="text-xl md:text-4xl font-bold text-white">{stats?.health || 'Optimal'}</p>
-            </motion.div>
-
-            {/* Team Info Span 2 */}
-            <motion.div variants={itemVariants} className="col-span-2 bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 md:p-8 rounded-3xl hover:border-[#902bd1]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <FiUsers className="text-[#902bd1]" /> Team Affiliation
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-[#0a0a0a]/50 border border-gray-700 p-5 rounded-2xl flex items-center gap-4">
-                  <div className="p-3 bg-[#902bd1]/20 rounded-xl text-[#902bd1]">
-                    <FiUsers size={24} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Main Group</p>
-                    <p className="text-lg text-white font-medium">
-                      {typeof player.group === 'object' ? player.group?.name : player.group || 'Not Assigned'}
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-[#0a0a0a]/50 border border-gray-700 p-5 rounded-2xl flex items-center gap-4">
-                  <div className="p-3 bg-[#4fb0ff]/20 rounded-xl text-[#4fb0ff]">
-                    <FiGrid size={24} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Sub Group</p>
-                    <p className="text-lg text-white font-medium">
-                      {typeof player.subgroup === 'object' ? player.subgroup?.name : player.subgroup || 'Not Assigned'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Right Column (Personal Details) */}
-          <div className="lg:col-span-1">
-            <motion.div variants={itemVariants} className="bg-gray-900/40 backdrop-blur-xl border border-gray-700/50 p-6 md:p-8 rounded-3xl h-full">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                <FiUser className="text-[#00d0cb]" /> Identity
-              </h3>
-
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-2.5 bg-gray-800 rounded-xl text-gray-400">
-                    <FiPhone />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Phone Number</p>
-                    <p className="text-gray-200">{player.phone || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="p-2.5 bg-gray-800 rounded-xl text-gray-400">
-                    <FiMail />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs text-gray-500 mb-1">Email Address</p>
-                    <p className="text-gray-200 break-all">{player.user?.email || player.email || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="p-2.5 bg-gray-800 rounded-xl text-gray-400">
-                    <FiCalendar />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Date of Birth</p>
-                    <p className="text-gray-200">{player.date_of_birth || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div className="h-px w-full bg-gray-700/50 my-4"></div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[#0a0a0a]/50 border border-gray-700/50 p-4 rounded-2xl text-center">
-                    <p className="text-xs text-gray-500 mb-1">Height</p>
-                    <p className="text-xl font-semibold text-[#00d0cb]">{player.height ? `${player.height} cm` : '--'}</p>
-                  </div>
-                  <div className="bg-[#0a0a0a]/50 border border-gray-700/50 p-4 rounded-2xl text-center">
-                    <p className="text-xs text-gray-500 mb-1">Weight</p>
-                    <p className="text-xl font-semibold text-[#902bd1]">{player.weight ? `${player.weight} kg` : '--'}</p>
-                  </div>
-                  {player.foot && (
-                    <div className="bg-[#0a0a0a]/50 border border-gray-700/50 p-4 rounded-2xl text-center col-span-2">
-                      <p className="text-xs text-gray-500 mb-1">Preferred Foot</p>
-                      <p className="text-lg font-semibold text-white">{player.foot}</p>
+            {/* Contact */}
+            {hasContact && (
+              <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#902bd1,#4fb0ff)' }} />
+                  Contact Information
+                </h2>
+                <div className="space-y-3">
+                  {email && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
+                      <FiMail className="text-[#4fb0ff] flex-shrink-0" size={15} />
+                      <span className="text-sm text-gray-300 break-all">{email}</span>
+                    </div>
+                  )}
+                  {player.phone && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
+                      <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
+                      <span className="text-sm text-gray-300">{player.phone}</span>
+                    </div>
+                  )}
+                  {player.address && (
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
+                      <FiMapPin className="text-[#902bd1] flex-shrink-0" size={15} />
+                      <span className="text-sm text-gray-300">{player.address}</span>
                     </div>
                   )}
                 </div>
-
               </div>
-            </motion.div>
-          </div>
+            )}
 
+            {/* Physical Stats */}
+            {hasPhysical && (
+              <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#f59e0b,#ef4444)' }} />
+                  Physical Profile
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {player.height && (
+                    <div className="p-3 rounded-xl bg-gray-800/40 border border-gray-700/30 text-center">
+                      <p className="text-xs text-gray-500 mb-1">Height</p>
+                      <p className="text-lg font-bold text-[#00d0cb]">{player.height} <span className="text-xs text-gray-500">cm</span></p>
+                    </div>
+                  )}
+                  {player.weight && (
+                    <div className="p-3 rounded-xl bg-gray-800/40 border border-gray-700/30 text-center">
+                      <p className="text-xs text-gray-500 mb-1">Weight</p>
+                      <p className="text-lg font-bold text-[#902bd1]">{player.weight} <span className="text-xs text-gray-500">kg</span></p>
+                    </div>
+                  )}
+                  {player.foot && (
+                    <div className="p-3 rounded-xl bg-gray-800/40 border border-gray-700/30 text-center col-span-2">
+                      <p className="text-xs text-gray-500 mb-1">Preferred Foot</p>
+                      <p className="text-base font-bold text-white">{player.foot}</p>
+                    </div>
+                  )}
+                  {player.date_of_birth && (
+                    <div className="p-3 rounded-xl bg-gray-800/40 border border-gray-700/30 col-span-2 flex items-center gap-3">
+                      <FiCalendar className="text-[#4fb0ff] flex-shrink-0" size={15} />
+                      <div>
+                        <p className="text-xs text-gray-500">Date of Birth</p>
+                        <p className="text-sm text-white font-medium">{player.date_of_birth}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Group Assignment */}
+            {hasGroup && (
+              <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="w-1 h-5 rounded-full bg-[#00d0cb]" />
+                  <FiUsers size={14} className="text-[#00d0cb]" />Team Affiliation
+                </h2>
+                <div className="space-y-2">
+                  {groupName && (
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-gray-800/40 border border-gray-700/30">
+                      <span className="text-xs text-gray-500 flex items-center gap-1"><FiUsers size={11} />Group</span>
+                      <span className="text-sm text-white font-medium">{groupName}</span>
+                    </div>
+                  )}
+                  {subgroupName && (
+                    <div className="flex justify-between items-center p-3 rounded-xl bg-gray-800/40 border border-gray-700/30">
+                      <span className="text-xs text-gray-500 flex items-center gap-1"><FiGrid size={11} />Sub-group</span>
+                      <span className="text-sm font-bold px-2 py-0.5 rounded-md"
+                        style={{ background: 'rgba(79,176,255,.15)', color: '#4fb0ff', border: '1px solid rgba(79,176,255,.25)' }}>
+                        {subgroupName}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </motion.div>
+
+          {/* ── RIGHT COLUMN ── */}
+          <div className="lg:col-span-2 space-y-5">
+
+            {/* Bio */}
+            {player.bio && (
+              <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#4fb0ff,#00d0cb)' }} />
+                  About
+                </h2>
+                <p className="text-gray-300 leading-relaxed text-sm">{player.bio}</p>
+              </motion.div>
+            )}
+
+            {/* Health / Notes */}
+            {player.notes && (
+              <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                  <FiActivity className="text-[#22c55e]" size={16} />
+                  Coach Notes
+                </h2>
+                <p className="text-gray-300 leading-relaxed text-sm whitespace-pre-line">{player.notes}</p>
+              </motion.div>
+            )}
+
+            {/* Position detail card — only if position exists */}
+            {player.position && (
+              <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
+                <h2 className="text-base font-bold text-white mb-5 flex items-center gap-2">
+                  <FaFutbol className="text-[#f59e0b]" style={{ fontSize: 16 }} />
+                  Playing Position
+                </h2>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: posColor(player.position) + '20', border: `1px solid ${posColor(player.position)}30` }}>
+                    <FaFutbol style={{ fontSize: 26, color: posColor(player.position) }} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-extrabold" style={{ color: posColor(player.position) }}>
+                      {player.position}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Field position</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Empty state */}
+            {!player.bio && !player.notes && !player.position && (
+              <motion.div variants={iV}
+                className="bg-gray-900/70 rounded-2xl p-12 border border-dashed border-gray-700/50 text-center">
+                <FiEdit2 className="mx-auto text-gray-600 mb-4" size={36} />
+                <p className="text-white text-base font-medium mb-1">No detailed profile yet</p>
+                <p className="text-gray-500 text-sm">
+                  This player hasn't filled in their bio or details through Settings.
+                </p>
+              </motion.div>
+            )}
+          </div>
         </div>
+      </div>
       </div>
     </motion.div>
   );

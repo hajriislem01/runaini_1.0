@@ -15,17 +15,18 @@ const ContactInfoSection = ({ academyData, setAcademyData, itemVariants }) => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { field: 'email', label: 'Email', type: 'email', placeholder: 'academy@example.com' },
-          { field: 'phone', label: 'Phone', type: 'tel', placeholder: '+216 12 345 678' },
-          { field: 'website', label: 'Website', type: 'url', placeholder: 'https://yourwebsite.com' },
-          { field: 'facebook', label: 'Facebook', type: 'url', placeholder: 'https://facebook.com/...' },
-          { field: 'instagram', label: 'Instagram', type: 'url', placeholder: 'https://instagram.com/...' },
+          { field: 'email', label: 'Email', type: 'email', placeholder: 'academy@example.com', autoComplete: 'email' },
+          { field: 'phone', label: 'Phone', type: 'tel', placeholder: '+216 12 345 678', autoComplete: 'tel' },
+          { field: 'website', label: 'Website', type: 'url', placeholder: 'https://yourwebsite.com', autoComplete: 'url' },
+          { field: 'facebook', label: 'Facebook', type: 'url', placeholder: 'https://facebook.com/...', autoComplete: 'url' },
+          { field: 'instagram', label: 'Instagram', type: 'url', placeholder: 'https://instagram.com/...', autoComplete: 'url' },
         ].map(item => (
           <div key={item.field}>
             <label className="block text-gray-300 font-medium mb-2">{item.label}</label>
             <input type={item.type} value={academyData[item.field] || ''}
               onChange={(e) => setAcademyData(p => ({ ...p, [item.field]: e.target.value }))}
               className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-white placeholder-gray-500"
+              autoComplete={item.autoComplete}
               placeholder={item.placeholder} />
           </div>
         ))}

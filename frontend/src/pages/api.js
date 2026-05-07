@@ -1,15 +1,15 @@
 import axios from 'axios';
 
 // Instance avec token pour toutes les requêtes authentifiées
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/';
+
 const API = axios.create({
-  baseURL: 'http://localhost:8000/api/',
-  headers: { 'Content-Type': 'application/json' }
+  baseURL: BASE_URL,
 });
 
 // Instance sans token, pour signup/login
 export const API_NO_AUTH = axios.create({
-  baseURL: 'http://localhost:8000/api/',
-  headers: { 'Content-Type': 'application/json' }
+  baseURL: BASE_URL,
 });
 
 // Intercepteur : ajoute automatiquement le token pour API

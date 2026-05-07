@@ -51,13 +51,20 @@ const CalendarGrid = ({
               <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
                 {day.events.slice(0, 4).map(event => (
                   <motion.div key={event.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-                    className={`p-2 rounded-lg truncate border ${
-                      event.type === 'Tournament'
-                        ? 'bg-gradient-to-r from-[#902bd1]/20 to-[#00d0cb]/20 border-[#902bd1]/30'
-                        : 'bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 border-[#00d0cb]/30'
+                    className={`p-1.5 rounded-lg truncate border ${
+                      event._isTraining
+                        ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/30'
+                        : event.type === 'Tournament'
+                          ? 'bg-gradient-to-r from-[#902bd1]/20 to-[#00d0cb]/20 border-[#902bd1]/30'
+                          : 'bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 border-[#00d0cb]/30'
                     }`}>
-                    <div className="font-medium text-xs truncate text-white">{event.title}</div>
-                    <div className="text-[0.65rem] text-gray-400 mt-1 flex items-center">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      {event._isTraining && (
+                        <span className="text-[0.55rem] font-bold px-1 py-0 rounded bg-emerald-500/30 text-emerald-300 shrink-0 leading-tight">Coach</span>
+                      )}
+                      <div className="font-medium text-xs truncate text-white">{event.title}</div>
+                    </div>
+                    <div className="text-[0.65rem] text-gray-400 flex items-center">
                       <FiClock className="mr-1" size={10} />
                       {format(new Date(event.date), 'HH:mm')}
                     </div>

@@ -1,135 +1,161 @@
-import { useState } from 'react';
-import { FiMenu, FiX, FiArrowUpRight, FiUser } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { FiMenu, FiX, FiArrowRight, FiUser } from 'react-icons/fi';
 
-const guestLinks = [
+// Brand Colors (Synchronized with global CSS)
+const P = '#902bd1'; // Primary Purple
+const B = '#4fb0ff'; // Secondary Blue
+const T = '#00d0cb'; // Cyan/Teal
+const G = '#00f5ff'; // Electric Blue
+
+const links = [
   { name: 'Home', path: '/' },
   { name: 'Plans', path: '/pricing' },
   { name: 'Blog', path: '/blog' },
-  { name: 'About', path: '/about' }
+  { name: 'About', path: '/about' },
 ];
 
 const Navbar = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const { pathname } = useLocation();
 
-    return (
-        <nav className="top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-md fixed w-full z-50">
-            <div className="max-w-8xl mx-auto px-8 sm:px-28 flex items-center h-16">
-                {/* Branding */}
-                <motion.div whileHover={{ scale: 1.02 }} className="inline-block">
-                    <Link to="/" className="text-2xl font-bold flex items-center group">
-                        <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent transition-all group-hover:from-blue-700 group-hover:to-blue-600">
-                            RUN
-                        </span>
-                        <span className="text-gray-900 ml-1.5 font-medium">AINI</span>
-                    </Link>
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  const isPublic = ['/', '/pricing', '/blog', '/about'].includes(pathname);
+
+  return (
+    <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 px-6 ${scrolled ? 'py-3' : 'py-5'}`}
+      style={{
+        background: '#05050a',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      }}>
+
+      <div className="max-w-[1400px] mx-auto flex items-center justify-between lg:grid lg:grid-cols-3">
+
+        {/* Left: Logo */}
+        <div className="flex justify-start">
+          <Link to="/" className="text-2xl font-black flex items-center gap-0.5 tracking-tighter">
+            <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              RUN
+            </span>
+            <span className="text-white">AI</span>
+            <span style={{ color: T }}>NI</span>
+          </Link>
+        </div>
+
+        {/* Center: Desktop Navigation Links */}
+        <div className="hidden lg:flex justify-center">
+          <div className="flex items-center p-1 bg-white/[0.03] rounded-full border border-white/[0.05] backdrop-blur-md">
+            <LayoutGroup id="nav-capsule">
+              {links.map(l => {
+                const active = pathname === l.path;
+                return (
+                  <Link key={l.name} to={l.path}
+                    className="relative px-5 py-2 text-[13px] font-bold transition-all duration-300 tracking-wide uppercase"
+                    style={{ color: active ? 'white' : 'rgba(255,255,255,0.5)' }}>
+                    {active && (
+                      <motion.div
+                        layoutId="active-pill"
+                        className="absolute inset-0 rounded-full z-0"
+                        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 hover:text-white transition-colors">
+                      {l.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </LayoutGroup>
+          </div>
+        </div>
+
+        {/* Right: Action Items */}
+        <div className="flex justify-end items-center gap-4 lg:gap-6">
+          <Link to="/login"
+            className="hidden lg:flex items-center gap-2 text-[13px] font-bold text-white/50 hover:text-white transition-all tracking-widest uppercase">
+            <FiUser size={14} className="text-[#00f5ff]" /> Login
+          </Link>
+
+          <Link to="/signup" className="hidden lg:flex">
+            <motion.button
+              whileHover={{ scale: 1.02, boxShadow: `0 0 20px ${P}40` }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-2.5 rounded-full text-[13px] font-black text-white transition-all uppercase tracking-widest flex items-center gap-2"
+              style={{ background: `linear-gradient(135deg,${P},${B})` }}>
+              Get Started
+              <FiArrowRight size={14} />
+            </motion.button>
+          </Link>
+
+          {/* Mobile Toggle */}
+          <button onClick={() => setOpen(!open)}
+            className="lg:hidden p-2 rounded-full transition-colors"
+            style={{ color: open ? G : 'white', background: 'rgba(255,255,255,0.05)' }}>
+            {open ? <FiX size={20} /> : <FiMenu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="mobile-nav"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-full left-0 right-0 bg-[#05050a] border-b border-white/5 overflow-hidden"
+          >
+            <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-2">
+              {links.map((l, i) => (
+                <motion.div
+                  key={l.name}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link to={l.path}
+                    className="flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-bold tracking-widest uppercase transition-all"
+                    style={{
+                      color: pathname === l.path ? G : 'rgba(255,255,255,0.5)',
+                      background: pathname === l.path ? 'rgba(255,255,255,0.03)' : 'transparent',
+                      border: pathname === l.path ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent'
+                    }}>
+                    {l.name} <FiArrowRight size={14} className="opacity-30" />
+                  </Link>
                 </motion.div>
-
-                {/* Desktop Links */}
-                <div className="hidden md:flex items-center flex-grow justify-center">
-                    <div className="flex space-x-10">
-                        {guestLinks.map((link) => (
-                            <motion.div key={link.name} className="relative" whileHover="hover" initial="initial">
-                                <Link
-                                    to={link.path}
-                                    className="text-gray-600 hover:text-gray-900 px-2 py-1.5 font-medium transition-colors duration-300"
-                                >
-                                    {link.name}
-                                    <motion.span
-                                        className="absolute left-0 -bottom-1 w-full h-0.5 bg-blue-500"
-                                        variants={{
-                                            initial: { scaleX: 0, originX: 0 },
-                                            hover: { scaleX: 1 },
-                                        }}
-                                        transition={{ duration: 0.3, ease: "easeOut" }}
-                                    />
-                                </Link>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Auth Section */}
-                <div className="hidden md:flex items-center space-x-4 ml-6">
-                    <Link to="/login" className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition">
-                        <FiUser size={22} />
-                    </Link>
-                    <motion.div whileHover={{ scale: 1.05 }} transition={{ type: 'spring', stiffness: 300 }}>
-                        <Link
-                            to="/signup"
-                            className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-2.5 rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-blue-200/50 flex items-center space-x-2"
-                        >
-                            Get Started
-                        </Link>
-                    </motion.div>
-                </div>
-
-                {/* Mobile Menu Button */}
-                <div className="md:hidden flex items-center ml-auto">
-                    <motion.button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-                        whileTap={{ scale: 0.95 }}
-                        className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-                    </motion.button>
-                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/5">
+                <Link to="/login" className="flex items-center justify-center py-4 rounded-2xl text-sm font-bold text-white/50 uppercase tracking-widest bg-white/[0.03]">
+                  Login
+                </Link>
+                <Link to="/signup" className="flex items-center justify-center py-4 rounded-2xl text-sm font-bold text-white uppercase tracking-widest" style={{ background: `linear-gradient(135deg,${P},${B})` }}>
+                  Join Now
+                </Link>
+              </div>
             </div>
-
-            {/* Mobile Menu */}
-            <AnimatePresence>
-                {isMenuOpen && (
-                    <motion.div
-                        key="mobile-menu"
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="md:hidden fixed top-16 left-0 w-full bg-white/95 backdrop-blur-lg shadow-xl border-t border-gray-100 z-40"
-                    >
-                        <div className="px-4 py-6 space-y-2">
-                            {guestLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    to={link.path}
-                                    className="block px-4 py-3 text-gray-600 hover:bg-blue-50 rounded-xl transition-colors hover:text-blue-600 font-medium group flex items-center justify-between"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    <span>{link.name}</span>
-                                    <FiArrowUpRight className="text-gray-400 group-hover:text-blue-600 transition-colors" />
-                                </Link>
-                            ))}
-
-                            {/* Mobile Login Link */}
-                            <Link
-                                to="/login"
-                                className="block px-4 py-3 text-gray-600 hover:bg-blue-50 rounded-xl transition-colors hover:text-blue-600 font-medium group flex items-center justify-between"
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                <span>Login</span>
-                                <FiUser className="text-gray-400 group-hover:text-blue-600 transition-colors" />
-                            </Link>
-
-                            {/* Signup Button */}
-                            <div className="pt-4 mt-2 border-t border-gray-100">
-                                <motion.div whileTap={{ scale: 0.95 }} className="mx-2">
-                                    <Link
-                                        to="/signup"
-                                        className="block bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-3.5 rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all text-center shadow-md hover:shadow-lg font-medium"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Get Started
-                                    </Link>
-                                </motion.div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </nav>
-    );
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
 };
 
 export default Navbar;

@@ -16,26 +16,39 @@ class EventViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Event.objects.filter(
             academy=user.academy
-        ).prefetch_related('participants__player')
+        ).prefetch_related('participants__player', 'groups', 'subgroups', 'target_coaches', 'target_players')
 
-        # ✅ Coach voit seulement les events de ses groupes
+        if user.role == 'admin':
+            return queryset
+
+        from django.db.models import Q
+
         if user.role == 'coach':
-            try:
-                queryset = queryset.filter(
-                    group__coach=user.coach_profile
-                )
-            except Exception:
-                return Event.objects.none()
+            profile = user.coach_profile
+            queryset = queryset.filter(
+                Q(target_coaches=profile) |
+                Q(groups__assigned_coaches=profile) |
+                Q(groups__full_access_coaches=profile) |
+                Q(subgroups__assigned_coaches=profile) |
+                Q(target_players__group__assigned_coaches=profile) |
+                Q(target_players__group__full_access_coaches=profile) |
+                Q(target_players__subgroup__assigned_coaches=profile)
+            ).distinct()
 
-        # Filtres optionnels
+        elif user.role == 'player':
+            profile = user.player_profile
+            queryset = queryset.filter(
+                Q(target_players=profile) |
+                Q(groups=profile.group) |
+                Q(subgroups=profile.subgroup)
+            ).distinct()
+
+        # Optional filters
         event_type = self.request.query_params.get('type')
-        group_id = self.request.query_params.get('group')
         status_filter = self.request.query_params.get('status')
 
         if event_type:
             queryset = queryset.filter(type=event_type)
-        if group_id:
-            queryset = queryset.filter(group__id=group_id)
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
@@ -47,7 +60,15 @@ class EventViewSet(viewsets.ModelViewSet):
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
-        serializer.save(academy=self.request.user.academy)
+        event = serializer.save(academy=self.request.user.academy)
+        print(f"📥 CREATED EVENT {event.id}: Groups: {list(event.groups.values_list('id', flat=True))}, Subgroups: {list(event.subgroups.values_list('id', flat=True))}")
+        from .signals import send_event_notifications
+        send_event_notifications(event)
+
+    def perform_update(self, serializer):
+        event = serializer.save()
+        from .signals import send_event_notifications
+        send_event_notifications(event)
 
     @action(detail=True, methods=['post'], url_path='add-participant')
     def add_participant(self, request, pk=None):

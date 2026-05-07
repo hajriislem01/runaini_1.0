@@ -39,7 +39,6 @@ const AdministrationDashboard = ({ players = [], coaches = [], events = [] }) =>
               Welcome to {organizationName}
             </h1>
           )}
-          <p className="text-gray-300 mt-2 text-lg">Administration Dashboard</p>
         </motion.div>
 
         {/* Stats Cards */}
