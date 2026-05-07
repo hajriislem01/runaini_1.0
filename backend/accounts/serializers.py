@@ -48,7 +48,8 @@ class AcademySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(image_field.url)
-        return f"http://127.0.0.1:8000{image_field.url}"
+        base = os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')
+        return f"{base}{image_field.url}"
 
 
 # ─── 2. CustomUser (minimal) ──────────────────────────────────────────────────
@@ -89,7 +90,7 @@ class CoachSerializer(serializers.ModelSerializer):
             photo_url = None
             if profile.photo:
                 request = self.context.get('request')
-                photo_url = request.build_absolute_uri(profile.photo.url) if request else f"http://127.0.0.1:8000{profile.photo.url}"
+                photo_url = request.build_absolute_uri(profile.photo.url) if request else f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{profile.photo.url}"
 
             return {
                 'id':                  profile.id,
@@ -271,7 +272,8 @@ class CoachProfileSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(obj.photo.url)
-        return f'http://127.0.0.1:8000{obj.photo.url}'
+        base = os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')
+        return f'{base}{obj.photo.url}'
 
 
 # ─── 6. Group ─────────────────────────────────────────────────────────────────
@@ -394,7 +396,8 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(obj.photo.url)
-        return f'http://127.0.0.1:8000{obj.photo.url}'
+        base = os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')
+        return f'{base}{obj.photo.url}'
 
 
 # ─── 8. Event ─────────────────────────────────────────────────────────────────
@@ -413,7 +416,7 @@ class EventParticipantSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.player.photo.url)
-            return f'http://127.0.0.1:8000{obj.player.photo.url}'
+            return f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{obj.player.photo.url}"
         return None
 
 
@@ -471,7 +474,7 @@ class EventSerializer(serializers.ModelSerializer):
         def get_photo(c):
             if c.photo:
                 request = self.context.get('request')
-                return request.build_absolute_uri(c.photo.url) if request else f"http://127.0.0.1:8000{c.photo.url}"
+                return request.build_absolute_uri(c.photo.url) if request else f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{c.photo.url}"
             return None
 
         return [
@@ -497,7 +500,7 @@ class EventSerializer(serializers.ModelSerializer):
         def get_photo(p):
             if p.photo:
                 request = self.context.get('request')
-                return request.build_absolute_uri(p.photo.url) if request else f"http://127.0.0.1:8000{p.photo.url}"
+                return request.build_absolute_uri(p.photo.url) if request else f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{p.photo.url}"
             return None
 
         return [
@@ -550,7 +553,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             return request.build_absolute_uri(obj.receipt.url)
-        return f"http://127.0.0.1:8000{obj.receipt.url}"
+        return f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{obj.receipt.url}"
 
 
 # ─── 10. PlayerReport ─────────────────────────────────────────────────────────

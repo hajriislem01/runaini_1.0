@@ -111,7 +111,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const res = await axios.post('http://localhost:8000/api/login/', { email, password });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL || 'http://localhost:8000/api/'}login/`, { email, password });
       const { token, user: userData } = res.data;
       if (!userData) { setError('Login successful but user data is missing.'); return; }
 
