@@ -92,8 +92,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:80",
     "https://runaini-5f59w7c1z-hajriislem01s-projects.vercel.app",  
-    "https://runaini.onrender.com",
-    "https://runaini.vercel.app",
+    "https://runaini-backend.onrender.com",
+    "https://runaini-1-0.vercel.app",
 ]
 
 ROOT_URLCONF = 'backend.urls'
