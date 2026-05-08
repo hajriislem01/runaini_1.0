@@ -19,6 +19,9 @@ def set_default_group(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0010_remove_group_players_remove_playerprofile_group_and_more'),
     ]

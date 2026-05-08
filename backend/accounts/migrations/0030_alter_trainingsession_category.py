@@ -23,6 +23,9 @@ def convert_category_to_json_array(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0029_remove_group_coach_remove_subgroup_coach'),
     ]

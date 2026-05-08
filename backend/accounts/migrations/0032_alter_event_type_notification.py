@@ -7,6 +7,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0031_remove_event_group_remove_event_subgroup_and_more'),
     ]

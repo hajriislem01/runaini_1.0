@@ -7,6 +7,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0002_playerprofile_coachprofile'),
     ]

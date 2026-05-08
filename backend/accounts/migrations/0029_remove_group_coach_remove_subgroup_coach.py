@@ -5,6 +5,9 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0028_coachprofile_assigned_groups_and_more'),
     ]

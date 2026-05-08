@@ -5,6 +5,9 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0008_remove_playerprofile_category_playerprofile_address_and_more'),
     ]

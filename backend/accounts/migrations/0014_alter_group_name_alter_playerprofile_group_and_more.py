@@ -6,6 +6,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0013_alter_playerprofile_group'),
     ]

@@ -5,6 +5,9 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0007_coachprofile_address_coachprofile_certification_and_more'),
     ]

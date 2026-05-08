@@ -6,6 +6,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0015_academy_alter_group_name_customuser_academy_and_more'),
     ]

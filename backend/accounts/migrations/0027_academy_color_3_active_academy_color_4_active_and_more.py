@@ -5,6 +5,9 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0026_academy_border_radius_style_academy_color_3_and_more'),
     ]

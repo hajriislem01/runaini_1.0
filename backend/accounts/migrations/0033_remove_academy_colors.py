@@ -5,6 +5,9 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0032_alter_event_type_notification'),
     ]

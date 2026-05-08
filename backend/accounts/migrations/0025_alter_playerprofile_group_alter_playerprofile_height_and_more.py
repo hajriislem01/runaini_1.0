@@ -6,6 +6,9 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
+
     dependencies = [
         ('accounts', '0024_alter_customuser_options_alter_customuser_username_and_more'),
     ]
