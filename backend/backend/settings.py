@@ -91,9 +91,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.1.6:3000",
     "http://localhost:3000",
     "http://localhost:80",
-    "https://runaini-5f59w7c1z-hajriislem01s-projects.vercel.app",  
     "https://runaini-backend.onrender.com",
     "https://runaini-1-0.vercel.app",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://runaini.*\.vercel\.app$",
+    r"^https://hajriislem01.*\.vercel\.app$",
 ]
 
 ROOT_URLCONF = 'backend.urls'
