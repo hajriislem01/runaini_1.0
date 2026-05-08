@@ -6,6 +6,8 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
     dependencies = [
         ('accounts', '0027_academy_color_3_active_academy_color_4_active_and_more'),
     ]

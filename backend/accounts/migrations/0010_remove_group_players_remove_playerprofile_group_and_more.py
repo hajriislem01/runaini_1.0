@@ -7,6 +7,8 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
 
+    atomic = False
+
     dependencies = [
         ('accounts', '0009_remove_playerprofile_date_of_birth'),
     ]
