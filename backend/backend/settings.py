@@ -61,12 +61,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'rest_framework',
-    'rest_framework.authtoken' ,
+    'rest_framework.authtoken',
     'accounts',
-    'django.contrib.staticfiles',  
-    'corsheaders', 
-    
-    
+    'django.contrib.staticfiles',
+    'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 REST_FRAMEWORK = {
@@ -177,5 +177,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 CORS_ALLOW_CREDENTIALS = True
 import os
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY':    os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

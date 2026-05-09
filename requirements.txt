@@ -12,3 +12,5 @@ tzdata==2025.2
 whitenoise==6.7.0
 dj-database-url==3.0.1
 python-dotenv==1.0.1
+cloudinary==1.42.1
+django-cloudinary-storage==0.3.0
