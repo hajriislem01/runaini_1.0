@@ -63,10 +63,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'accounts',
-    'django.contrib.staticfiles',
     'corsheaders',
     'cloudinary',
     'cloudinary_storage',
+    'django.contrib.staticfiles',
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 REST_FRAMEWORK = {
