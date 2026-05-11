@@ -61,7 +61,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         event = serializer.save(academy=self.request.user.academy)
-        print(f"📥 CREATED EVENT {event.id}: Groups: {list(event.groups.values_list('id', flat=True))}, Subgroups: {list(event.subgroups.values_list('id', flat=True))}")
         from .signals import send_event_notifications
         send_event_notifications(event)
 

@@ -142,9 +142,6 @@ class CoachSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         initial_data = getattr(self, 'initial_data', {})
-        print(f"📥 Received for update (validated): {validated_data}")
-        print(f"📥 Full payload (initial): {initial_data}")
-        
         # 1. Handle base CustomUser (Role, Credentials, Contact)
         user_instance = instance
         
@@ -166,8 +163,7 @@ class CoachSerializer(serializers.ModelSerializer):
             user_instance.club = initial_data['club']
             
         user_instance.save()
-        print("✅ user_instance modified & saved!")
-            
+
         # 2. Handle nested CoachProfile (Metrics, Credentials)
         coach_instance = getattr(user_instance, 'coach_profile', None)
         if coach_instance:
@@ -182,7 +178,6 @@ class CoachSerializer(serializers.ModelSerializer):
                 coach_instance.certification = initial_data['certification']
                 
             coach_instance.save()
-            print("✅ coach_instance modified & saved!")
             
             # ✅ NEW: Multi-Group Assignment Logic
             # payload format expected: 

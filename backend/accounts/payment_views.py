@@ -52,7 +52,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            print("❌ Payment Validation Errors:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         self.perform_create(serializer)
@@ -76,7 +75,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
             academy = user.coach_profile.academy
 
         if not academy:
-            print(f"DEBUG: No academy found for user {user.username} (ID: {user.id})")
             raise serializers.ValidationError({
                 "academy": "No academy associated. Please link your account or the player to an academy."
             })

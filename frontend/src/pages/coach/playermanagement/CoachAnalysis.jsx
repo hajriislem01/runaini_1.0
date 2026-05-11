@@ -11,7 +11,7 @@ import {
 import { Radar, Bar, Line } from 'react-chartjs-2';
 import API from '../../api';
 import toast, { Toaster } from 'react-hot-toast';
-import { format, subMonths } from 'date-fns';
+import { format } from 'date-fns';
 
 ChartJS.register(
   RadialLinearScale, PointElement, LineElement, Filler,
@@ -75,47 +75,14 @@ const GROUP_COLORS = {
   'Health': '#ef4444',    'Academic': '#ec4899',
 };
 
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-const makeMock = (pid, months) => {
-  const now = new Date();
-  return Array.from({ length: months }, (_, i) => {
-    const base = 5.5 + (pid % 3) + Math.random();
-    const trend = i * 0.18;
-    return {
-      month: format(subMonths(now, months - 1 - i), 'yyyy-MM'),
-      overall_score: parseFloat((base + trend).toFixed(1)),
-      technical_avg: parseFloat((base + trend + Math.random() * 0.5).toFixed(1)),
-      tactical_avg:  parseFloat((base + trend + Math.random() * 0.8).toFixed(1)),
-      physical_avg:  parseFloat((base + trend + Math.random() * 0.4).toFixed(1)),
-      mental_avg:    parseFloat((base + trend + Math.random() * 0.6).toFixed(1)),
-      technical_scores: { Finishing: 6+Math.random()*3, Dribbling: 5+Math.random()*3, 'Ball control': 6+Math.random()*2, Shooting: 5+Math.random()*4, Passing: 6+Math.random()*2, Heading: 5+Math.random()*3, Tackling: 5+Math.random()*2 },
-      tactical_scores:  { Positioning: 7+Math.random()*2, 'Game reading': 6+Math.random()*3, Pressing: 5+Math.random()*2, 'Decision making': 6+Math.random()*2, 'Off-the-ball': 6+Math.random()*2, Transition: 5+Math.random()*3 },
-      physical_scores:  { Speed: 6+Math.random()*2, Endurance: 5+Math.random()*3, Strength: 5+Math.random()*2, Agility: 6+Math.random()*2, Explosivity: 6+Math.random()*2 },
-      mental_scores:    { Attitude: 7+Math.random()*2, Resilience: 6+Math.random()*2, Leadership: 5+Math.random()*3, Concentration: 6+Math.random()*2, Confidence: 7+Math.random()*2 },
-      fatigue_level:    1 + Math.ceil(Math.random() * 4),
-      sleep_quality:    2 + Math.ceil(Math.random() * 3),
-      is_injured:       Math.random() < 0.1,
-      school_grade_avg: 10 + Math.random() * 9,
-      school_attendance: 70 + Math.random() * 30,
-      school_behaviour: 5 + Math.random() * 5,
-      attendance_present: 12 + Math.ceil(Math.random() * 4),
-      attendance_total: 16,
-    };
-  });
-};
-
-const makeGroupAvg = (months) => {
-  const now = new Date();
-  return Array.from({ length: months }, (_, i) => ({
-    month: format(subMonths(now, months - 1 - i), 'yyyy-MM'),
-    overall_score:  parseFloat((6.5 + Math.random() * 0.5).toFixed(1)),
-    technical_avg:  parseFloat((6.8 + Math.random() * 0.4).toFixed(1)),
-    tactical_avg:   parseFloat((6.5 + Math.random() * 0.6).toFixed(1)),
-    physical_avg:   parseFloat((7.0 + Math.random() * 0.3).toFixed(1)),
-    mental_avg:     parseFloat((6.7 + Math.random() * 0.5).toFixed(1)),
-    health_avg:     parseFloat((6.0 + Math.random() * 1.0).toFixed(1)),
-    academic_avg:   parseFloat((7.0 + Math.random() * 1.5).toFixed(1)),
-  }));
+// ─── API helper ────────────────────────────────────────────────────────────────
+const fetchKpiAnalysis = async (playerId, months) => {
+  try {
+    const res = await API.get('reports/kpi-analysis/', { params: { player: playerId, months } });
+    return res.data; // { player, reports: [...], group_avg: [...] }
+  } catch {
+    return { reports: [], group_avg: [] };
+  }
 };
 
 // ─── KPI value extractor ───────────────────────────────────────────────────────
@@ -249,28 +216,70 @@ const CoachAnalysis = () => {
         const [pr, gr] = await Promise.all([API.get('players/'), API.get('groups/')]);
         setPlayers(pr.data);
         setGroups(gr.data);
-        setGroupAvgData(makeGroupAvg(monthsRange));
         if (pr.data.length > 0) {
           const first = pr.data[0];
           setSelectedPlayers([first.id]);
-          setReportsData({ [first.id]: makeMock(first.id, monthsRange) });
+          const data = await fetchKpiAnalysis(first.id, monthsRange);
+          setReportsData({ [first.id]: data.reports });
+          setGroupAvgData(data.group_avg);
         }
       } catch { toast.error('Failed to load data'); }
       finally   { setIsLoading(false); }
     };
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-fetch when monthsRange changes
+  useEffect(() => {
+    if (selectedPlayers.length === 0) return;
+    const reload = async () => {
+      const newData = {};
+      let latestGroupAvg = [];
+      for (const pid of selectedPlayers) {
+        const data = await fetchKpiAnalysis(pid, monthsRange);
+        newData[pid] = data.reports;
+        if (data.group_avg.length > 0) latestGroupAvg = data.group_avg;
+      }
+      setReportsData(newData);
+      if (latestGroupAvg.length > 0) setGroupAvgData(latestGroupAvg);
+    };
+    reload();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthsRange]);
 
   const getPlayerName = (pid) => players.find(p => p.id === pid)?.full_name || `Player ${pid}`;
   const getLatest     = (pid) => { const r = reportsData[pid] || []; return r[r.length - 1]; };
+  const getGroupKpiAvg = (kpiKey) => {
+    if (!groupAvgData.length) return 0;
+    const latest = groupAvgData[groupAvgData.length - 1];
+    const pillar = Object.values(KPI_GROUPS).flat().find(x => x.key === kpiKey)?.pillar;
+    const map = { technical: latest.avg_technical, tactical: latest.avg_tactical, physical: latest.avg_physical, mental: latest.avg_mental };
+    return parseFloat((map[pillar] || latest.avg_overall || 0).toFixed(1));
+  };
 
-  const togglePlayer = (p) => {
-    setSelectedPlayers(prev => {
-      const next = prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id];
-      if (!reportsData[p.id])
-        setReportsData(rd => ({ ...rd, [p.id]: makeMock(p.id, monthsRange) }));
-      return next;
-    });
+  const togglePlayer = async (p) => {
+    const isSelected = selectedPlayers.includes(p.id);
+    if (isSelected) {
+      setSelectedPlayers(prev => prev.filter(id => id !== p.id));
+    } else {
+      setSelectedPlayers(prev => [...prev, p.id]);
+      if (!reportsData[p.id]) {
+        const data = await fetchKpiAnalysis(p.id, monthsRange);
+        setReportsData(rd => ({ ...rd, [p.id]: data.reports }));
+        if (data.group_avg.length > 0) setGroupAvgData(data.group_avg);
+      }
+    }
+  };
+
+  const selectPlayerForDeepAnalysis = async (p) => {
+    setActiveView('advanced');
+    setSelectedPlayers([p.id]);
+    if (!reportsData[p.id]) {
+      const data = await fetchKpiAnalysis(p.id, monthsRange);
+      setReportsData(rd => ({ ...rd, [p.id]: data.reports }));
+      if (data.group_avg.length > 0) setGroupAvgData(data.group_avg);
+    }
   };
 
   const toggleKpi = (k) => {
@@ -306,13 +315,14 @@ const CoachAnalysis = () => {
       pointBackgroundColor: KPI_COLORS[i % KPI_COLORS.length],
     }));
     datasets.push({
-      label:'Group avg', data: selectedKpis.map(() => parseFloat((6.5 + Math.random() * 0.8).toFixed(1))),
+      label:'Group avg', data: selectedKpis.map(k => getGroupKpiAvg(k)),
       borderColor:'rgba(156,163,175,0.5)', backgroundColor:'rgba(156,163,175,0.06)',
       borderWidth:1.5, borderDash:[4,4], pointRadius:2,
       pointBackgroundColor:'rgba(156,163,175,0.5)',
     });
     return { labels, datasets };
-  }, [selectedPlayers, selectedKpis, reportsData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPlayers, selectedKpis, reportsData, groupAvgData]);
 
   // ── Bar (current month) ──────────────────────────────────────────────────────
   const barData = useMemo(() => {
@@ -350,7 +360,7 @@ const CoachAnalysis = () => {
       })
     );
     datasets.push({
-      label:'Group avg', data: groupAvgData.map(r => r.overall_score),
+      label:'Group avg', data: groupAvgData.map(r => r.avg_overall || 0),
       borderColor:'rgba(156,163,175,0.4)', backgroundColor:'transparent',
       borderDash:[5,5], tension:0.4, borderWidth:1.5, pointRadius:2,
       pointBackgroundColor:'rgba(156,163,175,0.4)',
@@ -385,7 +395,7 @@ const CoachAnalysis = () => {
           label:'Group avg',
           data: groupAvgData.length > 0
             ? (() => { const g = groupAvgData[groupAvgData.length-1];
-                return [g.technical_avg,g.tactical_avg,g.physical_avg,g.mental_avg,g.health_avg||6.2,g.academic_avg||7.0]; })()
+                return [g.avg_technical||0,g.avg_tactical||0,g.avg_physical||0,g.avg_mental||0,g.avg_overall||0,g.avg_overall||0]; })()
             : [0,0,0,0,0,0],
           backgroundColor:'rgba(156,163,175,0.3)', borderRadius:4,
         },
@@ -425,11 +435,19 @@ const CoachAnalysis = () => {
   // ── Simple Quick View ────────────────────────────────────────────────────────
   const SimpleView = () => (
     <motion.div variants={iV} className="space-y-3">
+      {filteredPlayers.length === 0 && (
+        <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50">
+          <FiUsers className="mx-auto text-4xl text-gray-600 mb-3"/>
+          <p className="text-gray-300 font-medium">No players found</p>
+          <p className="text-gray-500 text-sm mt-1">Add players to your academy to see their overview here.</p>
+        </div>
+      )}
       {filteredPlayers.map((p, idx) => {
-        const r     = getLatest(p.id) || makeMock(p.id, monthsRange).slice(-1)[0];
-        const prev  = (reportsData[p.id] || makeMock(p.id, monthsRange)).slice(-2)[0];
+        const reports = reportsData[p.id] || [];
+        const r     = reports[reports.length - 1] || null;
+        const prev  = reports[reports.length - 2] || null;
         const delta = r && prev ? (r.overall_score - prev.overall_score) : 0;
-        const alerts= computeAlerts(p.id, reportsData[p.id] || makeMock(p.id, monthsRange), p.full_name);
+        const alerts= computeAlerts(p.id, reports, p.full_name);
         const danger = alerts.filter(a => a.type === 'danger').length;
         const warn   = alerts.filter(a => a.type === 'warning').length;
         const attPct = r ? Math.round((r.attendance_present / r.attendance_total) * 100) : 0;
@@ -473,8 +491,8 @@ const CoachAnalysis = () => {
 
               {/* Attendance */}
               <div className="text-center">
-                <div className={`text-lg font-bold ${attPct >= 80 ? 'text-green-400' : attPct >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
-                  {attPct}%
+                <div className={`text-lg font-bold ${!r ? 'text-gray-500' : attPct >= 80 ? 'text-green-400' : attPct >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
+                  {r ? `${attPct}%` : '—'}
                 </div>
                 <div className="text-xs text-gray-500">Attendance</div>
               </div>
@@ -490,23 +508,29 @@ const CoachAnalysis = () => {
 
               {/* Alerts */}
               <div className="flex gap-2">
-                {danger > 0 && (
-                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-400">
-                    {danger} alert{danger > 1 ? 's' : ''}
-                  </span>
-                )}
-                {warn > 0 && (
-                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400">
-                    {warn} warning{warn > 1 ? 's' : ''}
-                  </span>
-                )}
-                {danger === 0 && warn === 0 && (
-                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-green-500/20 text-green-400">OK</span>
+                {!r ? (
+                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-gray-700/50 text-gray-400">No data</span>
+                ) : (
+                  <>
+                    {danger > 0 && (
+                      <span className="px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-400">
+                        {danger} alert{danger > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {warn > 0 && (
+                      <span className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400">
+                        {warn} warning{warn > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {danger === 0 && warn === 0 && (
+                      <span className="px-2 py-1 rounded-lg text-xs font-bold bg-green-500/20 text-green-400">OK</span>
+                    )}
+                  </>
                 )}
               </div>
 
               {/* Go deeper */}
-              <button onClick={() => { setActiveView('advanced'); setSelectedPlayers([p.id]); if (!reportsData[p.id]) setReportsData(rd => ({ ...rd, [p.id]: makeMock(p.id, monthsRange) })); }}
+              <button onClick={() => selectPlayerForDeepAnalysis(p)}
                 className="px-3 py-2 rounded-xl text-xs font-medium text-white transition-all hover:opacity-80"
                 style={{ background: `linear-gradient(135deg, ${color}80, ${color})` }}>
                 Deep analysis →
@@ -670,6 +694,9 @@ const CoachAnalysis = () => {
               </div>
               <div className="flex flex-wrap gap-3">
                 {isLoading ? [1,2,3,4].map(i => <div key={i} className="h-10 w-32 bg-gray-700/50 rounded-xl animate-pulse"/>) :
+                  filteredPlayers.length === 0 ? (
+                    <p className="text-sm text-gray-500 py-2">No players found. Add players to your academy first.</p>
+                  ) :
                   filteredPlayers.map((p, idx) => {
                     const sel   = selectedPlayers.includes(p.id);
                     const color = KPI_COLORS[idx % KPI_COLORS.length];
@@ -768,7 +795,7 @@ const CoachAnalysis = () => {
               );
             })()}
 
-            {/* Empty state */}
+            {/* Empty state — no selection */}
             {(selectedPlayers.length === 0 || selectedKpis.length === 0) && (
               <motion.div variants={iV} className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50 mb-5">
                 <FiActivity className="mx-auto text-4xl text-gray-600 mb-3"/>
@@ -776,7 +803,20 @@ const CoachAnalysis = () => {
               </motion.div>
             )}
 
-            {selectedPlayers.length > 0 && selectedKpis.length > 0 && (
+            {/* Empty state — player selected but no reports yet */}
+            {selectedPlayers.length > 0 && selectedKpis.length > 0 &&
+              selectedPlayers.every(pid => (reportsData[pid] || []).length === 0) && (
+              <motion.div variants={iV} className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50 mb-5">
+                <FiEdit3 className="mx-auto text-4xl text-gray-600 mb-3"/>
+                <p className="text-gray-300 font-medium">No reports yet</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Fill in monthly player reports to unlock KPI analysis and charts.
+                </p>
+              </motion.div>
+            )}
+
+            {selectedPlayers.length > 0 && selectedKpis.length > 0 &&
+              selectedPlayers.some(pid => (reportsData[pid] || []).length > 0) && (
               <>
                 {/* Radar + Bar */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">

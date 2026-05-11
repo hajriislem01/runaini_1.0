@@ -35,7 +35,6 @@ class AcademyView(APIView):
             request.user.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        print("❌ Academy Create Errors:", serializer.errors)
         return Response({
             "errors": serializer.errors,
             "received_keys": list(request.data.keys()),
@@ -54,7 +53,6 @@ class AcademyView(APIView):
             serializer.save()
             return Response(serializer.data)
         
-        print("❌ Academy Update Errors:", serializer.errors)
         return Response({
             "errors": serializer.errors,
             "received_keys": list(request.data.keys()),

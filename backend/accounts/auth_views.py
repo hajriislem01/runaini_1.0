@@ -135,7 +135,6 @@ class PlayerSignupView(APIView):
 
     def post(self, request):
         data = request.data
-        print(f"📥 [PlayerSignupView] Received Data: {data}")
         required_fields = ['username', 'email', 'password', 'full_name']
 
         if not all(field in data for field in required_fields):
@@ -202,14 +201,12 @@ class PlayerSignupView(APIView):
                 player.notes = data.get("notes", "")
                 player.academy = request.user.academy
                 
-                print(f"🛠️ [PlayerSignupView] Saving Profile: H={player.height}, W={player.weight}, G={player.group}")
                 player.save()
 
                 serializer = PlayerProfileSerializer(player)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            print(f"❌ [PlayerSignupView] Error: {str(e)}")
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST

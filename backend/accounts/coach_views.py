@@ -21,7 +21,6 @@ class CoachViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         if not serializer.is_valid():
-            print("❌ COACH UPDATE VALIDATION ERROR:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         self.perform_update(serializer)
