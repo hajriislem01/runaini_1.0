@@ -227,7 +227,7 @@ const CoachAnalysis = () => {
       finally   { setIsLoading(false); }
     };
     load();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line
   }, []);
 
   // Re-fetch when monthsRange changes
@@ -245,7 +245,7 @@ const CoachAnalysis = () => {
       if (latestGroupAvg.length > 0) setGroupAvgData(latestGroupAvg);
     };
     reload();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line
   }, [monthsRange]);
 
   const getPlayerName = (pid) => players.find(p => p.id === pid)?.full_name || `Player ${pid}`;
@@ -321,7 +321,7 @@ const CoachAnalysis = () => {
       pointBackgroundColor:'rgba(156,163,175,0.5)',
     });
     return { labels, datasets };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line
   }, [selectedPlayers, selectedKpis, reportsData, groupAvgData]);
 
   // ── Bar (current month) ──────────────────────────────────────────────────────
