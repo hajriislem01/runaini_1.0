@@ -31,21 +31,30 @@ export const useDashboardStats = (players = [], coaches = [], events = []) => {
     const fetchStats = async () => {
       setIsLoadingStats(true);
       try {
-        const [playersRes, coachesRes, groupsRes, academyRes] = await Promise.all([
+        const [playersRes, coachesRes, groupsRes, academyRes, eventsRes] = await Promise.all([
           API.get('players/'),
           API.get('coaches/'),
           API.get('groups/'),
-          API.get('academy/')
+          API.get('academy/'),
+          API.get('events/')
         ]);
 
         const playersData = playersRes.data;
         const coachesData = coachesRes.data;
-        const groupsData = groupsRes.data;
+        const groupsData  = groupsRes.data;
+        const eventsData  = eventsRes.data;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const upcomingCount = eventsData.filter(e => {
+          const d = new Date(e.date);
+          return !isNaN(d) && d >= today && e.status !== 'completed' && e.status !== 'cancelled';
+        }).length;
 
         setStats({
           totalPlayers: playersData.length,
           totalCoaches: coachesData.length,
-          totalEvents: events.length,
+          totalEvents:  upcomingCount,
           activeGroups: groupsData.length
         });
 
