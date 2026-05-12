@@ -195,7 +195,6 @@ const SignupForm = () => {
     }
     if (step === 3) {
       if (!formData.academy_name.trim()) { setError('Academy name is required.'); return false; }
-      if (!formData.club.trim())         { setError('Club / company is required.'); return false; }
       if (!/^\d{8}$/.test(formData.phone)) {
         setError('Phone must be exactly 8 digits (no spaces).'); return false;
       }
@@ -292,8 +291,8 @@ const SignupForm = () => {
           <p className="text-xs text-gray-600 mb-2">Your organization details</p>
           <GoldInput label="Academy Name" icon={FiShield} type="text"
             value={formData.academy_name} onChange={set('academy_name')} required />
-          <GoldInput label="Club / Company" icon={FiHome} type="text"
-            value={formData.club} onChange={set('club')} required />
+          <GoldInput label="Club / Company (optional)" icon={FiHome} type="text"
+            value={formData.club} onChange={set('club')} />
           <PhoneInput value={formData.phone}
             onChange={e => { setFormData(p => ({ ...p, phone: e.target.value })); setError(''); }} />
         </div>
