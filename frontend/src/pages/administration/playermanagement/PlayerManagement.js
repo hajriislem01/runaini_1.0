@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 import { usePlayerManagement } from './hooks/usePlayerManagement';
 import {
@@ -19,6 +20,7 @@ import GroupModal from './modals/GroupModal';
 import GroupDetailModal from './modals/GroupDetailModal';
 
 const PlayerManagement = () => {
+  const { t } = useTranslation('playermanagement');
   const {
     players, setPlayers, groups, setGroups, coaches,
     activeTab, setActiveTab, showModal, setShowModal,
@@ -114,7 +116,7 @@ const PlayerManagement = () => {
       if (selectedGroupObj) {
         groupId = selectedGroupObj.id;
       } else {
-        addNotification('Selected group not found', 'error');
+        addNotification(t('messages.groupNotFound', 'Selected group not found'), 'error');
         return;
       }
     }
@@ -156,7 +158,7 @@ const PlayerManagement = () => {
           headers: { 'Authorization': `Token ${authToken}` }
         });
         if (response.status === 200 || response.status === 204) {
-          addNotification('Player updated successfully');
+          addNotification(t('messages.editSuccess', 'Player updated successfully'));
           setShowModal(false);
           resetForm();
           fetchPlayers();
@@ -167,7 +169,7 @@ const PlayerManagement = () => {
           headers: { 'Authorization': `Token ${authToken}` }
         });
         if (response.status === 201 || response.status === 200) {
-          addNotification('Player added successfully');
+          addNotification(t('messages.addSuccess', 'Player added successfully'));
           setShowModal(false);
           resetForm();
           fetchPlayers();
@@ -177,7 +179,7 @@ const PlayerManagement = () => {
     } catch (error) {
       console.error('Error saving player:', error);
       const data = error.response?.data;
-      let errMsg = 'Failed to save player';
+      let errMsg = t('messages.failedSavePlayer', 'Failed to save player');
 
       if (data) {
         if (typeof data === 'object') {
@@ -223,14 +225,14 @@ const PlayerManagement = () => {
   const handleDeletePlayer = async (id) => {
     try {
       const playerName = players.find(p => p.id === id)?.full_name || 'Player';
-      if (window.confirm(`Are you sure you want to delete ${playerName}?`)) {
+      if (window.confirm(t('messages.deleteConfirm', { name: playerName }) || `Are you sure you want to delete ${playerName}?`)) {
         await axios.delete(`${API_URL}/players/${id}/`, { headers: { 'Authorization': `Token ${authToken}` } });
         setPlayers(players.filter(player => player.id !== id));
-        addNotification(`${playerName} deleted successfully`);
+        addNotification(t('messages.deleteSuccess', 'Player deleted successfully'));
       }
     } catch (error) {
       console.error('Delete failed:', error);
-      addNotification('Failed to delete player', 'error');
+      addNotification(t('messages.deleteFailed', 'Failed to delete player'), 'error');
     }
   };
 
@@ -257,7 +259,7 @@ const PlayerManagement = () => {
     const name = groupForm.name.trim();
     const subgroups = groupForm.subgroups.map(s => s.trim()).filter(Boolean);
     const coachId = groupForm.coach || null;
-    if (!name) return addNotification('Group name is required', 'error');
+    if (!name) return addNotification(t('messages.groupNameRequired', 'Group name is required'), 'error');
 
     try {
       setGroupApiError(null);
@@ -285,14 +287,14 @@ const PlayerManagement = () => {
       }
       if (groupResponse && (groupResponse.status === 200 || groupResponse.status === 201 || groupResponse.status === 204)) {
         fetchGroups();
-        addNotification(isEditingGroup ? 'Group updated' : 'Group created');
+        addNotification(isEditingGroup ? t('messages.groupUpdated', 'Group updated') : t('messages.groupCreated', 'Group created'));
         setShowGroupModal(false);
         resetGroupForm();
       }
     } catch (error) {
       console.error('Error saving group:', error);
       const data = error.response?.data;
-      let errorMsg = 'Failed to save group';
+      let errorMsg = t('messages.failedSaveGroup', 'Failed to save group');
       
       if (data) {
         if (typeof data === 'object') {
@@ -332,7 +334,7 @@ const PlayerManagement = () => {
   const handleGroupDelete = async (groupId) => {
     const group = groups.find(g => g.id === groupId);
     const groupName = group?.name || 'Group';
-    if (window.confirm(`Are you sure you want to delete ${groupName}?`)) {
+    if (window.confirm(t('messages.groupDeleteConfirm', { name: groupName }) || `Are you sure you want to delete ${groupName}?`)) {
       try {
         await axios.delete(`${API_URL}/groups/${groupId}/`, { headers: { 'Authorization': `Token ${authToken}` } });
         setGroups(groups.filter(g => g.id !== groupId));
@@ -340,10 +342,10 @@ const PlayerManagement = () => {
           const pg = typeof p.group === 'object' ? p.group?.name : p.group;
           return pg === groupName ? { ...p, group: null, subgroup: null } : p;
         }));
-        addNotification(`${groupName} deleted successfully`);
+        addNotification(t('messages.groupDeleteSuccess', 'Group deleted successfully'));
       } catch (error) {
         console.error('Delete group failed:', error);
-        addNotification('Failed to delete group', 'error');
+        addNotification(t('messages.groupDeleteFailed', 'Failed to delete group'), 'error');
       }
     }
   };
@@ -364,9 +366,9 @@ const PlayerManagement = () => {
       if (!player) return;
       await axios.put(`${API_URL}/players/${playerId}/`, { ...player, group: viewingGroup.id, subgroup: null }, { headers: { 'Authorization': `Token ${authToken}` } });
       fetchPlayers();
-      addNotification('Player added to group');
+      addNotification(t('messages.addedToGroup', 'Player added to group'));
     } catch (error) {
-      addNotification('Failed to add player to group', 'error');
+      addNotification(t('messages.failedAddIntoGroup', 'Failed to add player to group'), 'error');
     }
   };
 
@@ -377,9 +379,9 @@ const PlayerManagement = () => {
       if (!player) return;
       await axios.put(`${API_URL}/players/${playerId}/`, { ...player, subgroup: null }, { headers: { 'Authorization': `Token ${authToken}` } });
       fetchPlayers();
-      addNotification('Player removed from group');
+      addNotification(t('messages.removedFromGroup', 'Player removed from group'));
     } catch (error) {
-      addNotification('Failed to remove player from group', 'error');
+      addNotification(t('messages.failedRemoveFromGroup', 'Failed to remove player from group'), 'error');
     }
   };
 

@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiUsers, FiLayers } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const TabNavigation = ({ activeTab, setActiveTab, playersCount, groupsCount, itemVariants }) => {
+  const { t } = useTranslation('playermanagement');
+
   return (
     <motion.div variants={itemVariants} className="mb-6">
       <div className="flex gap-2 border-b border-gray-700/50">
@@ -16,7 +19,7 @@ const TabNavigation = ({ activeTab, setActiveTab, playersCount, groupsCount, ite
         >
           <div className="flex items-center gap-2">
             <FiUsers />
-            Players ({playersCount})
+            {t('playersTab', 'Players')} ({playersCount})
           </div>
         </button>
         <button
@@ -29,7 +32,7 @@ const TabNavigation = ({ activeTab, setActiveTab, playersCount, groupsCount, ite
         >
           <div className="flex items-center gap-2">
             <FiLayers />
-            Groups ({groupsCount})
+            {t('groupsTab', 'Groups')} ({groupsCount})
           </div>
         </button>
       </div>

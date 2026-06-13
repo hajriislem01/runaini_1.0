@@ -1,0 +1,93 @@
+{
+  "header": {
+    "myProfile": "My Profile",
+    "personalInformation": "Personal Information",
+    "playerDetails": "Player Details",
+    "contactInfo": "Contact Info",
+    "about": "About"
+  },
+  "labels": {
+    "fullName": "Full Name",
+    "dob": "Date of Birth",
+    "nationality": "Nationality",
+    "position": "Position",
+    "height": "Height",
+    "weight": "Weight",
+    "jerseyNumber": "Jersey Number",
+    "team": "Team",
+    "group": "Group",
+    "subgroup": "Subgroup"
+  },
+  "actions": {
+    "editProfile": "Edit Profile",
+    "saveChanges": "Save Changes",
+    "changePassword": "Change Password",
+    "updatePhoto": "Update Photo",
+    "refresh": "Refresh"
+  },
+  "status": {
+    "verifiedPlayer": "Verified Player",
+    "memberSince": "Member since",
+    "accountSettings": "Account Settings",
+    "active": "Active",
+    "injured": "Injured",
+    "inactive": "Inactive",
+    "good": "Good"
+  },
+  "sections": {
+    "contact": "Contact",
+    "physical": "Physical",
+    "quickAccess": "Quick access",
+    "about": "About",
+    "healthStatus": "Health status"
+  },
+  "stats": {
+    "monthlyScore": "Monthly score",
+    "attendance": "Attendance",
+    "health": "Health",
+    "schoolGrade": "School grade"
+  },
+  "contact": {
+    "noInfo": "No contact info added"
+  },
+  "about": {
+    "noBio": "No bio yet."
+  },
+  "evaluation": {
+    "latestTitle": "Latest evaluation — {{month}}",
+    "viewFullReport": "View full report →",
+    "strengths": "Strengths",
+    "toImprove": "To improve",
+    "noEvaluation": "No evaluation this month yet",
+    "evaluateSoon": "Your coach will evaluate you soon"
+  },
+  "quickAccess": {
+    "myTraining": "My Training",
+    "performance": "Performance",
+    "settings": "Settings"
+  },
+  "health": {
+    "currentlyInjured": "Currently injured",
+    "fitToPlay": "Fit to play",
+    "playerStatus": "Player status",
+    "valid": "Valid",
+    "invalidExpired": "Invalid / Expired",
+    "medicalCertificate": "Medical certificate"
+  },
+  "categories": {
+    "technical": "Technical",
+    "tactical": "Tactical",
+    "physical": "Physical",
+    "mental": "Mental"
+  },
+  "positions": {
+    "forward": "Forward",
+    "midfielder": "Midfielder",
+    "defender": "Defender",
+    "goalkeeper": "Goalkeeper"
+  },
+  "common": {
+    "noProfileFound": "No profile found",
+    "notLinked": "Your account is not linked to a player profile yet."
+  }
+}

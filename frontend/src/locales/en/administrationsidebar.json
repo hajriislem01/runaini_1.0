@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "groupsAndPlayers": "Groups & Players",
+    "coaches": "Coaches",
+    "events": "Events",
+    "payments": "Payments",
+    "agenda": "Agenda",
+    "contact": "Contact",
+    "settings": "Settings",
+    "logout": "Logout"
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "header": {
+    "agenda": "Agenda",
+    "upcoming_sessions": "Sessions à venir",
+    "calendar_view": "Vue Calendrier"
+  },
+  "controls": {
+    "month": "Mois",
+    "week": "Semaine",
+    "day": "Jour",
+    "today": "Aujourd'hui",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "this_week": "Cette semaine"
+  },
+  "event": {
+    "add_new": "Ajouter un événement",
+    "create_session": "Créer une session",
+    "edit": "Modifier l'événement",
+    "name": "Nom de l'événement",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "location": "Lieu",
+    "notes": "Remarques",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler",
+    "delete": "Supprimer l'événement",
+    "delete_this": "Supprimer ceci",
+    "delete_all": "Tout supprimer",
+    "level": "Niveau",
+    "exercises": "exercices",
+    "more_exercises": "plus d'exercices",
+    "players": "joueurs",
+    "recurring": "récurrent",
+    "past": "Passé",
+    "session": "Session",
+    "agenda_item": "Élément d'agenda",
+    "team_training": "Entraînement d'équipe"
+  },
+  "categories": {
+    "technical": "Technique",
+    "tactical": "Tactique",
+    "physical": "Physique",
+    "mental": "Mental",
+    "match_prep": "Préparation au match",
+    "recovery": "Récupération",
+    "meeting": "Réunion interne",
+    "friendly": "Match amical",
+    "tournament": "Tournoi"
+  },
+  "toast": {
+    "load_error": "Échec du chargement de l'agenda",
+    "date_required": "La date est requise",
+    "update_success": "Session mise à jour ✅",
+    "update_error": "Échec de la mise à jour de la session",
+    "delete_success": "Session supprimée ✅",
+    "delete_error": "Échec de la suppression de la session"
+  },
+  "empty": {
+    "no_upcoming": "Aucune session à venir",
+    "click_to_add": "Créez une session pour commencer",
+    "no_day_sessions": "Aucune session prévue pour ce jour",
+    "add_for_day": "Ajouter une session pour ce jour"
+  },
+  "modal": {
+    "add_title": "Ajouter une session",
+    "update_title": "Modifier la session",
+    "delete_title": "Supprimer la session",
+    "recurrence_warning": "Ceci est une session récurrente. La modification ne mettra à jour que cette occurrence.",
+    "delete_all_warning": "Cela supprimera TOUTES les occurrences de cette session récurrente. Cette action est irréversible.",
+    "delete_single_warning": "Cela ne supprimera que cette session. Cette action est irréversible."
+  },
+  "stats": {
+    "this_month": "Ce mois-ci",
+    "this_week": "Cette semaine",
+    "today": "Aujourd'hui",
+    "recurring": "Récurrent",
+    "sessions_scheduled": "sessions prévues",
+    "session_s": "session(s)"
+  },
+  "filters": {
+    "title": "Filtres",
+    "clear_all": "Tout effacer",
+    "recurring_only": "Récurrent uniquement"
+  },
+  "days": {
+    "sun": "Dim",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven",
+    "sat": "Sam",
+    "sunday": "Dimanche",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi"
+  },
+  "months": {
+    "jan": "Jan", "feb": "Fév", "mar": "Mar", "apr": "Avr", "may": "Mai", "jun": "Juin", 
+    "jul": "Juil", "aug": "Août", "sep": "Sep", "oct": "Oct", "nov": "Nov", "dec": "Déc",
+    "january": "Janvier", "february": "Février", "march": "Mars", "april": "Avril", 
+    "may_long": "Mai", "june": "Juin", "july": "Juillet", "august": "Août", "september": "Septembre", 
+    "october": "Octobre", "november": "Novembre", "december": "Décembre"
+  }
+}

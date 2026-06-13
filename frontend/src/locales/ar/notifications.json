@@ -1,0 +1,40 @@
+{
+  "title": "الإشعارات",
+  "newCount": "{{count}} جديدة",
+  "tabs": {
+    "all": "الكل",
+    "unread": "غير مقروءة"
+  },
+  "actions": {
+    "markAllRead": "تحديد الكل كمقروء",
+    "clearAll": "مسح الكل",
+    "viewAll": "عرض جميع الإشعارات"
+  },
+  "types": {
+    "payment": "تم تسجيل دفعة جديدة للاعب {{player}}",
+    "payment_title": "تنبيه الدفع",
+    "subscription": "اشتراك جديد",
+    "subscription_title": "تنبيه الاشتراك",
+    "system": "تنبيه النظام",
+    "system_title": "تنبيه النظام",
+    "settings": "تم تحديث إعدادات الأكاديمية بنجاح",
+    "settings_title": "تحديث الإعدادات",
+    "coach_assigned": "تم تعيين مدرب جديد للمجموعة {{group}}",
+    "coach_assigned_title": "تم تعيين مدرب",
+    "training": "تم جدولة تدريب جديد لمجموعة {{group}}",
+    "training_title": "تحديث التدريب",
+    "session": "تم إنشاء حصة تدريبية جديدة",
+    "session_title": "حصة جديدة",
+    "event": "دعوة لحدث جديد",
+    "event_title": "حدث جديد"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "قبل {{count}} دقيقة",
+    "hoursAgo": "قبل {{count}} ساعة",
+    "daysAgo": "قبل {{count}} يوم"
+  },
+  "empty": "لا توجد إشعارات جديدة",
+  "emptyDescription": "ليس لديك أي تنبيهات جديدة في الوقت الحالي.",
+  "footerSchedule": "ابق على اطلاع بجدول أكاديميتك"
+}

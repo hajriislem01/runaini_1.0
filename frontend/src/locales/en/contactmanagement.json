@@ -1,0 +1,50 @@
+{
+  "title": "Academy Directory",
+  "subtitle": "Find and connect with football academies on our platform",
+  "stats": {
+    "total": "Total Academies",
+    "countries": "Countries",
+    "withContact": "With Contact"
+  },
+  "filters": {
+    "title": "Search & Filter",
+    "country": "Country",
+    "allCountries": "All Countries",
+    "city": "City",
+    "placeholderCity": "Enter city name...",
+    "search": "Search",
+    "placeholderSearch": "Search by name...",
+    "noAcademiesFound": "No academies found",
+    "tryAdjusting": "Try adjusting your search criteria",
+    "clearFilters": "Clear Filters"
+  },
+  "meta": {
+    "showing": "Showing {{count}} of {{total}} academies"
+  },
+  "card": {
+    "contactInfo": "Contact Information",
+    "location": "Location"
+  },
+  "countries": {
+    "TN": "Tunisia",
+    "DZ": "Algeria",
+    "MA": "Morocco",
+    "LY": "Libya",
+    "EG": "Egypt",
+    "MR": "Mauritania"
+  },
+  "modal": {
+    "facilities": "Facilities",
+    "gym": "Gym",
+    "cafeteria": "Cafeteria",
+    "dormitory": "Dormitory",
+    "staff": "Staff",
+    "technicalDirector": "Technical Director",
+    "headCoach": "Head Coach",
+    "fitnessCoach": "Fitness Coach",
+    "philosophy": "Philosophy",
+    "achievements": "Achievements",
+    "homeKit": "Home Kit",
+    "awayKit": "Away Kit"
+  }
+}

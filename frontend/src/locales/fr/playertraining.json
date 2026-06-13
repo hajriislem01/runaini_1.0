@@ -1,0 +1,72 @@
+{
+  "header": {
+    "myTraining": "Mes Entraînements",
+    "subtitle": "Vos sessions d'entraînement et exercices personnels",
+    "subtitleGroup": "Sessions du groupe {{group}} + vos exercices personnels",
+    "nextSession": "Prochaine session:",
+    "inProgress": "En cours",
+    "in": "Dans",
+    "min": "min",
+    "h": "h"
+  },
+  "stats": {
+    "upcoming": "À venir",
+    "pastSessions": "Sessions passées",
+    "personalExos": "Exos persos",
+    "minThisMonth": "Min ce mois"
+  },
+  "load": {
+    "thisWeek": "Cette semaine",
+    "minPlanned": "min prévues",
+    "lightWeek": "Semaine légère",
+    "mediumWeek": "Semaine moyenne",
+    "heavyWeek": "Semaine chargée",
+    "highLoad": "Charge Forte",
+    "mediumLoad": "Charge Moyenne",
+    "lowLoad": "Charge Légère"
+  },
+  "view": {
+    "list": "Liste",
+    "week": "Semaine",
+    "month": "Mois"
+  },
+  "weekView": {
+    "thisWeek": "Cette semaine",
+    "thisWeeksSessions": "Sessions de cette semaine",
+    "noSessionsOn": "Aucune session le",
+    "days": ["L", "M", "M", "J", "V", "S", "D"]
+  },
+  "monthView": {
+    "today": "Aujourd'hui",
+    "more": "de plus",
+    "sessionsFor": "Sessions pour le"
+  },
+  "listView": {
+    "upcoming": "À venir",
+    "personal": "Personnel",
+    "past": "Passé",
+    "assignedToYou": "exercice assigné personnellement à vous",
+    "assignedToYouPlural": "exercices assignés personnellement à vous"
+  },
+  "card": {
+    "teamTraining": "Entraînement Équipe",
+    "meeting": "Réunion",
+    "friendlyMatch": "Match Amical",
+    "tournament": "Tournoi",
+    "today": "Aujourd'hui",
+    "level": "Niveau",
+    "noUpcoming": "Aucune session à venir",
+    "noPersonal": "Aucun exercice personnel assigné pour l'instant",
+    "noPersonalDesc": "Votre coach vous assignera des exercices individuels",
+    "noPast": "Aucune session passée"
+  },
+  "categories": {
+    "technical": "Technique",
+    "tactical": "Tactique",
+    "physical": "Physique",
+    "mental": "Mental",
+    "matchPrep": "Prépa Match",
+    "recovery": "Récupération",
+    "session": "Session"
+  }
+}

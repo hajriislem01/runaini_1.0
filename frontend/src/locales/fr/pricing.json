@@ -1,0 +1,161 @@
+{
+  "toggle": {
+    "monthly": "Mensuel",
+    "annual": "Annuel",
+    "discount": "−20%"
+  },
+  "hero": {
+    "tagline": "Tarifs transparents",
+    "titleStart": "Investissez dans l'avantage de votre ",
+    "titleEnd": "académie",
+    "description": "Pas de frais cachés. Pas d'offres gonflées. Chaque forfait est construit autour de fonctionnalités réelles utilisées par de vrais entraîneurs."
+  },
+  "price": {
+    "monthLabel": "/mois",
+    "billedSave": "Facturé {{annualPrice}} €/an — économisez {{savedAmount}} €",
+    "custom": "Sur mesure",
+    "customSub": "Contactez notre équipe pour un devis personnalisé"
+  },
+  "plans": {
+    "mostPopular": "★ Le plus populaire",
+    "starter": {
+      "name": "Starter",
+      "tagline": "Pour les clubs en croissance qui font leurs premiers pas dans le numérique.",
+      "cta": "Commencer",
+      "features": {
+        "admins": "Jusqu'à 1 administrateur",
+        "coaches": "Jusqu'à 2 entraîneurs",
+        "players": "Jusqu'à 30 joueurs",
+        "groups": "2 groupes + sous-groupes",
+        "scheduling": "Planification des matchs & événements",
+        "notifications": "Moteur de notifications de base",
+        "profileManagement": "Gestion du profil des joueurs",
+        "evaluations": "Système d'évaluation à 6 piliers",
+        "positionPredictor": "Prédicteur de position par IA",
+        "analytics": "Analyses radar & graphiques KPI",
+        "pdfExport": "Exportation de rapports PDF",
+        "videoAnalysis": "Suite d'analyse vidéo"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "tagline": "La suite complète d'intelligence d'entraînement pour les clubs sérieux.",
+      "cta": "Démarrer l'essai Pro",
+      "features": {
+        "admins": "Jusqu'à 3 administrateurs",
+        "coaches": "Jusqu'à 10 entraîneurs",
+        "players": "Joueurs illimités",
+        "groups": "Groupes & sous-groupes illimités",
+        "scheduling": "Planification complète des matchs & événements",
+        "notifications": "Moteur de notifications en temps réel",
+        "profileManagement": "Gestion du profil des joueurs",
+        "evaluations": "Système d'évaluation à 6 piliers",
+        "positionPredictor": "Prédicteur de position par IA",
+        "analytics": "Analyses radar & graphiques KPI",
+        "pdfExport": "Exportation de rapports PDF",
+        "videoAnalysis": "Suite d'analyse vidéo"
+      }
+    },
+    "elite": {
+      "name": "Elite",
+      "tagline": "Configuration personnalisée pour les académies et fédérations d'élite.",
+      "cta": "Contacter le service commercial",
+      "features": {
+        "admins": "Administrateurs illimités",
+        "coaches": "Entraîneurs illimités",
+        "players": "Joueurs illimités",
+        "groups": "Groupes & sous-groupes illimités",
+        "scheduling": "Planification complète des matchs & événements",
+        "notifications": "Moteur de notifications en temps réel",
+        "profileManagement": "Gestion du profil des joueurs",
+        "evaluations": "Système d'évaluation à 6 piliers",
+        "positionPredictor": "Prédicteur de position par IA",
+        "analytics": "Analyses radar & graphiques KPI",
+        "pdfExport": "Exportation de rapports PDF",
+        "videoAnalysis": "Suite d'analyse vidéo"
+      }
+    }
+  },
+  "deepScan": {
+    "title": "Scan approfondi de l'écosystème de fonctionnalités",
+    "subtitle": "Comparaison complète des espaces de travail",
+    "headers": {
+      "segment": "Segment / Capacité",
+      "core": "Core",
+      "pro": "Pro",
+      "elite": "Elite"
+    },
+    "partial": "Partiel",
+    "fullSuite": "Suite complète",
+    "customized": "Personnalisé",
+    "rows": {
+      "admin": {
+        "title": "Contrôle Administrateur",
+        "features": [
+          "Hiérarchies multi-groupes",
+          "Moteur de notifications",
+          "Permissions du staff"
+        ]
+      },
+      "coach": {
+        "title": "Intelligence Entraîneur",
+        "features": [
+          "Évaluation à 6 piliers",
+          "Analyses radar KPI",
+          "Créateur d'entraînements"
+        ]
+      },
+      "player": {
+        "title": "Analyses Joueur",
+        "features": [
+          "Sujets de performance",
+          "Historique de santé",
+          "Feuilles de route persos"
+        ]
+      },
+      "system": {
+        "title": "Noyau du système",
+        "features": [
+          "Synchro temps réel",
+          "Multi-langues",
+          "Marque blanche"
+        ]
+      }
+    }
+  },
+  "callout": {
+    "title": "Tous les plans incluent un essai Pro de 14 jours",
+    "description": "Commencez gratuitement avec toute la puissance de RunAiNi Pro. Pas de carte de crédit. Pas de surprise. Essayez chaque fonctionnalité avant de vous engager.",
+    "cta": "Réclamer votre essai gratuit"
+  },
+  "faq": {
+    "tagline": "Des questions ?",
+    "title": "Tout ce que vous devez savoir",
+    "items": [
+      {
+        "q": "Puis-je changer de forfait à tout moment ?",
+        "a": "Oui. Les modifications de forfait s'appliquent immédiatement avec une facturation au prorata. Le déclassement lors du renouvellement est instantané sans pénalités de blocage."
+      },
+      {
+        "q": "Le système d'évaluation à 6 piliers est-il vraiment réservé aux abonnements Pro ?",
+        "a": "Oui. Le moteur de notation technique, tactique, physique, mental, santé et académique — y compris les exports PDF — est une fonctionnalité réservée aux forfaits Pro et Elite."
+      },
+      {
+        "q": "Que fait concrètement le prédicteur de position par IA ?",
+        "a": "Il évalue les joueurs sur plus de 24 critères et classe les 4 positions principales selon leur adéquation. Les entraîneurs peuvent accepter ou rejeter la recommandation, ce qui met à jour le profil du joueur instantanément."
+      },
+      {
+        "q": "Comment fonctionne le moteur de notifications ?",
+        "a": "Lorsqu'un administrateur crée un événement pour un groupe ou un sous-groupe, le système résout automatiquement tous les entraîneurs et joueurs concernés et envoie des notifications en temps réel à chaque membre."
+      },
+      {
+        "q": "Existe-t-il un essai gratuit ?",
+        "a": "Chaque nouvelle académie bénéficie d'un essai complet de 14 jours de l'offre Pro — sans carte de crédit requise. Après 14 jours, choisissez l'abonnement qui convient le mieux à la croissance de votre académie."
+      },
+      {
+        "q": "Proposez-vous un déploiement sur site pour le forfait Elite ?",
+        "a": "Oui. Les académies Elite peuvent demander un déploiement auto-hébergé avec un transfert DevOps dédié et un accord de niveau de service (SLA)."
+      }
+    ]
+  }
+}

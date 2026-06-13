@@ -1,0 +1,66 @@
+{
+  "header": {
+    "title": "Performance Report",
+    "subtitle": "Monthly evaluation · Player & parent view",
+    "exportPdf": "Export PDF",
+    "generating": "Generating..."
+  },
+  "tabs": {
+    "report": "Report",
+    "progress": "Progression",
+    "history": "History"
+  },
+  "empty": {
+    "noReport": "No report this month yet",
+    "noReportDesc": "Your coach will evaluate you soon",
+    "notEnoughData": "Not enough data yet",
+    "notEnoughDataDesc": "At least 2 monthly reports are needed",
+    "noReportsYet": "No reports yet",
+    "noData": "No data"
+  },
+  "stats": {
+    "vsGroupAvg": "vs group avg",
+    "vsLastMonth": "vs last month",
+    "topPct": "Top {{pct}}% of group",
+    "playerProfile": "Player profile",
+    "player": "Player",
+    "groupAvg": "Group avg",
+    "fourPillars": "4 Pillars",
+    "tapToExpand": "Tap to expand criteria",
+    "topStrengths": "Top strengths",
+    "toImprove": "To improve",
+    "health": "Health",
+    "fatigue": "Fatigue",
+    "sleep": "Sleep",
+    "injury": "Injury",
+    "medCert": "Med cert",
+    "none": "None",
+    "injured": "Injured",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "school": "School",
+    "grade": "Grade",
+    "attendance": "Attendance",
+    "behaviour": "Behaviour",
+    "sessions": "sessions",
+    "monthsProgression": "{{count}}-month progression",
+    "pts": "pts",
+    "coachMessage": "Your coach",
+    "monthlyEval": "monthly evaluation",
+    "monthlyGoal": "Monthly goal",
+    "pillarProgression": "Pillar progression — {{count}} months",
+    "monthTrends": "{{count}}-month trends",
+    "profileComparison": "Profile comparison",
+    "reportsCount": "{{count}} monthly report",
+    "reportsCountPlural": "{{count}} monthly reports",
+    "tapToSeeDetails": "Tap a month to see details"
+  },
+  "categories": {
+    "technical": "Technical",
+    "tactical": "Tactical",
+    "physical": "Physical",
+    "mental": "Mental",
+    "health": "Health",
+    "school": "School"
+  }
+}

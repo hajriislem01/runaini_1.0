@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiEyeOff, FiEye, FiClipboard, FiPlus, FiTrash2, FiShield, FiCheckSquare, FiSquare, FiUsers, FiTarget } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { strengthColors, strengthLabels } from '../utils/coachHelpers';
 
 const CoachFormModal = ({
@@ -9,6 +10,9 @@ const CoachFormModal = ({
   showPassword, setShowPassword, passwordStrength, resetForm,
   groups, subgroups, apiError
 }) => {
+  const { t, i18n } = useTranslation('coachmanagement');
+  const isRtl = i18n.language === 'ar';
+
   const [selGrp, setSelGrp]   = React.useState('');
   const [showGrpDropdown, setShowGrpDropdown] = React.useState(false);
   const [showSgDropdown, setShowSgDropdown] = React.useState(false);
@@ -120,7 +124,7 @@ const CoachFormModal = ({
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] bg-clip-text text-transparent">
-                {editCoachId ? 'Edit Coach' : 'Add New Coach'}
+                {editCoachId ? t('form.editTitle', 'Edit Coach Details') : t('form.addTitle', 'Add New Coach')}
               </h2>
               <motion.button whileHover={{ rotate: 90 }} whileTap={{ scale: 0.9 }}
                 onClick={() => { setShowModal(false); resetForm(); }}
@@ -144,12 +148,12 @@ const CoachFormModal = ({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.firstNameLabel', 'First Name')}</label>
                   <input type="text" name="first_name" value={formData.first_name} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.lastNameLabel', 'Last Name')}</label>
                   <input type="text" name="last_name" value={formData.last_name} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none" />
                 </div>
@@ -157,13 +161,13 @@ const CoachFormModal = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Username *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.usernameLabel', 'Username *')}</label>
                   <input type="text" name="username" value={formData.username} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
                     required disabled={!!editCoachId} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.emailLabel', 'Email *')}</label>
                   <input type="email" name="email" value={formData.email} onChange={handleChange} autoComplete="username"
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
                     required disabled={!!editCoachId} />
@@ -173,7 +177,7 @@ const CoachFormModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Password {!editCoachId && '*'}
+                    {t('form.passwordLabel', 'Password')} {!editCoachId && '*'}
                   </label>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} name="password"
@@ -181,9 +185,9 @@ const CoachFormModal = ({
                       autoComplete="new-password"
                       className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
                       required={!editCoachId}
-                      placeholder={editCoachId ? 'Leave blank to keep current' : ''} />
+                      placeholder={editCoachId ? t('form.passwordPlaceholder', 'Leave blank to keep current') : ''} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                      className={`absolute ${isRtl ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}>
                       {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                     </button>
                   </div>
@@ -194,12 +198,12 @@ const CoachFormModal = ({
                           <div key={i} className={`flex-1 rounded-full ${i < passwordStrength ? strengthColors[i] : 'bg-gray-700'}`} />
                         ))}
                       </div>
-                      <p className="text-xs text-gray-400">{passwordStrength > 0 ? strengthLabels[passwordStrength - 1] : ''}</p>
+                      <p className="text-xs text-gray-400">{passwordStrength > 0 ? t(`strength.${strengthLabels[passwordStrength - 1].toLowerCase()}`, strengthLabels[passwordStrength - 1]) : ''}</p>
                     </div>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.phoneLabel', 'Phone')}</label>
                   <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none" />
                 </div>
@@ -207,28 +211,28 @@ const CoachFormModal = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Club</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.clubLabel', 'Club')} (Optional)</label>
                   <input type="text" name="club" value={formData.club} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Specialization</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.specializationLabel', 'Specialization')}</label>
                   <input type="text" name="specialization" value={formData.specialization} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
-                    placeholder="e.g., Youth Development" />
+                    placeholder={t('form.specializationPlaceholder', 'e.g., Youth Development')} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Years of Experience</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.experienceLabel', 'Years of Experience')}</label>
                   <input type="number" name="years_of_experience" value={formData.years_of_experience}
                     onChange={handleChange} min="0"
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
                     placeholder="5" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Certification</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">{t('form.certificationLabel', 'Certification')}</label>
                   <input type="text" name="certification" value={formData.certification} onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
                     placeholder="UEFA Pro License" />
@@ -241,9 +245,9 @@ const CoachFormModal = ({
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 p-1">
                   
                   {/* 1. Group Multi-Select */}
-                  <div className="flex-1 relative" onClick={(e) => e.stopPropagation()}>
+                  <div className={`flex-1 relative ${showGrpDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                     <label className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5">
-                      <FiUsers size={10} className="text-[#902bd1]" /> Select Groups
+                      <FiUsers size={10} className="text-[#902bd1]" /> {t('form.selectGroupsLabel', 'Select Groups')}
                     </label>
                     <button 
                       type="button"
@@ -253,7 +257,7 @@ const CoachFormModal = ({
                       <span className="text-gray-300 truncate font-medium">
                         {(formData.assignments || []).length > 0 
                           ? `${formData.assignments.length} Groups Assigned` 
-                          : 'Choose domains...'}
+                          : t('form.chooseDomainsPlaceholder', 'Choose domains...')}
                       </span>
                       <div className={`transition-transform duration-200 ${showGrpDropdown ? 'rotate-180' : ''}`}>
                         <FiUsers className={(formData.assignments || []).length > 0 ? 'text-[#902bd1]' : 'text-gray-600'} />
@@ -288,9 +292,9 @@ const CoachFormModal = ({
                   </div>
 
                   {/* 2. Subgroup Multi-Select (Contextual Mirror) */}
-                  <div className="flex-1 relative" onClick={(e) => e.stopPropagation()}>
+                  <div className={`flex-1 relative ${showSgDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                     <label className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5">
-                      <FiTarget size={10} className="text-[#00d0cb]" /> Units Access
+                      <FiTarget size={10} className="text-[#00d0cb]" /> {t('form.unitsAccessLabel', 'Units Access')}
                     </label>
                     <button 
                       type="button"
@@ -303,7 +307,7 @@ const CoachFormModal = ({
                           ? 'All Subgroups (Full)' 
                           : (currentAss?.subgroups || []).length > 0 
                             ? `${currentAss.subgroups.length} Selected` 
-                            : selGrp ? 'Open unit selector...' : 'Pick a Group first'}
+                            : selGrp ? t('form.openUnitsPlaceholder', 'Open unit selector...') : t('form.pickGroupPlaceholder', 'Pick a Group first')}
                       </span>
                       <div className={`transition-transform duration-200 ${showSgDropdown ? 'rotate-180' : ''}`}>
                         <FiTarget className={selGrp ? 'text-[#00d0cb]' : 'text-gray-700'} />
@@ -346,10 +350,12 @@ const CoachFormModal = ({
                 {/* Active Coach Domains List */}
                 <div className="pt-4 space-y-2 border-t border-gray-700/20">
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest opacity-60">Active Coach Domains</p>
+                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest opacity-60">
+                      {t('form.activeDomainsLabel', 'Active Coach Domains')}
+                    </p>
                     {selGrp && (
                       <span className="text-[9px] text-[#00d0cb] font-bold animate-pulse flex items-center gap-1">
-                        <FiTarget size={10} /> Currently Focused
+                        <FiTarget size={10} /> {t('form.currentlyFocused', 'Currently Focused')}
                       </span>
                     )}
                   </div>
@@ -366,7 +372,7 @@ const CoachFormModal = ({
                           onClick={() => handleGroupActivation(ass.group_id)}
                           className={`flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer group/row ${isFocused ? 'bg-[#00d0cb]/10 border-[#00d0cb]/40 shadow-[0_0_20px_rgba(0,208,203,0.1)]' : 'bg-gray-900/40 border-gray-700/30 hover:border-gray-500'}`}
                         >
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-1">
+                          <div className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-1 ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className={`text-xs font-black uppercase tracking-tight transition-colors ${isFocused ? 'text-[#00d0cb]' : 'text-gray-300'}`}>{gName}</span>
                             <div className="flex flex-wrap gap-1.5 items-center">
                               {ass.full_access ? (
@@ -396,7 +402,9 @@ const CoachFormModal = ({
                   
                   {(formData.assignments || []).length === 0 && (
                     <div className="text-center py-8 border-2 border-dashed border-gray-800/50 rounded-2xl bg-gray-900/20">
-                      <p className="text-xs text-gray-600 italic">No domains assigned. Use the selectors above to start.</p>
+                      <p className="text-xs text-gray-600 italic">
+                        {t('form.noDomainsAssigned', 'No domains assigned. Use the selectors above to start.')}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -405,15 +413,15 @@ const CoachFormModal = ({
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50">
                 <button type="button" onClick={() => { setShowModal(false); resetForm(); }}
                   className="px-5 py-2.5 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700/50 hover:bg-gray-700/50">
-                  Cancel
+                  {t('actions.cancel', 'Cancel')}
                 </button>
                 <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   disabled={isLoading}
                   className="px-5 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white rounded-xl font-medium flex items-center gap-2 disabled:opacity-70">
                   {isLoading ? (
-                    <><div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>Processing...</>
+                    <><div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>{t('messages.loading', 'Processing...')}</>
                   ) : (
-                    <><FiClipboard />{editCoachId ? 'Save Changes' : 'Add Coach'}</>
+                    <><FiClipboard />{editCoachId ? t('actions.save', 'Save Changes') : t('actions.add', 'Add Coach')}</>
                   )}
                 </motion.button>
               </div>

@@ -1,0 +1,129 @@
+{
+  "header": {
+    "agenda": "الروزنامة",
+    "upcoming_sessions": "الجلسات القادمة",
+    "calendar_view": "عرض التقويم"
+  },
+  "controls": {
+    "month": "شهر",
+    "week": "أسبوع",
+    "day": "يوم",
+    "today": "اليوم",
+    "previous": "السابق",
+    "next": "التالي",
+    "this_week": "هذا الأسبوع"
+  },
+  "event": {
+    "add_new": "إضافة حدث جديد",
+    "create_session": "إنشاء جلسة",
+    "edit": "تعديل الحدث",
+    "name": "اسم الحدث",
+    "start_date": "تاريخ البدء",
+    "end_date": "تاريخ الانتهاء",
+    "location": "الموقع",
+    "notes": "ملاحظات",
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "cancel": "إلغاء",
+    "delete": "حذف الحدث",
+    "delete_this": "حذف هذا",
+    "delete_all": "حذف الكل",
+    "level": "مستوى",
+    "exercises": "تمارين",
+    "more_exercises": "المزيد من التمارين",
+    "players": "لاعبين",
+    "recurring": "متكرر",
+    "past": "ماضي",
+    "session": "جلسة",
+    "agenda_item": "بند الأجندة",
+    "team_training": "تدريب الفريق"
+  },
+  "categories": {
+    "technical": "فني",
+    "tactical": "تكتيكي",
+    "physical": "بدني",
+    "mental": "ذهني",
+    "match_prep": "التحضير للمباراة",
+    "recovery": "استرجاع",
+    "meeting": "اجتماع داخلي",
+    "friendly": "مباراة ودية",
+    "tournament": "بطولة"
+  },
+  "toast": {
+    "load_error": "فشل تحميل الأجندة",
+    "date_required": "التاريخ مطلوب",
+    "update_success": "تم تحديث الجلسة ✅",
+    "update_error": "فشل تحديث الجلسة",
+    "delete_success": "تم حذف الجلسة ✅",
+    "delete_error": "فشل حذف الجلسة"
+  },
+  "empty": {
+    "no_upcoming": "لا توجد جلسات قادمة",
+    "click_to_add": "قم بإنشاء جلسة للبدء",
+    "no_day_sessions": "لا توجد جلسات مجدولة لهذا اليوم",
+    "add_for_day": "إضافة جلسة لهذا اليوم"
+  },
+  "modal": {
+    "add_title": "إضافة جلسة",
+    "update_title": "تعديل الجلسة",
+    "delete_title": "حذف الجلسة",
+    "recurrence_warning": "هذه جلسة متكررة. التعديل سيحدث هذا التكرار فقط.",
+    "delete_all_warning": "سيتم حذف جميع تكرارات هذه الجلسة المتكررة. لا يمكن التراجع عن هذا الإجراء.",
+    "delete_single_warning": "سيتم حذف هذه الجلسة فقط. لا يمكن التراجع عن هذا الإجراء."
+  },
+  "stats": {
+    "this_month": "هذا الشهر",
+    "this_week": "هذا الأسبوع",
+    "today": "اليوم",
+    "recurring": "متكرر",
+    "sessions_scheduled": "جلسات مجدولة",
+    "session_s": "جلسة/جلسات"
+  },
+  "filters": {
+    "title": "عوامل التصفية",
+    "clear_all": "مسح الكل",
+    "recurring_only": "المتكررة فقط"
+  },
+  "days": {
+    "sun": "الأحد",
+    "mon": "الإثنين",
+    "tue": "الثلاثاء",
+    "wed": "الأربعاء",
+    "thu": "الخميس",
+    "fri": "الجمعة",
+    "sat": "السبت",
+    "sunday": "الأحد",
+    "monday": "الإثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت"
+  },
+  "months": {
+    "jan": "يناير",
+    "feb": "فبراير",
+    "mar": "مارس",
+    "apr": "أبريل",
+    "may": "مايو",
+    "jun": "يونيو",
+    "jul": "يوليو",
+    "aug": "أغسطس",
+    "sep": "سبتمبر",
+    "oct": "أكتوبر",
+    "nov": "نوفمبر",
+    "dec": "ديسمبر",
+    "january": "يناير",
+    "february": "فبراير",
+    "march": "مارس",
+    "april": "أبريل",
+    "may_long": "مايو",
+    "june": "يونيو",
+    "july": "يوليو",
+    "august": "أغسطس",
+    "september": "سبتمبر",
+    "october": "أكتوبر",
+    "november": "نوفمبر",
+    "december": "ديسمبر"
+  }
+}

@@ -15,6 +15,7 @@ import { Line } from 'react-chartjs-2';
 import API from '../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format, addMonths, subMonths } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import PlayerReportHistoryModal from './modals/PlayerReportHistoryModal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
@@ -151,7 +152,14 @@ const StarRating = ({ value=0, onChange, max=10 }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 //  PlayerManagement — main component
 // ═══════════════════════════════════════════════════════════════════════════════
+const toWestern = (num) =>
+  String(num).replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) =>
+    String(d.charCodeAt(0) - (d.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660))
+  );
+
 const PlayerManagement = () => {
+  const { t, i18n } = useTranslation('coachplayers');
+  const isRtl = i18n.language === 'ar';
   const navigate = useNavigate();
   const [players,   setPlayers]   = useState([]);
   const [groups,    setGroups]    = useState([]);
@@ -262,9 +270,9 @@ const PlayerManagement = () => {
 
   const handleSubmitEval = async (e) => {
     e.preventDefault();
-    if (!evalForm.strength.trim())   { toast.error('Strength is required');   return; }
-    if (!evalForm.to_improve.trim()) { toast.error('To improve is required'); return; }
-    if (!evalForm.objective.trim())  { toast.error('Objective is required');  return; }
+    if (!evalForm.strength.trim())   { toast.error(t('errStrengthReq'));   return; }
+    if (!evalForm.to_improve.trim()) { toast.error(t('errImproveReq')); return; }
+    if (!evalForm.objective.trim())  { toast.error(t('errObjReq'));  return; }
     setIsSubmitting(true);
     try {
       await API.post('reports/', {
@@ -284,7 +292,7 @@ const PlayerManagement = () => {
         attendance_present:parseInt(evalForm.attendance_present)||0,
         attendance_total:parseInt(evalForm.attendance_total)||0,
       });
-      toast.success(`Evaluation saved for ${evalPlayer.full_name} ✅`);
+      toast.success(t('evalSaved', { name: evalPlayer.full_name }));
       setShowEvalModal(false);
     } catch (err) {
       toast.error(err.response?.data?.non_field_errors?.[0]||'Failed to save evaluation');
@@ -298,7 +306,7 @@ const PlayerManagement = () => {
   };
   const filledCount = Object.values(testScores).filter(v=>v>0).length;
   const runPrediction = () => {
-    if (filledCount<MIN_CRITERIA) { toast.error(`Please fill at least ${MIN_CRITERIA} criteria`); return; }
+    if (filledCount<MIN_CRITERIA) { toast.error(t('errMinCriteria', { min: MIN_CRITERIA })); return; }
     setPositionDecision(null); setIsPredicting(true);
     setTimeout(() => { setPredictions(predictPosition(testScores)); setIsPredicting(false); }, 1000);
   };
@@ -310,14 +318,14 @@ const PlayerManagement = () => {
       if (decision==='change') {
         await API.patch(`players/${predictPlayer.id}/`,{ position:newPos });
         setPlayers(prev => prev.map(p => p.id===predictPlayer.id ? {...p,position:newPos} : p));
-        toast.success(`Position updated to ${newPos} ✅`);
-      } else { toast.success(`Position kept as ${predictPlayer.position} ✅`); }
+        toast.success(t('posUpdatedSucc', { pos: newPos }));
+      } else { toast.success(t('posKeptSucc', { pos: predictPlayer.position })); }
       setPositionDecision(decision);
     } catch {
       if (decision==='change') {
         setPlayers(prev => prev.map(p => p.id===predictPlayer.id ? {...p,position:newPos} : p));
-        toast.success(`Position updated to ${newPos} ✅`);
-      } else { toast.success(`Position kept as ${predictPlayer.position} ✅`); }
+        toast.success(t('posUpdatedSucc', { pos: newPos }));
+      } else { toast.success(t('posKeptSucc', { pos: predictPlayer.position })); }
       setPositionDecision(decision);
     } finally { setIsUpdatingPosition(false); }
   };
@@ -340,7 +348,8 @@ const PlayerManagement = () => {
   return (
     <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
       style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
-      initial="hidden" animate="visible" variants={cV}>
+      initial="hidden" animate="visible" variants={cV}
+      dir={isRtl ? 'rtl' : 'ltr'}>
       <Toaster position="top-right"/>
       <div className="max-w-7xl mx-auto">
 
@@ -349,17 +358,17 @@ const PlayerManagement = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-                My Players
+                {t('myPlayers')}
               </h1>
               <p className="text-xl text-gray-300 mt-3">
-                {isLoading ? 'Loading...' : `${filteredPlayers.length} players available`}
+                {isLoading ? t('loading') : t('playersAvailable', { count: toWestern(filteredPlayers.length) })}
               </p>
             </div>
             <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
               onClick={() => navigate('/coach/analysis')}
               className="flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-white"
               style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-              <FiActivity size={18}/>KPI Analysis
+              <FiActivity size={18}/>{t('kpiAnalysis')}
             </motion.button>
           </div>
         </motion.div>
@@ -367,10 +376,10 @@ const PlayerManagement = () => {
         {/* Stats */}
         <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
           {[
-            { label:'Total Players', value:players.length, color:'#4fb0ff' },
-            { label:'Total Groups',  value:groups.length,  color:'#00d0cb' },
-            { label:'Filtered',      value:filteredPlayers.length, color:'#902bd1' },
-            { label:'Active',        value:players.filter(p=>p.status==='Active').length, color:'#22c55e' },
+            { label: t('totalPlayers'), value: toWestern(players.length), color:'#4fb0ff' },
+            { label: t('totalGroups'),  value: toWestern(groups.length),  color:'#00d0cb' },
+            { label: t('filtered'),      value: toWestern(filteredPlayers.length), color:'#902bd1' },
+            { label: t('active'),        value: toWestern(players.filter(p=>p.status==='Active').length), color:'#22c55e' },
           ].map((stat,i) => (
             <div key={i} className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 text-center">
               {isLoading
@@ -388,7 +397,7 @@ const PlayerManagement = () => {
               <div className="p-2 rounded-lg bg-gradient-to-br from-[#902bd1] to-[#00d0cb] shadow-lg shadow-[#00d0cb]/10">
                 <FiFilter className="text-white" />
               </div>
-              <span className="bg-gradient-to-r from-[#902bd1] to-[#00d0cb] bg-clip-text text-transparent uppercase tracking-wider">Player Filters</span>
+              <span className="bg-gradient-to-r from-[#902bd1] to-[#00d0cb] bg-clip-text text-transparent uppercase tracking-wider">{t('playerFilters')}</span>
             </h2>
             
             <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
@@ -401,7 +410,7 @@ const PlayerManagement = () => {
                   <div className="flex items-center gap-3">
                     <FiUsers className={`${selectedGroup ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
                     <span className="text-sm font-medium truncate">
-                      {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : 'All Groups'}
+                      {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : t('allGroups')}
                     </span>
                   </div>
                   <FiChevronDown className={`transition-transform duration-200 ${showGroupDropdown ? 'rotate-180' : ''}`} />
@@ -416,7 +425,7 @@ const PlayerManagement = () => {
                       <div onClick={() => handleGroupChange('')} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                            <FiFilter className="text-gray-500 group-hover:text-[#00d0cb]" />
-                           <span className="font-medium">All Groups</span>
+                           <span className="font-medium">{t('allGroups')}</span>
                         </div>
                         {!selectedGroup && <FiCheck className="text-[#00d0cb]" />}
                       </div>
@@ -444,7 +453,7 @@ const PlayerManagement = () => {
                   <div className="flex items-center gap-3">
                     <FiTarget className={`${selectedSubgroup ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
                     <span className="text-sm font-medium truncate">
-                      {selectedSubgroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.subgroups?.find(s => Number(s.id) === Number(selectedSubgroup))?.name : 'All Subgroups'}
+                      {selectedSubgroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.subgroups?.find(s => Number(s.id) === Number(selectedSubgroup))?.name : t('allSubgroups')}
                     </span>
                   </div>
                   <FiChevronDown className={`transition-transform duration-200 ${showSubgroupDropdown ? 'rotate-180' : ''}`} />
@@ -459,7 +468,7 @@ const PlayerManagement = () => {
                       <div onClick={() => { setSelectedSubgroup(''); setShowSubgroupDropdown(false); }} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                            <FiFilter className="text-gray-500 group-hover:text-[#00d0cb]" />
-                           <span className="font-medium">All Subgroups</span>
+                           <span className="font-medium">{t('allSubgroups')}</span>
                         </div>
                         {!selectedSubgroup && <FiCheck className="text-[#00d0cb]" />}
                       </div>
@@ -486,7 +495,7 @@ const PlayerManagement = () => {
                   <div className="flex items-center gap-3">
                     <FiActivity className={`${selectedStatus ? 'text-[#00d0cb]' : 'text-gray-500'} group-hover:scale-110 transition-transform`} />
                     <span className="text-sm font-medium truncate">
-                      {selectedStatus || 'All Status'}
+                      {selectedStatus ? t(selectedStatus.toLowerCase().replace(/\s+/g, '') + 'Status') : t('allStatus')}
                     </span>
                   </div>
                   <FiChevronDown className={`transition-transform duration-200 ${showStatusDropdown ? 'rotate-180' : ''}`} />
@@ -499,10 +508,10 @@ const PlayerManagement = () => {
                       className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
                     >
                       {[
-                        { id: '', name: 'All Status', icon: <FiFilter className="text-gray-400" /> },
-                        { id: 'Active', name: 'Active', icon: <FiActivity className="text-green-400" /> },
-                        { id: 'Injured', name: 'Injured', icon: <FiActivity className="text-red-400" /> },
-                        { id: 'Inactive', name: 'Inactive', icon: <FiActivity className="text-gray-400" /> },
+                        { id: '', name: t('allStatus'), icon: <FiFilter className="text-gray-400" /> },
+                        { id: 'Active', name: t('activeStatus'), icon: <FiActivity className="text-green-400" /> },
+                        { id: 'Injured', name: t('injuredStatus'), icon: <FiActivity className="text-red-400" /> },
+                        { id: 'Inactive', name: t('inactiveStatus'), icon: <FiActivity className="text-gray-400" /> },
                       ].map(opt => (
                         <div key={opt.id} onClick={() => { setSelectedStatus(opt.id); setShowStatusDropdown(false); }} className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
                           <div className="flex items-center gap-3">
@@ -519,13 +528,13 @@ const PlayerManagement = () => {
 
               {/* 4. Search */}
               <div className="relative flex-[1.5] min-w-[250px]">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#00d0cb] transition-colors" />
+                <FiSearch className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#00d0cb] transition-colors`} />
                 <input 
                   type="text" 
-                  placeholder="Search by name, position..."
+                  placeholder={t('searchPlaceholder')}
                   value={search} 
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]/30 transition-all shadow-inner"
+                  className={`w-full ${isRtl ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4'} py-3 bg-[#0c132a]/60 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]/30 transition-all shadow-inner`}
                 />
               </div>
             </div>
@@ -543,8 +552,8 @@ const PlayerManagement = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-800/80 border-b border-gray-700/50">
-                    {['Player','Position','Group','Subgroup','Status','Actions'].map(h=>(
-                      <th key={h} className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">{h}</th>
+                    {[t('player'),t('position'),t('group'),t('subgroup'),t('status'),t('actions')].map((h, i)=>(
+                      <th key={i} className={`px-6 py-4 text-sm font-semibold text-gray-300 uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -572,13 +581,13 @@ const PlayerManagement = () => {
                           </div>
                           <div className="ml-3">
                             <div className="text-sm font-bold text-white group-hover:text-[#4fb0ff] transition-colors">{p.full_name}</div>
-                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">View Profile</div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">{t('viewProfile')}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r ${posColor(p.position)} text-white shadow-sm`}>
-                          {p.position || 'Unknown'}
+                          {p.position ? t(p.position.toLowerCase()) || p.position : t('unknown')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -589,7 +598,7 @@ const PlayerManagement = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-gray-400 text-xs font-medium">{p.subgroup?.name || '—'}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`text-xs font-bold px-2.5 py-1 rounded-lg bg-gray-800/40 border border-gray-700/30 ${statusColor(p.status)}`}>
-                          {p.status || '—'}
+                          {p.status ? t(p.status.toLowerCase().replace(/\s+/g, '') + 'Status') : '—'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -599,23 +608,23 @@ const PlayerManagement = () => {
                             onClick={(e) => { e.stopPropagation(); openEvalModal(p); }}
                             className="inline-flex items-center gap-1.5 px-3 py-2 text-white rounded-xl text-[11px] font-bold shadow-md transition-all border-none"
                             style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}
-                            title="Monthly Evaluation">
-                            <FaStar size={10} />Evaluate
+                            title={t('monthlyEvaluation')}>
+                            <FaStar size={10} />{t('evaluate')}
                           </motion.button>
                           
                           {/* History */}
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={(e) => { e.stopPropagation(); setHistoryPlayer(p); setShowHistoryModal(true); }}
                             className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-gray-300 rounded-xl text-[11px] font-bold border border-gray-700 hover:text-white hover:bg-gray-700 transition-all"
-                            title="Report History">
-                            <FiFileText size={12} />History
+                            title={t('reportHistory')}>
+                            <FiFileText size={12} />{t('history')}
                           </motion.button>
                           
                           {/* Analysis */}
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={(e) => { e.stopPropagation(); navigate('/coach/analysis'); }}
                             className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#00d0cb] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
-                            title="Deep KPI Analysis">
+                            title={t('deepKpiAnalysis')}>
                             <FiActivity size={16} />
                           </motion.button>
 
@@ -623,7 +632,7 @@ const PlayerManagement = () => {
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={(e) => { e.stopPropagation(); openPredictModal(p); }}
                             className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#f59e0b] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
-                            title="Position Predictor">
+                            title={t('positionPredictor')}>
                             <FaMagic size={14} />
                           </motion.button>
                         </div>
@@ -634,8 +643,8 @@ const PlayerManagement = () => {
                     <tr>
                       <td colSpan="6" className="px-6 py-16 text-center">
                         <FiUsers className="mx-auto text-4xl text-gray-500 mb-4"/>
-                        <p className="text-white text-lg font-medium mb-1">No players found</p>
-                        <p className="text-gray-400">Try adjusting your search or filter</p>
+                        <p className="text-white text-lg font-medium mb-1">{t('noPlayersFound')}</p>
+                        <p className="text-gray-400">{t('tryAdjusting')}</p>
                       </td>
                     </tr>
                   )}
@@ -660,67 +669,67 @@ const PlayerManagement = () => {
       <AnimatePresence>
         {showEvalModal && evalPlayer && (
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto"
+            dir={isRtl ? 'rtl' : 'ltr'}>
             <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }}
               exit={{ scale:0.95, opacity:0 }}
-              className="bg-gray-900/95 rounded-2xl border border-gray-700 w-full max-w-3xl my-8">
+              className="bg-gray-900/95 rounded-2xl border border-gray-700 w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto my-8">
               <form onSubmit={handleSubmitEval}>
-                <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white font-bold text-lg relative overflow-hidden">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row items-center justify-between p-6 border-b border-gray-700 gap-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white font-bold text-lg sm:text-xl relative overflow-hidden flex-shrink-0">
                       {evalPlayer.profile_picture || evalPlayer.photo_url ? (
-                        <img 
-                          src={evalPlayer.profile_picture || evalPlayer.photo_url} 
-                          alt="" 
-                          className="absolute inset-0 w-full h-full object-cover z-10"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
+                        <img src={evalPlayer.profile_picture || evalPlayer.photo_url} alt="" className="absolute inset-0 w-full h-full object-cover z-10"
+                          onError={(e) => { e.target.style.display = 'none'; }} />
                       ) : null}
                       <span className="relative z-0">{evalPlayer.full_name?.charAt(0)?.toUpperCase()}</span>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-white">{evalPlayer.full_name}</div>
-                      <div className="text-sm text-gray-400">{evalPlayer.position} · Monthly Evaluation</div>
+                      <div className="text-lg sm:text-xl font-bold text-white">{evalPlayer.full_name}</div>
+                      <div className="text-xs sm:text-sm text-gray-400">
+                        {evalPlayer.position ? t('pos_' + evalPlayer.position.toLowerCase()) || evalPlayer.position : t('unknown')} · {t('monthlyEvaluation')}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-gray-800/50 rounded-xl px-3 py-2 border border-gray-700">
+                  <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                    <div className="flex items-center gap-2 bg-gray-800/50 rounded-xl px-3 py-2 border border-gray-700 flex-1 md:flex-none justify-between md:justify-start">
                       <button type="button" onClick={() => setEvalMonth(format(subMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
                         className="text-gray-400 hover:text-white"><FiChevronLeft size={16}/></button>
-                      <span className="text-sm text-white font-medium min-w-28 text-center">
+                      <span className="text-sm text-white font-medium min-w-28 text-center select-none">
                         {format(new Date(evalMonth+'-01'),'MMMM yyyy')}
                       </span>
                       <button type="button" onClick={() => setEvalMonth(format(addMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
                         className="text-gray-400 hover:text-white"><FiChevronRight size={16}/></button>
                     </div>
                     <button type="button" onClick={() => setShowEvalModal(false)}
-                      className="text-gray-400 hover:text-white p-2 rounded-xl hover:bg-gray-800">
+                      className="text-gray-400 hover:text-white p-2 rounded-xl hover:bg-gray-800 flex-shrink-0">
                       <FiX size={20}/>
                     </button>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-5 gap-3">
-                    <div className="bg-gray-800/50 rounded-xl p-3 text-center border border-gray-700/50">
-                      <div className="text-3xl font-bold text-[#4fb0ff]">{getOverall()}</div>
-                      <div className="text-xs text-gray-400 mt-1">Overall /10</div>
+                  {/* Pillar averages */}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 justify-items-center w-full">
+                    <div className="bg-gray-800/50 rounded-xl p-3 text-center border border-gray-700/50 w-full">
+                      <div className="text-2xl sm:text-3xl font-bold text-[#4fb0ff]">{toWestern(getOverall())}</div>
+                      <div className="text-[10px] sm:text-xs text-gray-400 mt-1">{t('overall10')}</div>
                     </div>
                     {['technical','tactical','physical','mental'].map(pillar => {
                       const c=PILLAR_CONFIG[pillar];
                       return (
-                        <div key={pillar} className={`${c.bg} rounded-xl p-3 text-center border ${c.border}`}>
-                          <div className={`text-2xl font-bold ${c.text}`}>{getPillarAvg(pillar)}</div>
-                          <div className="text-xs text-gray-400 mt-1 capitalize">{pillar}</div>
+                        <div key={pillar} className={`${c.bg} rounded-xl p-3 text-center border ${c.border} w-full`}>
+                          <div className={`text-xl sm:text-2xl font-bold ${c.text}`}>{toWestern(getPillarAvg(pillar))}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-400 mt-1 capitalize">{t('pillar_' + pillar)}</div>
                         </div>
                       );
                     })}
                   </div>
 
-                  <div>
-                    <div className="flex gap-2 mb-4 flex-wrap">
+                  {/* Pillar tabs */}
+                  <div className="w-full">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-2 overflow-x-auto whitespace-nowrap mb-4 pb-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
                       {TABS.map(tab => {
                         const c = tab==='health'
                           ? { bg:'bg-red-500/20', text:'text-red-400', border:'border-red-500/30' }
@@ -728,92 +737,94 @@ const PlayerManagement = () => {
                         const isActive = activePillar===tab;
                         return (
                           <button key={tab} type="button" onClick={() => setActivePillar(tab)}
-                            className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all border ${
+                            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium capitalize transition-all border shrink-0 ${
                               isActive ? `${c.bg} ${c.text} ${c.border}` : 'bg-gray-800/30 text-gray-400 border-gray-700/50 hover:text-white'}`}>
-                            {tab==='health' ? 'Health & Academic' : tab}
+                            {tab==='health' ? t('healthAcademic') : t('pillar_' + tab)}
                           </button>
                         );
                       })}
                     </div>
 
                     {['technical','tactical','physical','mental'].includes(activePillar) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {(PILLARS[evalPlayer.position]?.[activePillar]||[]).map(criterion => (
-                          <div key={criterion} className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30">
-                            <div className="text-sm text-gray-300 mb-2">{criterion}</div>
-                            <StarRating
-                              value={evalForm[`${activePillar}_scores`][criterion]||0}
-                              onChange={(val) => setScore(activePillar,criterion,val)}
-                            />
-                          </div>
-                        ))}
+                      <div className="w-full space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {(PILLARS[evalPlayer.position]?.[activePillar]||[]).map(criterion => (
+                            <div key={criterion} className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30">
+                              <div className="text-sm text-gray-300 mb-2">{t('crit_' + criterion.toLowerCase().replace(/\s+/g, '_'))}</div>
+                              <StarRating
+                                value={evalForm[`${activePillar}_scores`][criterion]||0}
+                                onChange={(val) => setScore(activePillar,criterion,val)}
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
                     {activePillar==='health' && (
                       <div className="space-y-4">
                         <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/20">
-                          <div className="text-sm font-medium text-red-400 mb-4">Health status</div>
+                          <div className="text-sm font-medium text-red-400 mb-4">{t('healthStatus')}</div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-center gap-3">
                               <input type="checkbox" id="is_injured" checked={evalForm.is_injured}
                                 onChange={e => setEvalForm(p=>({...p,is_injured:e.target.checked}))}
                                 className="h-4 w-4 rounded"/>
-                              <label htmlFor="is_injured" className="text-sm text-gray-300">Currently injured</label>
+                              <label htmlFor="is_injured" className="text-sm text-gray-300">{t('currentlyInjured')}</label>
                             </div>
                             <div className="flex items-center gap-3">
                               <input type="checkbox" id="med_cert" checked={evalForm.medical_cert_valid}
                                 onChange={e => setEvalForm(p=>({...p,medical_cert_valid:e.target.checked}))}
                                 className="h-4 w-4 rounded"/>
-                              <label htmlFor="med_cert" className="text-sm text-gray-300">Medical cert. valid</label>
+                              <label htmlFor="med_cert" className="text-sm text-gray-300">{t('medicalCertValid')}</label>
                             </div>
                             {evalForm.is_injured && (
                               <div className="md:col-span-2">
-                                <input type="text" placeholder="Injury details..."
+                                <input type="text" placeholder={t('injuryDetailsPlaceholder')}
                                   value={evalForm.injury_details}
                                   onChange={e => setEvalForm(p=>({...p,injury_details:e.target.value}))}
-                                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400"/>
+                                  className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${isRtl ? 'text-right' : ''}`}/>
                               </div>
                             )}
                             <div>
-                              <label className="block text-xs text-gray-400 mb-1">Fatigue level (1-5)</label>
-                              <div className="flex gap-2">
+                              <label className="block text-xs text-gray-400 mb-1">{t('fatigueLevel')}</label>
+                              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                                 {[1,2,3,4,5].map(v=>(
                                   <button key={v} type="button" onClick={()=>setEvalForm(p=>({...p,fatigue_level:v}))}
-                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${evalForm.fatigue_level===v?'bg-red-500 text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{v}</button>
+                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${evalForm.fatigue_level===v?'bg-red-500 text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{toWestern(v)}</button>
                                 ))}
                               </div>
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-400 mb-1">Sleep quality (1-5)</label>
-                              <div className="flex gap-2">
+                              <label className="block text-xs text-gray-400 mb-1">{t('sleepQuality')}</label>
+                              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                                 {[1,2,3,4,5].map(v=>(
                                   <button key={v} type="button" onClick={()=>setEvalForm(p=>({...p,sleep_quality:v}))}
-                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${evalForm.sleep_quality===v?'bg-blue-500 text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{v}</button>
+                                    className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${evalForm.sleep_quality===v?'bg-blue-500 text-white':'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>{toWestern(v)}</button>
                                 ))}
                               </div>
                             </div>
                           </div>
                         </div>
                         <div className="bg-purple-500/5 rounded-xl p-4 border border-purple-500/20">
-                          <div className="text-sm font-medium text-purple-400 mb-4">Academic tracking</div>
+                          <div className="text-sm font-medium text-purple-400 mb-4">{t('academicTracking')}</div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-xs text-gray-400 mb-1">Grade avg (/20)</label>
-                              <input type="number" min="0" max="20" step="0.1" placeholder="ex: 15.5"
+                              <label className="block text-xs text-gray-400 mb-1">{t('gradeAvg')}</label>
+                              <input type="number" min="0" max="20" step="0.1" placeholder={t('ex155')}
                                 value={evalForm.school_grade_avg}
                                 onChange={e=>setEvalForm(p=>({...p,school_grade_avg:e.target.value}))}
                                 className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"/>
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-400 mb-1">Attendance (%)</label>
-                              <input type="number" min="0" max="100" placeholder="ex: 95"
+                              <label className="block text-xs text-gray-400 mb-1">{t('attendancePercent')}</label>
+                              <input type="number" min="0" max="100" placeholder={t('ex95')}
                                 value={evalForm.school_attendance}
                                 onChange={e=>setEvalForm(p=>({...p,school_attendance:e.target.value}))}
                                 className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"/>
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-400 mb-1">Behaviour (1-10)</label>
+                              <label className="block text-xs text-gray-400 mb-1">{t('behaviour10')}</label>
                               <StarRating value={evalForm.school_behaviour}
                                 onChange={val=>setEvalForm(p=>({...p,school_behaviour:val}))}/>
                             </div>
@@ -823,77 +834,80 @@ const PlayerManagement = () => {
                     )}
                   </div>
 
+                  {/* Attendance */}
                   <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30">
-                    <div className="text-sm font-medium text-gray-300 mb-3">Training attendance</div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-400 mb-1">Sessions attended</label>
-                        <input type="number" min="0" placeholder="ex: 14"
+                    <div className="text-sm font-medium text-gray-300 mb-3">{t('trainingAttendance')}</div>
+                    <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-xs text-gray-400 mb-1">{t('sessionsAttended')}</label>
+                        <input type="number" min="0" placeholder={t('ex14')}
                           value={evalForm.attendance_present}
                           onChange={e=>setEvalForm(p=>({...p,attendance_present:e.target.value}))}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"/>
                       </div>
-                      <div className="text-gray-400 text-lg mt-4">/</div>
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-400 mb-1">Total sessions</label>
-                        <input type="number" min="0" placeholder="ex: 16"
+                      <div className="text-gray-400 text-lg mt-4 shrink-0">/</div>
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-xs text-gray-400 mb-1">{t('totalSessions')}</label>
+                        <input type="number" min="0" placeholder={t('ex16')}
                           value={evalForm.attendance_total}
                           onChange={e=>setEvalForm(p=>({...p,attendance_total:e.target.value}))}
                           className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"/>
                       </div>
                       {evalForm.attendance_present && evalForm.attendance_total && (
-                        <div className="mt-4 text-[#00d0cb] font-bold text-xl">
-                          {Math.round((evalForm.attendance_present/evalForm.attendance_total)*100)}%
+                        <div className="mt-4 text-[#00d0cb] font-bold text-xl min-w-[60px] text-center sm:text-right shrink-0">
+                          {toWestern(Math.round((evalForm.attendance_present/evalForm.attendance_total)*100))}%
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Text fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {[
-                      { key:'strength',   label:'Strength',   req:true, placeholder:'What does this player do well...' },
-                      { key:'to_improve', label:'To improve', req:true, placeholder:'What should this player improve...' },
+                      { key:'strength',   label: t('strength'),   req:true, placeholder: t('whatDoesPlayerWell') },
+                      { key:'to_improve', label: t('toImprove'), req:true, placeholder: t('whatShouldPlayerImprove') },
                     ].map(f=>(
-                      <div key={f.key}>
+                      <div key={f.key} className="w-full">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          {f.label} {f.req && <span className="text-red-400 text-xs">*required</span>}
+                          {f.label} {f.req && <span className="text-red-400 text-xs">{t('required')}</span>}
                         </label>
                         <textarea rows="3" placeholder={f.placeholder}
                           value={evalForm[f.key]}
                           onChange={e=>setEvalForm(p=>({...p,[f.key]:e.target.value}))}
-                          className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none"/>
+                          className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none ${isRtl ? 'text-right' : ''}`}/>
                       </div>
                     ))}
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-2 w-full">
                       <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Objective for next month <span className="text-red-400 text-xs">*required</span>
+                        {t('objectiveForNextMonth')} <span className="text-red-400 text-xs">{t('required')}</span>
                       </label>
-                      <textarea rows="2" placeholder="1-2 concrete objectives..."
+                      <textarea rows="2" placeholder={t('concreteObjectives')}
                         value={evalForm.objective}
                         onChange={e=>setEvalForm(p=>({...p,objective:e.target.value}))}
-                        className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none"/>
+                        className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none ${isRtl ? 'text-right' : ''}`}/>
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Coach comment (optional)</label>
-                      <textarea rows="2" placeholder="Additional notes..."
+                    <div className="md:col-span-2 w-full">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('coachComment')}</label>
+                      <textarea rows="2" placeholder={t('additionalNotes')}
                         value={evalForm.comment}
                         onChange={e=>setEvalForm(p=>({...p,comment:e.target.value}))}
-                        className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none"/>
+                        className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none ${isRtl ? 'text-right' : ''}`}/>
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-2">
+                  {/* Footer */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button type="button" onClick={() => setShowEvalModal(false)}
-                      className="px-6 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50">
-                      Cancel
+                      className="w-full sm:w-auto px-6 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50 order-2 sm:order-1">
+                      {t('cancel')}
                     </button>
                     <motion.button type="submit" disabled={isSubmitting}
                       whileHover={{ scale:1.02 }} whileTap={{ scale:0.98 }}
-                      className="flex-1 text-white font-semibold py-3 rounded-xl disabled:opacity-70 flex items-center justify-center gap-2"
+                      className="flex-1 text-white font-semibold py-3 rounded-xl disabled:opacity-70 flex items-center justify-center gap-2 order-1 sm:order-2 text-sm sm:text-base px-4 truncate"
                       style={{ background:'linear-gradient(135deg,#4fb0ff,#00d0cb)' }}>
                       {isSubmitting
-                        ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Saving...</>
-                        : <><FaStar style={{ fontSize:14 }}/>Save — {format(new Date(evalMonth+'-01'),'MMMM yyyy')}</>}
+                        ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t('saving')}</>
+                        : <><FaStar style={{ fontSize:14 }} className="shrink-0" /><span>{t('saveDate', { date: format(new Date(evalMonth+'-01'),'MMMM yyyy') })}</span></>}
                     </motion.button>
                   </div>
                 </div>
@@ -917,12 +931,12 @@ const PlayerManagement = () => {
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
                     style={{ background:'linear-gradient(135deg,#f59e0b,#ef4444)' }}>🎯</div>
                   <div>
-                    <div className="text-lg font-bold text-white">Position Predictor</div>
+                    <div className="text-lg font-bold text-white">{t('positionPredictor')}</div>
                     <div className="text-sm text-gray-400">
                       {predictPlayer.full_name}
                       {predictPlayer.position && (
                         <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
-                          Current: {predictPlayer.position}
+                          {t('current')}: {t(predictPlayer.position.toLowerCase()) || predictPlayer.position}
                         </span>
                       )}
                     </div>
@@ -936,21 +950,16 @@ const PlayerManagement = () => {
 
               <div className="p-6">
                 <div className="bg-gray-800/50 rounded-xl p-4 mb-5 border border-gray-700/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-300">Criteria filled</div>
-                    <div className="text-sm font-bold text-white">
-                      <span style={{ color:filledCount>=MIN_CRITERIA?'#22c55e':'#f59e0b' }}>{filledCount}</span>
-                      <span className="text-gray-500"> / {TOTAL_CRITERIA}</span>
-                      <span className="ml-2 text-xs text-gray-500">(min {MIN_CRITERIA})</span>
-                    </div>
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-gray-300 font-medium">{t('criteriaFilled')}</span>
+                    <span className={`${filledCount>=MIN_CRITERIA ? 'text-green-400' : 'text-gray-400'}`}>
+                      {filledCount} / {Object.keys(testScores).length} <span className="text-xs opacity-70">{t('min', { min: MIN_CRITERIA })}</span>
+                    </span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <motion.div className="h-full rounded-full"
-                      animate={{ width:`${(filledCount/TOTAL_CRITERIA)*100}%` }}
-                      style={{ background:filledCount>=MIN_CRITERIA?'#22c55e':'#f59e0b' }}
-                      transition={{ duration:0.3 }}/>
+                  <div className="h-2 bg-gray-700/50 rounded-full overflow-hidden mb-2">
+                    <div className={`h-full transition-all duration-500 ${filledCount>=MIN_CRITERIA ? 'bg-gradient-to-r from-green-400 to-emerald-400' : 'bg-gray-500'}`} style={{width:`${(filledCount/Object.keys(testScores).length)*100}%`}}/>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">More criteria = more accurate prediction.</div>
+                  <div className="text-xs text-gray-500 text-center italic">{t('moreCriteria')}</div>
                 </div>
 
                 <div className="space-y-5 mb-5 max-h-72 overflow-y-auto pr-1">
@@ -962,7 +971,7 @@ const PlayerManagement = () => {
                           <div key={criterion}
                             className={`rounded-xl p-3 border transition-all ${testScores[criterion]>0?'bg-gray-800/70 border-gray-600':'bg-gray-800/30 border-gray-700/40'}`}>
                             <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-xs text-gray-300">{criterion}</span>
+                              <span className="text-xs text-gray-300">{t('crit_' + criterion.toLowerCase().replace(/\s+/g, '_'))}</span>
                               {testScores[criterion]>0 && (
                                 <span className="text-xs font-bold" style={{ color }}>{testScores[criterion]}/10</span>
                               )}
@@ -980,117 +989,78 @@ const PlayerManagement = () => {
 
                 {predictions && (
                   <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }} className="mb-5">
-                    <div className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-                      <FaMagic className="text-amber-400" style={{ fontSize:14 }}/>
-                      Prediction results — 4 positions
-                    </div>
-                    <div className={`rounded-xl p-5 border-2 mb-3 ${predictions[0].profile.bg}`}
-                      style={{ borderColor:predictions[0].profile.color }}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-3xl">{predictions[0].profile.icon}</span>
-                          <div>
-                            <div className="text-xl font-bold" style={{ color:predictions[0].profile.color }}>
-                              {predictions[0].position}
+                    <h4 className="text-sm font-medium text-gray-300 mb-4">{t('predictionResults')}</h4>
+                    {predictions.map((res, i) => {
+                      const isMatch = res.position === predictPlayer.position;
+                      return (
+                        <div key={res.position} className={`relative overflow-hidden rounded-2xl p-4 border mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:bg-gray-800/50 ${i===0 ? 'border-[#f59e0b]/50 bg-[#f59e0b]/5' : 'border-gray-700/30 bg-gray-800/30'}`}>
+                          {i===0 && <div className="absolute top-0 right-0 w-32 h-32 bg-[#f59e0b]/10 rounded-full blur-3xl -mr-16 -mt-16"/>}
+                          <div className="flex-1 relative z-10">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className={`text-lg font-bold ${i===0 ? 'text-[#f59e0b]' : 'text-gray-300'}`}>
+                                {t('pos_' + res.position.toLowerCase()) || res.position}
+                              </span>
+                              {i===0 && isMatch && <span className="px-2 py-0.5 rounded-md bg-green-500/20 text-green-400 text-xs font-bold border border-green-500/20">✓</span>}
                             </div>
-                            <div className="text-xs text-gray-400">{predictions[0].profile.description}</div>
+                            <div className="text-xs text-gray-400">
+                              {t('desc_' + res.position.toLowerCase())}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-start sm:items-end w-full sm:w-auto relative z-10">
+                            <div className="text-2xl font-black bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
+                              {Math.round(res.score*10)}%
+                            </div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-wider">{t('confidence')}</div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-4xl font-bold" style={{ color:predictions[0].profile.color }}>
-                            {Math.round(predictions[0].score*10)}%
-                          </div>
-                          <div className="text-xs text-gray-400">confidence</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-300 bg-black/20 rounded-lg px-3 py-2 mb-3">
-                        {predictions[0].profile.traits}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {predictions[0].profile.strengths.map(s=>(
-                          <span key={s} className="text-xs px-2 py-1 rounded-full"
-                            style={{ background:predictions[0].profile.color+'25', color:predictions[0].profile.color }}>
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                      {predictPlayer.position && predictPlayer.position!==predictions[0].position ? (
-                        <div className="mt-3 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
-                          <span className="text-amber-400 text-xs">⚠</span>
-                          <span className="text-xs text-amber-300">
-                            Different from current position ({predictPlayer.position}). Consider testing in {predictions[0].position} role.
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="mt-3 flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
-                          <span className="text-green-400 text-xs">✓</span>
-                          <span className="text-xs text-green-300">Current position confirmed — player is well-placed.</span>
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })}
 
-                    <div className="grid grid-cols-3 gap-2">
-                      {predictions.slice(1,4).map(pred=>(
-                        <div key={pred.position} className={`rounded-xl p-3 border ${pred.profile.bg} ${pred.profile.border}`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg">{pred.profile.icon}</span>
-                            <div className="text-sm font-medium" style={{ color:pred.profile.color }}>{pred.position}</div>
-                          </div>
-                          <div className="text-xl font-bold" style={{ color:pred.profile.color }}>
-                            {Math.round(pred.score*10)}%
-                          </div>
-                          <div className="mt-1.5 bg-gray-700/50 rounded-full h-1.5 overflow-hidden">
-                            <div className="h-full rounded-full"
-                              style={{ width:`${(pred.score/predictions[0].score)*100}%`, background:pred.profile.color }}/>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Keep / Change decision */}
                     {!positionDecision ? (
-                      <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700/30">
-                        <div className="text-sm font-medium text-white mb-1">What do you want to do with this player's position?</div>
-                        <div className="text-xs text-gray-400 mb-3">
-                          Current: <span className="text-white font-medium">{predictPlayer.position||'Unknown'}</span>
-                          <span className="mx-2 text-gray-600">→</span>
-                          Predicted: <span style={{ color:predictions[0].profile.color }} className="font-medium">{predictions[0].position}</span>
-                        </div>
-                        <div className="flex gap-3">
-                          <motion.button onClick={() => handlePositionDecision('keep')}
-                            disabled={isUpdatingPosition}
-                            whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-                            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium disabled:opacity-50 bg-gray-800/50 text-gray-300 border-gray-600 hover:bg-gray-700/50 hover:text-white">
-                            {isUpdatingPosition ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"/> : <span className="text-base">🔒</span>}
-                            Keep as {predictPlayer.position||'current'}
-                          </motion.button>
-                          {predictPlayer.position!==predictions[0].position && (
-                            <motion.button onClick={() => handlePositionDecision('change')}
-                              disabled={isUpdatingPosition}
-                              whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-                              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold disabled:opacity-50 text-white"
-                              style={{ background:`linear-gradient(135deg,${predictions[0].profile.color}99,${predictions[0].profile.color})` }}>
-                              {isUpdatingPosition ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> : <span className="text-base">{predictions[0].profile.icon}</span>}
-                              Change to {predictions[0].position}
-                            </motion.button>
-                          )}
+                      <div className="bg-gray-800/50 rounded-2xl p-5 border border-gray-700/50">
+                        {predictions[0].position !== predictPlayer.position ? (
+                          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex gap-3 text-red-400 text-sm">
+                            <FiInfo className="shrink-0 mt-0.5" />
+                            <div>{t('diffPosition', { current: predictPlayer.position ? t('pos_' + predictPlayer.position.toLowerCase()) : '', new: predictions[0].position ? t('pos_' + predictions[0].position.toLowerCase()) : '' })}</div>
+                          </div>
+                        ) : (
+                          <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex gap-3 text-green-400 text-sm">
+                            <FiCheck className="shrink-0 mt-0.5" />
+                            <div>{t('posConfirmed')}</div>
+                          </div>
+                        )}
+                        <h4 className="text-sm font-medium text-gray-200 mb-4">{t('whatToDo')}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button onClick={() => handlePositionDecision('keep')}
+                            className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-300 text-sm hover:bg-gray-700 transition-colors flex flex-col items-center justify-center gap-1">
+                            <span className="text-xs text-gray-500">{t('current')}</span>
+                            <span className="font-bold">{t('keepAs', { pos: predictPlayer.position ? t('pos_' + predictPlayer.position.toLowerCase()) : '' })}</span>
+                          </button>
+                          <button onClick={() => handlePositionDecision('change')}
+                            className="px-4 py-3 bg-[#f59e0b]/10 border border-[#f59e0b]/30 rounded-xl text-[#f59e0b] text-sm hover:bg-[#f59e0b]/20 transition-colors flex flex-col items-center justify-center gap-1">
+                            <span className="text-xs opacity-70">{t('predicted')}</span>
+                            <span className="font-bold">{t('changeTo', { pos: predictions[0].position ? t('pos_' + predictions[0].position.toLowerCase()) : '' })}</span>
+                          </button>
                         </div>
                       </div>
                     ) : (
-                      <motion.div initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }}
-                        className={`mt-4 p-4 rounded-xl border flex items-center gap-3 ${
-                          positionDecision==='change' ? `${predictions[0].profile.bg} ${predictions[0].profile.border}` : 'bg-gray-800/50 border-gray-600'}`}>
-                        <span className="text-2xl">{positionDecision==='change' ? predictions[0].profile.icon : '🔒'}</span>
-                        <div>
-                          <div className={`text-sm font-medium ${positionDecision==='change' ? predictions[0].profile.text : 'text-gray-300'}`}>
-                            {positionDecision==='change' ? `Position updated to ${predictions[0].position}` : `Position kept as ${predictPlayer.position}`}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-0.5">
-                            {positionDecision==='change' ? 'Player profile has been updated successfully.' : 'Current position confirmed by coach.'}
-                          </div>
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-5 text-center">
+                        <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3 text-green-400 text-xl">
+                          <FiCheck />
                         </div>
-                        <button onClick={() => setPositionDecision(null)} className="ml-auto text-gray-500 hover:text-white text-xs underline">Undo</button>
-                      </motion.div>
+                        <div className="text-green-400 font-bold mb-1">
+                          {positionDecision === 'change'
+                            ? t('posUpdatedTo', { pos: predictions[0].position ? t('pos_' + predictions[0].position.toLowerCase()) : predictions[0].position })
+                            : t('posKeptAs',   { pos: predictPlayer.position  ? t('pos_' + predictPlayer.position.toLowerCase())  : predictPlayer.position  })}
+                        </div>
+                        <div className="text-sm text-green-400/70 mb-4">
+                          {positionDecision === 'change' ? t('profileUpdated') : t('posConfirmedByCoach')}
+                        </div>
+                        <button onClick={() => setPositionDecision(null)}
+                          className="text-xs text-green-400 hover:text-green-300 underline underline-offset-4">
+                          {t('undo')}
+                        </button>
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -1098,7 +1068,7 @@ const PlayerManagement = () => {
                 <div className="flex gap-3">
                   <button onClick={() => setShowPredictModal(false)}
                     className="px-6 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50">
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <motion.button onClick={runPrediction}
                     disabled={isPredicting||filledCount<MIN_CRITERIA}
@@ -1106,8 +1076,8 @@ const PlayerManagement = () => {
                     className="flex-1 text-white font-semibold py-3 rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
                     style={{ background:'linear-gradient(135deg,#f59e0b,#ef4444)' }}>
                     {isPredicting
-                      ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Analysing...</>
-                      : <><FiTarget size={16}/>{predictions ? 'Re-predict' : `Predict best position${filledCount<MIN_CRITERIA ? ` (${filledCount}/${MIN_CRITERIA})` : ''}`}</>}
+                      ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t('analysing')}</>
+                      : <><FiTarget size={16}/>{predictions ? t('rePredict') : (filledCount < MIN_CRITERIA ? t('predictBestPositionMin', { filled: filledCount, min: MIN_CRITERIA }) : t('predictBestPosition'))}</>}
                   </motion.button>
                 </div>
               </div>

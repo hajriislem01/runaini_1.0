@@ -1,0 +1,72 @@
+{
+  "header": {
+    "myTraining": "تدريباتي",
+    "subtitle": "جلسات التدريب والتمارين الشخصية",
+    "subtitleGroup": "جلسات فريق {{group}} + تمارينك الشخصية",
+    "nextSession": "الجلسة القادمة:",
+    "inProgress": "جارية",
+    "in": "خلال",
+    "min": "دقيقة",
+    "h": "ساعة"
+  },
+  "stats": {
+    "upcoming": "القادمة",
+    "pastSessions": "الجلسات السابقة",
+    "personalExos": "تمارين شخصية",
+    "minThisMonth": "دقيقة هذا الشهر"
+  },
+  "load": {
+    "thisWeek": "هذا الأسبوع",
+    "minPlanned": "دقيقة مخططة",
+    "lightWeek": "أسبوع خفيف",
+    "mediumWeek": "أسبوع متوسط",
+    "heavyWeek": "أسبوع مكثف",
+    "highLoad": "حمل عالي",
+    "mediumLoad": "حمل متوسط",
+    "lowLoad": "حمل خفيف"
+  },
+  "view": {
+    "list": "قائمة",
+    "week": "أسبوع",
+    "month": "شهر"
+  },
+  "weekView": {
+    "thisWeek": "هذا الأسبوع",
+    "thisWeeksSessions": "جلسات هذا الأسبوع",
+    "noSessionsOn": "لا توجد جلسات يوم",
+    "days": ["ن", "ث", "ع", "خ", "ج", "س", "ح"]
+  },
+  "monthView": {
+    "today": "اليوم",
+    "more": "المزيد",
+    "sessionsFor": "جلسات يوم"
+  },
+  "listView": {
+    "upcoming": "القادمة",
+    "personal": "شخصية",
+    "past": "السابقة",
+    "assignedToYou": "تمرين مخصص لك شخصياً",
+    "assignedToYouPlural": "تمارين مخصصة لك شخصياً"
+  },
+  "card": {
+    "teamTraining": "تدريب الفريق",
+    "meeting": "اجتماع",
+    "friendlyMatch": "مباراة ودية",
+    "tournament": "بطولة",
+    "today": "اليوم",
+    "level": "المستوى",
+    "noUpcoming": "لا توجد جلسات قادمة",
+    "noPersonal": "لم يتم تخصيص تمارين شخصية بعد",
+    "noPersonalDesc": "سيقوم مدربك بتخصيص تمارين فردية لك",
+    "noPast": "لا توجد جلسات سابقة"
+  },
+  "categories": {
+    "technical": "فني",
+    "tactical": "تكتيكي",
+    "physical": "بدني",
+    "mental": "ذهني",
+    "matchPrep": "تحضير للمباراة",
+    "recovery": "استشفاء",
+    "session": "جلسة"
+  }
+}

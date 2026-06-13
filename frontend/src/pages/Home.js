@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FiArrowRight, FiUsers, FiClipboard, FiTarget, FiActivity,
   FiZap, FiBell, FiBarChart2, FiShield, FiCheck, FiLayers,
@@ -30,29 +31,34 @@ const PitchSVG = () => (
   </svg>
 );
 
-
-
 /* ── Typing effect ───────────────────────────────────────── */
-const words = ['Academies Football.', 'Administrations.', 'Coaches & Players.',];
 function TypedWord() {
+  const { t } = useTranslation('home');
+  const words = t('hero.typedWords', { returnObjects: true }) || ['Academies Football.', 'Administrations.', 'Coaches & Players.'];
   const [idx, setIdx] = useState(0);
   const [displayed, setDisplayed] = useState('');
   const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
-    const target = words[idx];
+    if (!words || words.length === 0) return;
+    const target = words[idx] || '';
     const speed = deleting ? 50 : 100;
     const delay = deleting && displayed.length === 0 ? 600 : speed;
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       if (!deleting) {
         setDisplayed(target.slice(0, displayed.length + 1));
         if (displayed.length + 1 === target.length) setTimeout(() => setDeleting(true), 1400);
       } else {
         setDisplayed(displayed.slice(0, -1));
-        if (displayed.length === 0) { setDeleting(false); setIdx((idx + 1) % words.length); }
+        if (displayed.length === 0) {
+          setDeleting(false);
+          setIdx((idx + 1) % words.length);
+        }
       }
     }, delay);
-    return () => clearTimeout(t);
-  }, [displayed, deleting, idx]);
+    return () => clearTimeout(timer);
+  }, [displayed, deleting, idx, words]);
+
   return (
     <span style={{ background: `linear-gradient(90deg,${P},${B},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
       {displayed}<span className="cursor-blink" style={{ WebkitTextFillColor: T }}>|</span>
@@ -150,6 +156,7 @@ const PerformanceTrend = () => (
 
 /* ══ HOME ════════════════════════════════════════════════════ */
 const Home = () => {
+  const { t } = useTranslation('home');
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const yParallax = useTransform(scrollYProgress, [0, 1], ['0%', '40%']);
@@ -157,33 +164,68 @@ const Home = () => {
 
   const pillars = [
     {
-      role: 'Admin', icon: FiShield, color: P,
-      tagline: 'Total Command',
-      desc: 'Orchestrate your entire academy from one war room. Manage players, coaches, events, payments and real-time group notifications.',
-      features: ['Multi-Group & Subgroup Targeting', 'Real-Time Notification Engine', 'Payment & Subscription Tracking', 'Match & Tournament Scheduling', 'Role-Based Access Control'],
-      pills: [{ icon: FiBell, label: 'Smart Alerts' }, { icon: FiUsers, label: 'Squad Management' }],
+      key: 'admin',
+      icon: FiShield,
+      color: P,
+      pills: [
+        { icon: FiBell, labelKey: 'smartAlerts' },
+        { icon: FiUsers, labelKey: 'squadManagement' }
+      ],
     },
     {
-      role: 'Coach', icon: FiClipboard, color: B,
-      tagline: 'Elite Intelligence',
-      desc: 'Build champions with a six-pillar evaluation engine, AI position predictor, KPI radar charts and a structured training architecture.',
-      features: ['6-Pillar Monthly Evaluation', 'AI Position Predictor', 'KPI Radar & Progression Charts', 'PDF Report Export', 'Video Analysis Suite'],
-      pills: [{ icon: FaBrain, label: 'AI Predictor' }, { icon: FiBarChart2, label: 'KPI Analytics' }],
+      key: 'coach',
+      icon: FiClipboard,
+      color: B,
+      pills: [
+        { icon: FaBrain, labelKey: 'aiPredictor' },
+        { icon: FiBarChart2, labelKey: 'kpiAnalytics' }
+      ],
     },
     {
-      role: 'Player', icon: FiTarget, color: T,
-      tagline: 'Personal Excellence',
-      desc: 'Every player owns their journey. Track performance history, receive personalized training, and stay connected with your squad.',
-      features: ['Personal Performance Dashboard', 'Training Session Access', 'Event Notifications & RSVP', 'Progress History Timeline', 'Coach Feedback Visibility'],
-      pills: [{ icon: FiActivity, label: 'Live Stats' }, { icon: FaTrophy, label: 'Achievements' }],
+      key: 'player',
+      icon: FiTarget,
+      color: T,
+      pills: [
+        { icon: FiActivity, labelKey: 'liveStats' },
+        { icon: FaTrophy, labelKey: 'achievements' }
+      ],
     },
   ];
 
-  const features = [
-    { icon: FiBell, title: 'Real-Time Notification Engine', desc: 'Group and subgroup-aware alerts fire the instant an admin creates an event. Coaches and players are notified with context — match name, group, time — without lifting a finger.', color: P },
-    { icon: FaBrain, title: 'AI Position Predictor', desc: 'Our ML engine scores 24+ physical and tactical criteria to predict each player\'s optimal position with confidence rankings. One click updates their official profile.', color: B },
-    { icon: FiBarChart2, title: '6-Pillar Evaluation System', desc: 'Coaches score players across Technical, Tactical, Physical, Mental, Health, and Academic pillars monthly. Auto-calculated averages and trend lines expose every weakness before it becomes a problem.', color: T },
-    { icon: FiZap, title: 'Hierarchical Squad Architecture', desc: 'Structure your academy into Groups and Subgroups. Events, notifications, and participants are resolved automatically based on this hierarchy. Zero manual filtering.', color: P },
+  const ecosystemSpaces = [
+    { key: 'admin', color: B, icon: FiLayers },
+    { key: 'coach', color: P, icon: FiZap },
+    { key: 'player', color: T, icon: FiUsers },
+  ];
+
+  const deepFeatures = [
+    { key: 'notification', icon: FiBell, color: P },
+    { key: 'aiPredictor', icon: FaBrain, color: B },
+    { key: 'evaluation', icon: FiBarChart2, color: T },
+    { key: 'hierarchy', icon: FiZap, color: P },
+  ];
+
+  const stats = [
+    { value: '6', label: t('stats.evaluationPillars'), color: P, delay: 0 },
+    { value: '24+', label: t('stats.kpiCriteria'), color: B, delay: 0.1 },
+    { value: '3', label: t('stats.userSpaces'), color: T, delay: 0.2 },
+    { value: '100%', label: t('stats.realTime'), color: P, delay: 0.3 },
+  ];
+
+  const analyticsStats = [
+    { key: 'dataSync', val: t('analytics.stats.dataSync.val'), trend: t('analytics.stats.dataSync.trend') },
+    { key: 'evalMetrics', val: t('analytics.stats.evalMetrics.val'), trend: t('analytics.stats.evalMetrics.trend') },
+    { key: 'systemUptime', val: t('analytics.stats.systemUptime.val'), trend: t('analytics.stats.systemUptime.trend') },
+    { key: 'aiPrediction', val: t('analytics.stats.aiPrediction.val'), trend: t('analytics.stats.aiPrediction.trend') },
+  ];
+
+  const radarPoints = [
+    { x: 50, y: 15, label: t('analytics.radarLabels.speed') },
+    { x: 85, y: 35, label: t('analytics.radarLabels.control') },
+    { x: 75, y: 75, label: t('analytics.radarLabels.power') },
+    { x: 50, y: 85, label: t('analytics.radarLabels.vision') },
+    { x: 25, y: 75, label: t('analytics.radarLabels.health') },
+    { x: 15, y: 35, label: t('analytics.radarLabels.tactics') }
   ];
 
   const iV = { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } };
@@ -210,37 +252,37 @@ const Home = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] sm:text-sm font-medium mb-6 sm:mb-8 animate-glow-pulse"
             style={{ background: 'rgba(144,43,209,0.2)', border: `1px solid rgba(144,43,209,0.4)`, color: B }}>
             <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: T }} />
-            The Future of Football Management — Built Today
+            {t('hero.badge')}
           </motion.div>
 
           {/* Title */}
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
             className="text-4xl sm:text-6xl md:text-8xl font-extrabold leading-[1.1] mb-6 tracking-tight">
-            <span className="text-white">Built for</span>
+            <span className="text-white">{t('hero.title')}</span>
             <br />
             <TypedWord />
           </motion.h1>
 
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
             className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-            RunAiNi unifies your Admin war room, Coach intelligence suite, and Player portal into one seamless ecosystem. From squad notifications to AI-driven evaluations — every feature is production-ready.
+            {t('hero.description')}
           </motion.p>
 
           {/* CTAs */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-md mx-auto sm:max-w-none">
-            <Link to="/signup" className="w-full sm:w-auto">
+            <Link to="/request-academy" className="w-full sm:w-auto">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                 className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-white text-base animate-gradient"
                 style={{ background: `linear-gradient(135deg,${P},${B},${T})`, backgroundSize: '200% 200%' }}>
-                <FiZap size={18} /> Start Your Academy Free
+                <FiZap size={18} /> {t('hero.ctaFree')}
               </motion.button>
             </Link>
             <Link to="/pricing" className="w-full sm:w-auto">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}
                 className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold text-gray-300 border text-base transition-all hover:text-white"
                 style={{ borderColor: 'rgba(144,43,209,0.4)', background: 'rgba(12,19,42,0.6)' }}>
-                View Plans <FiArrowRight size={16} />
+                {t('hero.ctaPlans')} <FiArrowRight size={16} />
               </motion.button>
             </Link>
           </motion.div>
@@ -248,9 +290,13 @@ const Home = () => {
           {/* Proof pills */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}
             className="flex flex-wrap justify-center gap-3 mt-10">
-            {[{ icon: FiCheck, t: 'No credit card required' }, { icon: FiCheck, t: '3 user roles included' }, { icon: FiCheck, t: 'Full feature access' }].map(p => (
-              <div key={p.t} className="flex items-center gap-1.5 text-sm text-gray-500">
-                <FiCheck size={14} style={{ color: T }} />{p.t}
+            {[
+              { icon: FiCheck, text: t('hero.proofNoCard') },
+              { icon: FiCheck, text: t('hero.proofRoles') },
+              { icon: FiCheck, text: t('hero.proofFullAccess') }
+            ].map(p => (
+              <div key={p.text} className="flex items-center gap-1.5 text-sm text-gray-500">
+                <FiCheck size={14} style={{ color: T }} />{p.text}
               </div>
             ))}
           </motion.div>
@@ -264,12 +310,7 @@ const Home = () => {
       {/* ══ STATS ═════════════════════════════════════════════ */}
       <section className="py-16 px-4 relative">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { value: '6', label: 'Evaluation Pillars', color: P, delay: 0 },
-            { value: '24+', label: 'KPI Criteria', color: B, delay: 0.1 },
-            { value: '3', label: 'User Spaces', color: T, delay: 0.2 },
-            { value: '100%', label: 'Real-Time', color: P, delay: 0.3 },
-          ].map(s => <StatCard key={s.label} {...s} />)}
+          {stats.map(s => <StatCard key={s.label} {...s} />)}
         </div>
       </section>
 
@@ -278,44 +319,54 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cV}>
             <motion.p variants={iV} className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: T }}>
-              Three-Space Architecture
+              {t('pillarsHeader.tagline')}
             </motion.p>
             <motion.h2 variants={iV} className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-              One Platform. <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Three Superpowers.</span>
+              {t('pillarsHeader.titleStart')}<span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{t('pillarsHeader.titleEnd')}</span>
             </motion.h2>
             <motion.p variants={iV} className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Admin command, Coach intelligence, and Player excellence — each role has its own dedicated, feature-rich workspace.
+              {t('pillarsHeader.description')}
             </motion.p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {pillars.map((p, i) => (
-              <TiltCard key={p.role} className="glass-card rounded-2xl p-8 flex flex-col h-full">
-                <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}>
-                  {/* Icon */}
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 animate-glow-pulse"
-                    style={{ background: `linear-gradient(135deg,${p.color}40,${p.color}20)`, border: `1px solid ${p.color}40` }}>
-                    <p.icon size={26} style={{ color: p.color }} />
-                  </div>
-                  <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: p.color }}>{p.role} Space</div>
-                  <h3 className="text-2xl font-extrabold text-white mb-3">{p.tagline}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed mb-5">{p.desc}</p>
-                  {/* Features */}
-                  <ul className="space-y-2 mb-6 flex-1">
-                    {p.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                        <FiCheck size={13} style={{ color: p.color, flexShrink: 0 }} />{f}
-                      </li>
-                    ))}
-                  </ul>
-                  {/* Pills */}
-                  <div className="flex gap-2 flex-wrap">
-                    {p.pills.map(pl => <FeaturePill key={pl.label} icon={pl.icon} label={pl.label} />)}
-                  </div>
-                </motion.div>
-              </TiltCard>
-            ))}
+            {pillars.map((p, i) => {
+              const role = t(`pillars.${p.key}.role`);
+              const tagline = t(`pillars.${p.key}.tagline`);
+              const desc = t(`pillars.${p.key}.desc`);
+              const featuresList = t(`pillars.${p.key}.features`, { returnObjects: true }) || [];
+              const spaceLabel = t(`pillars.${p.key}.space`);
+
+              return (
+                <TiltCard key={p.key} className="glass-card rounded-2xl p-8 flex flex-col h-full">
+                  <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}>
+                    {/* Icon */}
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 animate-glow-pulse"
+                      style={{ background: `linear-gradient(135deg,${p.color}40,${p.color}20)`, border: `1px solid ${p.color}40` }}>
+                      <p.icon size={26} style={{ color: p.color }} />
+                    </div>
+                    <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: p.color }}>{spaceLabel}</div>
+                    <h3 className="text-2xl font-extrabold text-white mb-3">{tagline}</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-5">{desc}</p>
+                    {/* Features */}
+                    <ul className="space-y-2 mb-6 flex-1">
+                      {featuresList.map(f => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                          <FiCheck size={13} style={{ color: p.color, flexShrink: 0 }} />{f}
+                        </li>
+                      ))}
+                    </ul>
+                    {/* Pills */}
+                    <div className="flex gap-2 flex-wrap">
+                      {p.pills.map(pl => (
+                        <FeaturePill key={pl.labelKey} icon={pl.icon} label={t(`pillars.${p.key}.pills.${pl.labelKey}`)} />
+                      ))}
+                    </div>
+                  </motion.div>
+                </TiltCard>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -324,53 +375,41 @@ const Home = () => {
       <section className="py-24 px-4 relative overflow-hidden bg-black/40">
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6">Built for the <span style={{ color: G }}>Elite Circuit.</span></h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto font-medium">A unified architecture serving three distinct user worlds in perfect synchronization.</p>
+            <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
+              {t('ecosystem.title', { defaultValue: 'Built for the Elite Circuit.' })}
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto font-medium">
+              {t('ecosystem.subtitle', { defaultValue: 'A unified architecture serving three distinct user worlds in perfect synchronization.' })}
+            </p>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Admin Command',
-                desc: 'The master control room for academy operations. Manage structure, hierarchy, and financials.',
-                features: ['Multi-Group Hierarchies', 'Dynamic Notification Engine', 'Staff Permissions', 'Payment Management'],
-                color: B,
-                icon: FiLayers
-              },
-              {
-                title: 'Coach Intelligence',
-                desc: 'Empowering technical directors with data-driven decision tools and advanced scheduling.',
-                features: ['6-Pillar Evaluation System', 'KPI Radar Analytics', 'Training Session Creator', 'Video Analysis Suite'],
-                color: P,
-                icon: FiZap
-              },
-              {
-                title: 'Player Performance',
-                desc: 'Individualized tracking that transforms potential into professional-grade performance.',
-                features: ['Live Performance History', 'Injury & Health Logs', 'Personalized Training Plans', 'Report History Archives'],
-                color: T,
-                icon: FiUsers
-              }
-            ].map((space, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glass-card rounded-[2.5rem] p-10 relative group border border-white/5 hover:border-white/10 transition-all">
-                <div className="absolute -top-10 -right-10 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-all duration-700 group-hover:scale-110">
-                  <space.icon size={220} />
-                </div>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-black/40" style={{ background: `${space.color}15`, border: `1px solid ${space.color}30` }}>
-                  <space.icon size={26} style={{ color: space.color }} />
-                </div>
-                <h3 className="text-2xl font-extrabold text-white mb-5">{space.title}</h3>
-                <p className="text-gray-400 text-sm mb-8 leading-relaxed font-medium">{space.desc}</p>
-                <div className="space-y-4">
-                  {space.features.map(f => (
-                    <div key={f} className="flex items-center gap-3 text-xs font-bold text-gray-300 uppercase tracking-tight">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: space.color }} /> {f}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
+            {ecosystemSpaces.map((space, i) => {
+              const title = t(`ecosystem.${space.key}.title`);
+              const desc = t(`ecosystem.${space.key}.desc`);
+              const featuresList = t(`ecosystem.${space.key}.features`, { returnObjects: true }) || [];
+
+              return (
+                <motion.div key={space.key} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                  className="glass-card rounded-[2.5rem] p-10 relative group border border-white/5 hover:border-white/10 transition-all">
+                  <div className="absolute -top-10 -right-10 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-all duration-700 group-hover:scale-110">
+                    <space.icon size={220} />
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-black/40" style={{ background: `${space.color}15`, border: `1px solid ${space.color}30` }}>
+                    <space.icon size={26} style={{ color: space.color }} />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-white mb-5">{title}</h3>
+                  <p className="text-gray-400 text-sm mb-8 leading-relaxed font-medium">{desc}</p>
+                  <div className="space-y-4">
+                    {featuresList.map(f => (
+                      <div key={f} className="flex items-center gap-3 text-xs font-bold text-gray-300 uppercase tracking-tight">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: space.color }} /> {f}
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -382,33 +421,27 @@ const Home = () => {
           <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 border border-white/10 bg-white/5 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full animate-ping" style={{ background: G }} />
-              Live Intelligence
+              {t('analytics.badge')}
             </div>
             <h2 className="text-6xl md:text-8xl font-black text-white mb-10 leading-[0.85] tracking-tighter">
-              Precision <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient-x">
-                Analytics.
-              </span>
+              {t('analytics.title')}
             </h2>
             <p className="text-gray-400 text-xl mb-12 leading-relaxed font-medium max-w-xl">
-              Our proprietary KPI engine cross-references physical performance with technical growth. Experience the future of talent identification.
+              {t('analytics.desc')}
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-6 sm:gap-12">
-              {[
-                { label: 'Data Points Sync', val: '2.4M+', trend: '+15%' },
-                { label: 'Evaluation Metrics', val: '42', trend: 'Live' },
-                { label: 'System Uptime', val: '99.9%', trend: 'Stable' },
-                { label: 'AI Prediction', val: '98.8%', trend: 'High' },
-              ].map((stat, i) => (
-                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              {analyticsStats.map((stat, i) => (
+                <motion.div key={stat.key} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                   className="group cursor-default relative">
                   <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-0 group-hover:h-12 transition-all duration-500" style={{ background: G }} />
                   <div className="text-2xl sm:text-4xl font-black text-white group-hover:translate-x-2 transition-transform duration-500 flex items-baseline gap-2">
                     {stat.val}
                     <span className="text-[10px] text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity">{stat.trend}</span>
                   </div>
-                  <div className="text-[10px] sm:text-[11px] text-gray-500 uppercase font-black tracking-widest mt-2">{stat.label}</div>
+                  <div className="text-[10px] sm:text-[11px] text-gray-500 uppercase font-black tracking-widest mt-2">
+                    {t(`analytics.stats.${stat.key}.label`)}
+                  </div>
                 </motion.div>
               ))}
             </div>
@@ -421,7 +454,7 @@ const Home = () => {
                   animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }} />
 
                 <div className="flex justify-between items-center mb-10">
-                  <div className="font-black text-white text-base sm:text-xl tracking-tight">Technical Radar v4.2</div>
+                  <div className="font-black text-white text-base sm:text-xl tracking-tight">{t('analytics.radarTitle')}</div>
                   <FiActivity className="text-cyan-400 animate-pulse" size={24} />
                 </div>
 
@@ -434,10 +467,7 @@ const Home = () => {
                   <motion.svg className="w-full h-full relative z-10 overflow-visible" viewBox="0 0 100 100">
                     <motion.polygon initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }} transition={{ duration: 4 }}
                       points="50,15 85,35 75,75 50,85 25,75 15,35" fill="rgba(0,245,255,0.08)" stroke={G} strokeWidth="1.2" />
-                    {[
-                      { x: 50, y: 15, label: 'Speed' }, { x: 85, y: 35, label: 'Control' }, { x: 75, y: 75, label: 'Power' },
-                      { x: 50, y: 85, label: 'Vision' }, { x: 25, y: 75, label: 'Health' }, { x: 15, y: 35, label: 'Tactics' }
-                    ].map((pt, i) => (
+                    {radarPoints.map((pt, i) => (
                       <g key={i}>
                         <circle cx={pt.x} cy={pt.y} r="1.5" fill={G} className="animate-pulse" />
                         <text x={pt.x} y={pt.y - 6} textAnchor="middle" fill="#9ca3af" fontSize="3.5" fontWeight="900" className="uppercase tracking-widest">{pt.label}</text>
@@ -450,21 +480,20 @@ const Home = () => {
 
             <div className="grid grid-cols-2 gap-8">
               <TiltCard className="glass-card rounded-[2rem] p-8">
-                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Live Performance</div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">{t('analytics.livePerf')}</div>
                 <div className="h-20">
                   <PerformanceTrend />
                 </div>
               </TiltCard>
               <TiltCard className="glass-card rounded-[2rem] p-8 flex flex-col justify-center text-center">
-                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">System Uptime</div>
-                <div className="text-3xl font-black text-white">99.98%</div>
-                <div className="text-[10px] text-cyan-400 font-bold mt-1">Operational</div>
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">{t('analytics.sysUptime')}</div>
+                <div className="text-3xl font-black text-white">{t('analytics.stats.systemUptime.val')}</div>
+                <div className="text-[10px] text-cyan-400 font-bold mt-1">{t('analytics.operational')}</div>
               </TiltCard>
             </div>
           </div>
         </div>
       </section>
-
 
       {/* ══ FEATURE DEEP DIVE ══════════════════════════════════ */}
       <section className="py-24 px-4 relative">
@@ -473,31 +502,36 @@ const Home = () => {
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div className="text-center mb-16" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={cV}>
             <motion.p variants={iV} className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: B }}>
-              What Makes RunAiNi Different
+              {t('featuresDeep.tagline')}
             </motion.p>
             <motion.h2 variants={iV} className="text-4xl md:text-5xl font-extrabold text-white">
-              Engineered for <span style={{ background: `linear-gradient(90deg,${B},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Elite Performance</span>
+              {t('featuresDeep.title')}
             </motion.h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {features.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
-                whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }}>
-                <TiltCard className="glass-card rounded-2xl p-7 h-full">
-                  <div className="flex items-start gap-5">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${f.color}20`, border: `1px solid ${f.color}40` }}>
-                      <f.icon size={22} style={{ color: f.color }} />
+            {deepFeatures.map((f, i) => {
+              const title = t(`featuresDeep.${f.key}.title`);
+              const desc = t(`featuresDeep.${f.key}.desc`);
+
+              return (
+                <motion.div key={f.key} initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
+                  whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }}>
+                  <TiltCard className="glass-card rounded-2xl p-7 h-full">
+                    <div className="flex items-start gap-5">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: `${f.color}20`, border: `1px solid ${f.color}40` }}>
+                        <f.icon size={22} style={{ color: f.color }} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
+                        <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
-                    </div>
-                  </div>
-                </TiltCard>
-              </motion.div>
-            ))}
+                  </TiltCard>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -512,29 +546,31 @@ const Home = () => {
               <PitchSVG />
             </div>
             <div className="relative z-10">
-              <p className="text-[10px] md:text-sm font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: T }}>Ready to Dominate?</p>
+              <p className="text-[10px] md:text-sm font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: T }}>
+                {t('ctaBanner.tagline')}
+              </p>
               <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight">
-                Your Academy.<br />
+                {t('ctaBanner.titleStart')}<br />
                 <span style={{ background: `linear-gradient(90deg,${P},${T})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  Fully Digitized.
+                  {t('ctaBanner.titleEnd')}
                 </span>
               </h2>
               <p className="text-gray-400 mb-10 max-w-lg mx-auto text-sm md:text-lg leading-relaxed">
-                Join academies already managing players, tracking performance, and winning more with RunAiNi.
+                {t('ctaBanner.description')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-xs sm:max-w-none mx-auto">
-                <Link to="/signup" className="w-full sm:w-auto">
+                <Link to="/request-academy" className="w-full sm:w-auto">
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
                     className="w-full px-8 py-4 rounded-xl font-bold text-white text-sm md:text-base shadow-lg shadow-purple-500/20"
                     style={{ background: `linear-gradient(135deg,${P},${B})` }}>
-                    Start Free — No Card Required
+                    {t('ctaBanner.ctaStartFree')}
                   </motion.button>
                 </Link>
                 <Link to="/pricing" className="w-full sm:w-auto">
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
                     className="w-full px-8 py-4 rounded-xl font-semibold text-gray-300 border text-sm md:text-base transition-all hover:text-white"
                     style={{ borderColor: `${B}40`, background: 'rgba(12,19,42,0.5)' }}>
-                    See Pricing →
+                    {t('ctaBanner.ctaPricing')}
                   </motion.button>
                 </Link>
               </div>

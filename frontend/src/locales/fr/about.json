@@ -1,0 +1,83 @@
+{
+  "hero": {
+    "badge": "Notre Histoire",
+    "titleLine1": "Créé par les Entraîneurs.",
+    "titleLine2": "Propulsé par les Ingénieurs.",
+    "description": "RunAiNi est né d'une frustration simple : l'intelligence footballistique d'élite était enfermée derrière des logiciels d'entreprise coûteux et lourds. Nous avons décidé de changer cela."
+  },
+  "metrics": {
+    "userSpaces": "Espaces Utilisateur",
+    "kpiCriteria": "Critères KPI",
+    "evalPillars": "Piliers d'Évaluation",
+    "ambition": "Ambition"
+  },
+  "mission": {
+    "badge": "Notre Mission",
+    "title": "Démocratiser la Gestion du Football d'Élite",
+    "paragraph1": "Chaque joueur mérite un développement basé sur les données. Chaque entraîneur mérite des outils à la hauteur de son expertise. Chaque académie mérite une infrastructure évolutive.",
+    "paragraph2": "Nous avons construit RunAiNi en public — nous nous engageons à la transparence, livrant des fonctionnalités chaque semaine, et à l'écoute des entraîneurs sur le terrain. Le résultat est une plateforme conçue par les entraîneurs, pas pour un segment de marché.",
+    "bullets": {
+      "builtInPublic": "Construit en Public",
+      "weeklyReleases": "Mises à Jour Hebdomadaires",
+      "coachDriven": "Conception Axée Entraîneur",
+      "openArchitecture": "Architecture Ouverte"
+    },
+    "visual": {
+      "dashboard": "Tableau de Bord Coach",
+      "kpiRadar": "Radar KPI",
+      "pillars": "Évaluation 6-piliers active",
+      "notificationEngine": "Moteur de Notification",
+      "newMatch": "🔔 Nouveau Match pour le Groupe A",
+      "matchDetails": "→ 24 joueurs, 2 entraîneurs notifiés",
+      "aiPredictor": "Prédicteur IA",
+      "forward": "Attaquant 94%",
+      "position": "Milieu 72%"
+    }
+  },
+  "techStack": {
+    "badge": "Notre Stack",
+    "title": "Moderne, Scalable, Prêt pour la Production",
+    "categories": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "intelligence": "Intelligence"
+    },
+    "items": {
+      "frontend": ["React 18", "Framer Motion", "TailwindCSS", "Chart.js", "React Router v6"],
+      "backend": ["Django 4", "Django REST Framework", "Django Signals", "JWT Auth", "PostgreSQL"],
+      "intelligence": ["Scorer ML Personnalisé", "Prédicteur de Position", "Moteur KPI", "Générateur PDF", "Alertes Temps Réel"]
+    }
+  },
+  "timeline": {
+    "badge": "Feuille de Route",
+    "title": "Où Nous Venons. Où Nous Allons.",
+    "items": [
+      { "year": "v1",  "event": "Fondation",           "desc": "Espaces Administrateur, Entraîneur et Joueur déployés. Gestion de joueur de base, planification d'événements et notifications de groupe en direct.", "color": "#902bd1" },
+      { "year": "v1.5","event": "Couche Intelligence", "desc": "Système d'Évaluation 6-Piliers, Prédicteur de Position IA, et graphiques Radar KPI ajoutés. Export PDF disponible.", "color": "#4fb0ff" },
+      { "year": "v2",  "event": "Moteur Hiérarchie",   "desc": "Architecture sous-groupes, filtrage hiérarchique strict, moteur de notification conscient des groupes entièrement reconstruit.", "color": "#00d0cb" },
+      { "year": "v3",  "event": "Prochaines Étapes",   "desc": "Analyse vidéo à grande échelle, API fédération, application mobile pour les joueurs, et réseau de scouting public.", "color": "#902bd1" }
+    ]
+  },
+  "cta": {
+    "title": "Rejoignez le Mouvement",
+    "description": "Nous construisons l'avenir de la gestion du football en public, une fonctionnalité à la fois. Emmenez votre académie avec nous.",
+    "startButton": "Commencer Gratuitement",
+    "blogButton": "Lire notre Blog"
+  },
+  "build": {
+    "title": "Le Build in",
+    "publicManifest": "Public Manifeste.",
+    "phases": [
+      { "t": "Phase 1 : Fondation",      "d": "Architecture du moteur hybride MERN-Django pour des données d'académie à haute concurrence." },
+      { "t": "Phase 2 : Intelligence",   "d": "Développement de la logique de scoring 6-Piliers et cartographie KPI prédictive." },
+      { "t": "Phase 3 : Grille Unifiée", "d": "Connexion des espaces Administrateur, Entraîneur et Joueur dans un écosystème web réactif en temps réel." }
+    ]
+  },
+  "techEvolution": {
+    "badge": "Évolution Technologique",
+    "title": "Ingénierie du",
+    "subtitle": "Futur du Sport.",
+    "description": "RunAiNi repose sur une stack haute performance conçue pour une scalabilité horizontale infinie et un traitement ultra-rapide des données. Notre architecture exploite les dernières avancées en réactivité frontale et robustesse back-end.",
+    "stack": ["React 19", "Framer Motion", "Tailwind 4", "Django Rest", "PostgreSQL", "Socket.io", "JWT Auth"]
+  }
+}

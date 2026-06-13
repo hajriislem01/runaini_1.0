@@ -1,0 +1,110 @@
+{
+  "header": {
+    "agenda": "Agenda",
+    "upcoming_sessions": "Upcoming Sessions",
+    "calendar_view": "Calendar View"
+  },
+  "controls": {
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "today": "Today",
+    "previous": "Previous",
+    "next": "Next",
+    "this_week": "This week"
+  },
+  "event": {
+    "add_new": "Add New Event",
+    "create_session": "Create session",
+    "edit": "Edit Event",
+    "name": "Event Name",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "location": "Location",
+    "notes": "Notes",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete Event",
+    "delete_this": "Delete this",
+    "delete_all": "Delete all",
+    "level": "Level",
+    "exercises": "exercises",
+    "more_exercises": "more exercises",
+    "players": "players",
+    "recurring": "recurring",
+    "past": "Past",
+    "session": "Session",
+    "agenda_item": "Agenda Item",
+    "team_training": "Team Training"
+  },
+  "categories": {
+    "technical": "Technical",
+    "tactical": "Tactical",
+    "physical": "Physical",
+    "mental": "Mental",
+    "match_prep": "Match Prep",
+    "recovery": "Recovery",
+    "meeting": "Internal Meeting",
+    "friendly": "Friendly Match",
+    "tournament": "Tournament"
+  },
+  "toast": {
+    "load_error": "Failed to load agenda",
+    "date_required": "Date is required",
+    "update_success": "Session updated ✅",
+    "update_error": "Failed to update session",
+    "delete_success": "Session deleted ✅",
+    "delete_error": "Failed to delete session"
+  },
+  "empty": {
+    "no_upcoming": "No upcoming sessions",
+    "click_to_add": "Create a session to get started",
+    "no_day_sessions": "No sessions scheduled for this day",
+    "add_for_day": "Add Session for This Day"
+  },
+  "modal": {
+    "add_title": "Add Session",
+    "update_title": "Edit Session",
+    "delete_title": "Delete Session",
+    "recurrence_warning": "This is a recurring session. Editing will only update this specific occurrence.",
+    "delete_all_warning": "This will delete ALL occurrences of this recurring session. This action cannot be undone.",
+    "delete_single_warning": "This will delete only this session. This action cannot be undone."
+  },
+  "stats": {
+    "this_month": "This month",
+    "this_week": "This week",
+    "today": "Today",
+    "recurring": "Recurring",
+    "sessions_scheduled": "sessions scheduled",
+    "session_s": "session(s)"
+  },
+  "filters": {
+    "title": "Filters",
+    "clear_all": "Clear all",
+    "recurring_only": "Recurring only"
+  },
+  "days": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "months": {
+    "jan": "Jan", "feb": "Feb", "mar": "Mar", "apr": "Apr", "may": "May", "jun": "Jun", 
+    "jul": "Jul", "aug": "Aug", "sep": "Sep", "oct": "Oct", "nov": "Nov", "dec": "Dec",
+    "january": "January", "february": "February", "march": "March", "april": "April", 
+    "may_long": "May", "june": "June", "july": "July", "august": "August", "september": "September", 
+    "october": "October", "november": "November", "december": "December"
+  }
+}

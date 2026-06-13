@@ -1,0 +1,82 @@
+{
+  "sidebar": {
+    "title": "Panneau d'Administration",
+    "mainTitle": "Gérer les informations et les préférences de votre académie",
+    "academyInfo": "Informations sur l'Académie",
+    "academyInfoSub": "Configurer les détails de l'académie et l'image de marque",
+    "contactSocial": "Contact & Réseaux Sociaux",
+    "contactSocialSub": "Gérer les informations de contact",
+    "facilitiesStaff": "Installations & Personnel",
+    "facilitiesStaffSub": "Gérer les installations",
+    "preferences": "Préférences",
+    "preferencesSub": "Définir les préférences",
+    "privacySecurity": "Confidentialité & Sécurité",
+    "privacySecuritySub": "Paramètres de sécurité"
+  },
+  "academyInfo": {
+    "title": "Informations sur l'Académie",
+    "subtitle": "Configurez les détails et l'image de marque de votre académie",
+    "logoLabel": "CLIQUEZ SUR L'ICÔNE DE L'APPAREIL PHOTO POUR METTRE À JOUR L'IMAGE DE MARQUE DE L'ACADÉMIE",
+    "name": "Nom de l'Académie *",
+    "founded": "Année de fondation",
+    "country": "Pays",
+    "achievements": "Réalisations",
+    "achievementsPlaceholder": "Énumérez les réalisations de votre académie",
+    "philosophy": "Philosophie",
+    "teamKits": "Tenues d'Équipe",
+    "homeKit": "Tenue Domicile",
+    "awayKit": "Tenue Extérieur"
+  },
+  "branding": {
+    "title": "Moteur d'Image de Marque",
+    "subtitle": "Configurer les couleurs de la plateforme, la géométrie et la lisibilité",
+    "primaryColor": "COULEUR PRIMAIRE",
+    "secondaryColor": "COULEUR SECONDAIRE",
+    "accentSlot1": "ACCENT SLOT 1",
+    "accentSlot2": "ACCENT SLOT 2",
+    "previewTitle": "APERÇU DE L'IMAGE DE MARQUE EN DIRECT"
+  },
+  "contactSocial": {
+    "title": "Contact & Réseaux Sociaux",
+    "subtitle": "Gérez vos coordonnées et vos liens sociaux",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "website": "Site Web",
+    "facebook": "Facebook",
+    "instagram": "Instagram"
+  },
+  "staffFacilities": {
+    "title": "Personnel & Installations",
+    "subtitle": "Gérer les informations sur le personnel et les installations",
+    "staffHeader": "Informations sur le Personnel",
+    "facilitiesHeader": "Installations",
+    "technicalDirector": "Directeur Technique",
+    "headCoach": "Entraîneur Principal",
+    "fitnessCoach": "Préparateur Physique",
+    "medicalStaff": "Personnel Médical",
+    "stadiumName": "Nom du Stade",
+    "stadiumLocation": "Emplacement du Stade",
+    "gym": "Salle de sport disponible",
+    "cafeteria": "Cafétéria disponible",
+    "dormitory": "Dortoir disponible",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "subtitle": "Définissez vos préférences de langue et de fuseau horaire",
+    "timezone": "Fuseau Horaire",
+    "languages": "Langues"
+  },
+  "privacy": {
+    "title": "Confidentialité & Sécurité",
+    "subtitle": "Gérer votre mot de passe et vos paramètres de sécurité",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe"
+  },
+  "actions": {
+    "save": "Enregistrer les modifications",
+    "update": "Mettre à jour"
+  }
+}

@@ -28,11 +28,11 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     }
 
     if (!allowedRoles.includes(userRole)) {
-      // Rediriger vers la bonne page selon le rôle réel
-      if (userRole === 'admin')  return <Navigate to="/administration/Dashboard" replace/>;
-      if (userRole === 'coach')  return <Navigate to="/coach/Dashboard"          replace/>;
-      if (userRole === 'player') return <Navigate to="/players"                  replace/>;
-      return <Navigate to="/login" replace/>;
+      if (userRole === 'superadmin') return <Navigate to="/super-admin-portal" replace />;
+      if (userRole === 'admin') return <Navigate to="/administration/dashboard" replace />;
+      if (userRole === 'coach') return <Navigate to="/coach/dashboard" replace />;
+      if (userRole === 'player') return <Navigate to="/players" replace />;
+      return <Navigate to="/login" replace />;
     }
   }
 

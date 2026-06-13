@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FiUsers } from 'react-icons/fi';
 import { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import { useContactData } from './hooks/useContactData';
 import { containerVariants, itemVariants } from './utils/contactConstants';
@@ -12,6 +13,9 @@ import AcademyCard from './components/AcademyCard';
 import AcademyModal from './modals/AcademyModal';
 
 const Contact = () => {
+  const { t, i18n } = useTranslation('contactmanagement');
+  const isRtl = i18n.language === 'ar';
+
   const {
     academies, filteredAcademies, isLoading,
     selectedAcademy, setSelectedAcademy,
@@ -33,6 +37,7 @@ const Contact = () => {
       className="min-h-screen text-white p-4 md:p-6 lg:p-8"
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
+      dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
@@ -48,8 +53,7 @@ const Contact = () => {
         <motion.div variants={itemVariants} className="mb-6">
           <div className="bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 backdrop-blur-sm rounded-xl border border-[#4fb0ff]/30 p-4">
             <span className="text-gray-300">
-              Showing <span className="font-bold text-white">{filteredAcademies.length}</span> of{' '}
-              <span className="font-bold text-white">{academies.length}</span> academies
+              {t('meta.showing', { count: filteredAcademies.length, total: academies.length })}
             </span>
           </div>
         </motion.div>
@@ -66,13 +70,13 @@ const Contact = () => {
             <motion.div variants={itemVariants}
               className="bg-gradient-to-br from-[#4fb0ff]/20 to-[#00d0cb]/20 backdrop-blur-sm rounded-2xl border border-[#4fb0ff]/30 p-12 text-center">
               <div className="text-5xl mb-4 text-gray-400 flex justify-center"><FiUsers /></div>
-              <h3 className="text-xl font-bold text-gray-300 mb-2">No academies found</h3>
-              <p className="text-gray-400 mb-6">Try adjusting your search criteria</p>
+              <h3 className="text-xl font-bold text-gray-300 mb-2">{t('filters.noAcademiesFound', 'No academies found')}</h3>
+              <p className="text-gray-400 mb-6">{t('filters.tryAdjusting', 'Try adjusting your search criteria')}</p>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={clearFilters}
                 className="px-6 py-3 text-white font-medium rounded-xl"
                 style={{ background: 'linear-gradient(135deg, #4fb0ff, #00d0cb)' }}>
-                Clear Filters
+                {t('filters.clearFilters', 'Clear Filters')}
               </motion.button>
             </motion.div>
           )}

@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "home": "Home",
+    "plans": "Plans",
+    "blog": "Blog",
+    "about": "About"
+  },
+  "actions": {
+    "login": "Login",
+    "getStarted": "Get Started",
+    "joinNow": "Join Now"
+  },
+  "navbar": {
+    "getStarted": "Get Started"
+  }
+}

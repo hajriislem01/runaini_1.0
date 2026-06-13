@@ -1,0 +1,108 @@
+{
+  "header": {
+    "playerDashboard": "Espace Joueur",
+    "welcomeBack": "Bon retour, {{name}}",
+    "nextMatch": "Prochain match",
+    "upcomingTraining": "Entraînement à venir"
+  },
+  "stats": {
+    "monthlyScore": "Score mensuel",
+    "attendance": "Présence",
+    "myGroup": "Mon groupe",
+    "position": "Poste",
+    "totalMatches": "Total des matchs",
+    "goals": "Buts",
+    "assists": "Passes décisives",
+    "fitnessLevel": "Niveau de forme",
+    "overallRating": "Note globale"
+  },
+  "activity": {
+    "recentActivity": "Activité récente",
+    "matchReport": "Rapport de match",
+    "trainingSummary": "Résumé d'entraînement",
+    "viewAll": "Voir tout"
+  },
+  "status": {
+    "active": "Actif",
+    "injured": "Blessé",
+    "onTrial": "À l'essai"
+  },
+  "session": {
+    "todaysSession": "Séance d'aujourd'hui",
+    "nextSession": "Prochaine séance",
+    "nextSessions": "Prochaines séances",
+    "inProgress": "En cours",
+    "inMinutes": "Dans {{minutes}} min",
+    "inHoursMinutes": "Dans {{hours}} h {{minutes}} min",
+    "inHoursOnly": "Dans {{hours}} h",
+    "personal": "personnel",
+    "viewDetails": "Voir les détails →",
+    "noUpcoming": "Aucune séance à venir",
+    "session": "Séance",
+    "today": "Aujourd'hui",
+    "more": "de plus"
+  },
+  "medical": {
+    "valid": "Certificat médical valide",
+    "expired": "Certificat médical manquant ou expiré"
+  },
+  "categories": {
+    "technical": "Technique",
+    "tactical": "Tactique",
+    "physical": "Physique",
+    "mental": "Mental",
+    "match_prep": "Préparation match",
+    "recovery": "Récupération",
+    "session": "Séance"
+  },
+  "evaluation": {
+    "monthlyReportTitle": "Rapport de {{month}}",
+    "vsGroupAverage": "par rapport à la moyenne du groupe",
+    "above": "au-dessus",
+    "below": "en dessous",
+    "trend": "tendance",
+    "lastMonths": "Ces {{count}} derniers mois",
+    "goalReach": "Objectif : atteindre {{score}}/10",
+    "viewFullReport": "Voir le rapport complet →",
+    "noReportYet": "Aucun rapport ce mois-ci pour l'instant",
+    "evaluateSoon": "Votre entraîneur vous évaluera bientôt",
+    "monthlyEvaluation": "évaluation mensuelle",
+    "strengths": "Forces",
+    "toImprove": "Points à améliorer"
+  },
+  "streak": {
+    "thisWeek": "Cette semaine",
+    "noAttended": "Aucune séance suivie cette semaine",
+    "attendedCount_one": "1 séance suivie cette semaine",
+    "attendedCount_other": "{{count}} séances suivies cette semaine"
+  },
+  "exercises": {
+    "personalExercises": "Exercices personnels qui vous sont assignés",
+    "viewAll": "Voir tous les exercices personnels →"
+  },
+  "quickAccess": {
+    "title": "Accès rapide",
+    "myTraining": "Mon Entraînement",
+    "myTrainingDesc": "Séances & exercices",
+    "performance": "Performance",
+    "performanceDesc": "Rapport mensuel",
+    "myProfile": "Mon Profil",
+    "myProfileDesc": "Voir & modifier",
+    "settings": "Paramètres",
+    "settingsDesc": "Paramètres du compte"
+  },
+  "alerts": {
+    "injured": "Vous êtes actuellement marqué comme {{status}}. Contactez votre entraîneur.",
+    "lowAttendance": "Votre présence ce mois-ci est de {{percent}}% — inférieure à 75%.",
+    "lowScore": "Votre score ce mois-ci est de {{score}}/10. Continuez vos efforts !"
+  },
+  "motivation": {
+    "ready": "Prêt à vous entraîner ? Donnez le meilleur de vous-même aujourd'hui !",
+    "reachedGoal": "Vous avez atteint votre objectif de {{goal}}/10. Exceptionnel !",
+    "nearGoal": "Vous êtes à {{score}}/10 — plus que {{diff}} points de votre objectif de {{goal}}. Continuez ainsi !",
+    "farGoal": "Score : {{score}}/10. Concentrez-vous sur l'entraînement pour atteindre votre objectif de {{goal}}/10 !"
+  },
+  "common": {
+    "failedLoad": "Échec du chargement des données"
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "toggle": {
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "discount": "−20%"
+  },
+  "hero": {
+    "tagline": "Transparent Pricing",
+    "titleStart": "Invest in Your ",
+    "titleEnd": "Academy's Edge",
+    "description": "No hidden fees. No bloated tiers. Every plan is built around real features used by real coaches."
+  },
+  "price": {
+    "monthLabel": "/month",
+    "billedSave": "Billed €{{annualPrice}}/year — save €{{savedAmount}}",
+    "custom": "Custom",
+    "customSub": "Talk to our team for a tailored quote"
+  },
+  "plans": {
+    "mostPopular": "★ Most Popular",
+    "starter": {
+      "name": "Starter",
+      "tagline": "For growing clubs taking their first digital step.",
+      "cta": "Get Started",
+      "features": {
+        "admins": "Up to 1 Admin",
+        "coaches": "Up to 2 Coaches",
+        "players": "Up to 30 Players",
+        "groups": "2 Groups + Subgroups",
+        "scheduling": "Event & Match Scheduling",
+        "notifications": "Basic Notification Engine",
+        "profileManagement": "Player Profile Management",
+        "evaluations": "6-Pillar Evaluation System",
+        "positionPredictor": "AI Position Predictor",
+        "analytics": "KPI Radar & Chart Analytics",
+        "pdfExport": "PDF Report Export",
+        "videoAnalysis": "Video Analysis Suite"
+      }
+    },
+    "pro": {
+      "name": "Pro",
+      "tagline": "The complete coaching intelligence stack for serious clubs.",
+      "cta": "Start Pro Trial",
+      "features": {
+        "admins": "Up to 3 Admins",
+        "coaches": "Up to 10 Coaches",
+        "players": "Unlimited Players",
+        "groups": "Unlimited Groups & Subgroups",
+        "scheduling": "Full Event & Match Scheduling",
+        "notifications": "Real-Time Notification Engine",
+        "profileManagement": "Player Profile Management",
+        "evaluations": "6-Pillar Evaluation System",
+        "positionPredictor": "AI Position Predictor",
+        "analytics": "KPI Radar & Chart Analytics",
+        "pdfExport": "PDF Report Export",
+        "videoAnalysis": "Video Analysis Suite"
+      }
+    },
+    "elite": {
+      "name": "Elite",
+      "tagline": "White-glove setup for elite academies and federations.",
+      "cta": "Contact Sales",
+      "features": {
+        "admins": "Unlimited Admins",
+        "coaches": "Unlimited Coaches",
+        "players": "Unlimited Players",
+        "groups": "Unlimited Groups & Subgroups",
+        "scheduling": "Full Event & Match Scheduling",
+        "notifications": "Real-Time Notification Engine",
+        "profileManagement": "Player Profile Management",
+        "evaluations": "6-Pillar Evaluation System",
+        "positionPredictor": "AI Position Predictor",
+        "analytics": "KPI Radar & Chart Analytics",
+        "pdfExport": "PDF Report Export",
+        "videoAnalysis": "Video Analysis Suite"
+      }
+    }
+  },
+  "deepScan": {
+    "title": "Feature Ecosystem Deep-Scan",
+    "subtitle": "Comprehensive Workspace Comparison",
+    "headers": {
+      "segment": "Segment / Capability",
+      "core": "Core",
+      "pro": "Pro",
+      "elite": "Elite"
+    },
+    "partial": "Partial",
+    "fullSuite": "Full Suite",
+    "customized": "Customized",
+    "rows": {
+      "admin": {
+        "title": "Admin Command",
+        "features": [
+          "Multi-Group Hierarchies",
+          "Notification Engine",
+          "Staff Permissions"
+        ]
+      },
+      "coach": {
+        "title": "Coach Intelligence",
+        "features": [
+          "6-Pillar Evaluation",
+          "KPI Radar Analytics",
+          "Training Creator"
+        ]
+      },
+      "player": {
+        "title": "Player Analytics",
+        "features": [
+          "Performance Logs",
+          "Health History",
+          "Personal Roadmaps"
+        ]
+      },
+      "system": {
+        "title": "System Core",
+        "features": [
+          "Real-time Sync",
+          "Multi-Language",
+          "Custom Branding"
+        ]
+      }
+    }
+  },
+  "callout": {
+    "title": "All plans include a 14-day Pro trial",
+    "description": "Start with the full power of RunAiNi Pro — free. No credit card. No surprises. Experience every feature before you commit to a single euro.",
+    "cta": "Claim Your Free Trial"
+  },
+  "faq": {
+    "tagline": "Got Questions?",
+    "title": "Everything You Need to Know",
+    "items": [
+      {
+        "q": "Can I upgrade or downgrade my plan anytime?",
+        "a": "Yes. Plan changes apply immediately with prorated billing. Downgrading at renewal is instant with no lock-in penalties."
+      },
+      {
+        "q": "Is the 6-pillar evaluation system really exclusive to Pro?",
+        "a": "Yes. The Technical, Tactical, Physical, Mental, Health, and Academic scoring engine — including PDF exports — is a Pro and Elite exclusive feature."
+      },
+      {
+        "q": "What does the AI Position Predictor actually do?",
+        "a": "It scores players across 24+ criteria and ranks all 4 positions by fit. Coaches can accept or reject the recommendation, which updates the player's profile instantly."
+      },
+      {
+        "q": "How does the notification engine work?",
+        "a": "When an admin creates an event for a Group or Subgroup, the system automatically resolves all linked coaches and players and fires real-time in-app notifications to every member."
+      },
+      {
+        "q": "Is there a free trial?",
+        "a": "Every new academy gets a 14-day full Pro trial — no credit card required. After 14 days, pick the plan that fits your growth stage."
+      },
+      {
+        "q": "Do you offer on-premise deployment for Elite?",
+        "a": "Yes. Elite academies can request a self-hosted deployment with a dedicated DevOps handoff and SLA agreement."
+      }
+    ]
+  }
+}

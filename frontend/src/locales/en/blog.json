@@ -1,0 +1,61 @@
+{
+  "categories": {
+    "all": "All",
+    "sportsScience": "Sports Science",
+    "aiTech": "AI & Tech",
+    "coaching": "Coaching",
+    "management": "Management"
+  },
+  "hero": {
+    "badge": "Sports Intelligence Blog",
+    "title": "The Playbook",
+    "description": "Sports science, engineering insights, and coaching philosophy — straight from the team building the future of football management."
+  },
+  "readLabel": "{{time}} read",
+  "readArticle": "Read Article",
+  "noArticles": "No articles in this category yet — check back soon.",
+  "posts": {
+    "post1": {
+      "title": "How AI Position Prediction is Reshaping Youth Football Development",
+      "excerpt": "We built a 24-criteria ML model that outperforms traditional coach intuition in 78% of test cases. Here's the architecture behind it and why it matters for your academy.",
+      "tag": "Featured",
+      "date": "Apr 22, 2026"
+    },
+    "post2": {
+      "title": "The 6-Pillar Evaluation Framework: Beyond Goals and Assists",
+      "excerpt": "Technical, Tactical, Physical, Mental, Health, Academic. Why we chose these six dimensions and how monthly scoring creates a full picture no scout could miss.",
+      "tag": "Deep Dive",
+      "date": "Apr 18, 2026"
+    },
+    "post3": {
+      "title": "Building a Real-Time Notification System for Multi-Group Academies",
+      "excerpt": "When you have 12 groups and 6 subgroups, event distribution is a logistics nightmare. We solved it with a hierarchical resolver that auto-targets the right people every time.",
+      "tag": "Engineering",
+      "date": "Apr 14, 2026"
+    },
+    "post4": {
+      "title": "Why Your Academy Needs Subgroup Architecture (Not Just Teams)",
+      "excerpt": "A \"U-16 A\" isn't a team — it's a subgroup. Understanding hierarchical squad management unlocks smarter notifications, targeted coaching, and accurate reporting.",
+      "tag": "Strategy",
+      "date": "Apr 10, 2026"
+    },
+    "post5": {
+      "title": "Fatigue, Sleep, and School Grades: The Hidden Metrics That Win Matches",
+      "excerpt": "Our health and academic tracking pillars reveal that players with consistent sleep quality above 3/5 show 23% fewer technical errors in the following month.",
+      "tag": "Research",
+      "date": "Apr 6, 2026"
+    },
+    "post6": {
+      "title": "PDF Report Generation at Scale: How We Export 100+ Player Evaluations",
+      "excerpt": "Building a one-click PDF export that includes radar charts, pillar breakdowns, and attendance data — all in a branded document — required rethinking our serializer architecture.",
+      "tag": "Engineering",
+      "date": "Apr 2, 2026"
+    }
+  },
+  "newsletter": {
+    "title": "Stay on the Cutting Edge",
+    "subtitle": "New article every week. No spam. Unsubscribe anytime.",
+    "placeholder": "your@email.com",
+    "cta": "Subscribe"
+  }
+}

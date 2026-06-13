@@ -1,0 +1,80 @@
+{
+  "title": "Gestion des Entraîneurs",
+  "subtitle": "Gérez tous les entraîneurs, assignez des groupes et suivez les statuts.",
+  "searchPlaceholder": "Rechercher par nom, email ou club...",
+  "statusFilter": "Tous les Statuts",
+  "specializationFilter": "Toutes les Spécialisations",
+  "table": {
+    "name": "Entraîneur",
+    "group": "Groupe Assigné",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "actions": {
+    "add": "Ajouter un Entraîneur",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "view": "Voir",
+    "save": "Enregistrer les modifications",
+    "cancel": "Annuler"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "onLeave": "En Congé"
+  },
+  "form": {
+    "addTitle": "Ajouter un Nouvel Entraîneur",
+    "editTitle": "Modifier les Détails de l'Entraîneur",
+    "viewTitle": "Détails de l'Entraîneur",
+    "firstNameLabel": "Prénom",
+    "lastNameLabel": "Nom de Famille",
+    "usernameLabel": "Nom d'utilisateur *",
+    "emailLabel": "Email *",
+    "passwordLabel": "Mot de Passe",
+    "passwordPlaceholder": "Laisser vide pour conserver l'actuel",
+    "phoneLabel": "Téléphone",
+    "phonePlaceholder": "Entrer le numéro de téléphone",
+    "clubLabel": "Club",
+    "clubPlaceholder": "Entrer le nom du club",
+    "specializationLabel": "Spécialisation",
+    "specializationPlaceholder": "ex. : Développement des Jeunes",
+    "experienceLabel": "Années d'Expérience",
+    "experiencePlaceholder": "5",
+    "certificationLabel": "Certification",
+    "certificationPlaceholder": "Licence Pro UEFA",
+    "groupLabel": "Groupes",
+    "groupsCountLabel": "Groupes Assignés",
+    "selectGroupsLabel": "Sélectionner des Groupes",
+    "chooseDomainsPlaceholder": "Choisir des domaines...",
+    "unitsAccessLabel": "Accès aux Unités",
+    "openUnitsPlaceholder": "Ouvrir le sélecteur d'unités...",
+    "pickGroupPlaceholder": "Choisissez d'abord un groupe",
+    "activeDomainsLabel": "Domaines Actifs de l'Entraîneur",
+    "currentlyFocused": "Actuellement Focalisé",
+    "noDomainsAssigned": "Aucun domaine assigné. Utilisez les sélecteurs ci-dessus pour commencer.",
+    "noUnitsSelected": "Aucune unité sélectionnée",
+    "syncingUnits": "Synchronisation des unités...",
+    "noUnitsForGroup": "Aucune unité pour ce groupe.",
+    "activateGroupFirst": "Activez d'abord un groupe.",
+    "fullAccess": "Accès Complet"
+  },
+  "messages": {
+    "addSuccess": "Entraîneur ajouté avec succès !",
+    "editSuccess": "Entraîneur mis à jour avec succès !",
+    "deleteSuccess": "Entraîneur supprimé avec succès !",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet entraîneur ?",
+    "loading": "Chargement...",
+    "processing": "Traitement en cours...",
+    "noCoachesFound": "Aucun entraîneur trouvé",
+    "adjustSearch": "Essayez d'ajuster votre recherche",
+    "addFirstCoach": "Commencez par ajouter votre premier entraîneur"
+  },
+  "strength": {
+    "weak": "Faible",
+    "fair": "Moyen",
+    "good": "Bon",
+    "strong": "Fort",
+    "excellent": "Excellent"
+  }
+}

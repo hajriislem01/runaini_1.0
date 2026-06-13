@@ -1,0 +1,62 @@
+{
+  "header": {
+    "editProfile": "Edit Profile",
+    "noAcademyError": "No academy found. Please complete your settings.",
+    "loading": "Loading your profile...",
+    "needHelp": "Need help? Contact us",
+    "email": "Email",
+    "call": "Call"
+  },
+  "sections": {
+    "academyInfo": "Academy Information",
+    "staffInfo": "Staff Information",
+    "facilities": "Facilities",
+    "contact": "Contact",
+    "location": "Location",
+    "socialMedia": "Social Media"
+  },
+  "fields": {
+    "academyName": "Academy Name",
+    "founded": "Founded",
+    "country": "Country",
+    "city": "City",
+    "brandPalette": "Brand Palette",
+    "achievements": "Achievements",
+    "philosophy": "Academy Philosophy",
+    "technicalDirector": "Technical Director",
+    "headCoach": "Head Coach",
+    "fitnessCoach": "Fitness Coach",
+    "medicalStaff": "Medical Staff",
+    "stadiumName": "Stadium Name",
+    "stadiumLocation": "Stadium Location",
+    "gym": "Gym",
+    "cafeteria": "Cafeteria",
+    "dormitory": "Dormitory",
+    "email": "Email",
+    "phone": "Phone",
+    "website": "Website",
+    "facebook": "Facebook",
+    "instagram": "Instagram"
+  },
+  "kits": {
+    "title": "Team Kits",
+    "homeKit": "Home Kit",
+    "awayKit": "Away Kit",
+    "noHomeKit": "No home kit uploaded",
+    "noAwayKit": "No away kit uploaded",
+    "homeKitAlt": "Home Kit",
+    "awayKitAlt": "Away Kit"
+  },
+  "colors": {
+    "primary": "Primary",
+    "secondary": "Secondary"
+  },
+  "availability": {
+    "available": "Available",
+    "notAvailable": "Not available"
+  },
+  "misc": {
+    "na": "N/A",
+    "verified": "Verified"
+  }
+}

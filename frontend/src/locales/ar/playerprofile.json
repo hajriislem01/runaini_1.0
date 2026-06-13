@@ -1,0 +1,93 @@
+{
+  "header": {
+    "myProfile": "الملف الشخصي",
+    "personalInformation": "معلومات شخصية",
+    "playerDetails": "تفاصيل اللاعب",
+    "contactInfo": "معلومات الاتصال",
+    "about": "نبذة عني"
+  },
+  "labels": {
+    "fullName": "الاسم الكامل",
+    "dob": "تاريخ الميلاد",
+    "nationality": "الجنسية",
+    "position": "المركز",
+    "height": "الطول",
+    "weight": "الوزن",
+    "jerseyNumber": "رقم القميص",
+    "team": "الفريق",
+    "group": "المجموعة",
+    "subgroup": "المجموعة الفرعية"
+  },
+  "actions": {
+    "editProfile": "تعديل الملف الشخصي",
+    "saveChanges": "حفظ التغييرات",
+    "changePassword": "تغيير كلمة المرور",
+    "updatePhoto": "تحديث الصورة",
+    "refresh": "تحديث"
+  },
+  "status": {
+    "verifiedPlayer": "لاعب معتمد",
+    "memberSince": "عضو منذ",
+    "accountSettings": "إعدادات الحساب",
+    "active": "نشط",
+    "injured": "مصاب",
+    "inactive": "غير نشط",
+    "good": "جيد"
+  },
+  "sections": {
+    "contact": "الاتصال",
+    "physical": "البيانات البدنية",
+    "quickAccess": "الوصول السريع",
+    "about": "نبذة عني",
+    "healthStatus": "الحالة الصحية"
+  },
+  "stats": {
+    "monthlyScore": "النتيجة الشهرية",
+    "attendance": "الحضور",
+    "health": "الصحة",
+    "schoolGrade": "المعدل الدراسي"
+  },
+  "contact": {
+    "noInfo": "لم يتم إدخال معلومات اتصال بعد"
+  },
+  "about": {
+    "noBio": "لا توجد نبذة شخصية مكتوبة بعد."
+  },
+  "evaluation": {
+    "latestTitle": "آخر تقييم — {{month}}",
+    "viewFullReport": "عرض التقرير الكامل ←",
+    "strengths": "نقاط القوة",
+    "toImprove": "نقاط التحسين",
+    "noEvaluation": "لا يوجد تقييم لهذا الشهر بعد",
+    "evaluateSoon": "سيقوم مدربك بتقييمك قريباً"
+  },
+  "quickAccess": {
+    "myTraining": "تدريباتي",
+    "performance": "الأداء",
+    "settings": "الإعدادات"
+  },
+  "health": {
+    "currentlyInjured": "مصاب حالياً",
+    "fitToPlay": "لائق للعب",
+    "playerStatus": "حالة اللاعب",
+    "valid": "صالح",
+    "invalidExpired": "غير صالح / منتهي الصلاحية",
+    "medicalCertificate": "الشهادة الطبية"
+  },
+  "categories": {
+    "technical": "فني",
+    "tactical": "تكتيكي",
+    "physical": "بدني",
+    "mental": "ذهني"
+  },
+  "positions": {
+    "forward": "مهاجم",
+    "midfielder": "لاعب وسط",
+    "defender": "مدافع",
+    "goalkeeper": "حارس مرمى"
+  },
+  "common": {
+    "noProfileFound": "لم يتم العثور على ملف شخصي",
+    "notLinked": "حسابك غير مرتبط بملف لاعب بعد."
+  }
+}

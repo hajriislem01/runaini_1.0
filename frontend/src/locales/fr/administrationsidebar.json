@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "groupsAndPlayers": "Groupes & Joueurs",
+    "coaches": "Entraîneurs",
+    "events": "Événements",
+    "payments": "Paiements",
+    "agenda": "Agenda",
+    "contact": "Contact",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  }
+}

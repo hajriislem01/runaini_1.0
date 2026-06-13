@@ -1,0 +1,47 @@
+{
+  "header": {
+    "title": "Settings",
+    "subtitle": "Manage your account profile and security preferences."
+  },
+  "profile": {
+    "title": "Profile Details",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "location": "Location",
+    "systemInfo": "System Info",
+    "position": "Position",
+    "group": "Group",
+    "height": "Height (cm)",
+    "weight": "Weight (kg)",
+    "bio": "Bio / Notes",
+    "bioPlaceholder": "Tell us about yourself...",
+    "choosePhoto": "Choose new photo",
+    "confirmPhoto": "Confirm Photo",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "photoSizeWarning": "JPG or PNG. Max size 5MB.",
+    "photoMaxSize": "Photo must be under 5MB"
+  },
+  "security": {
+    "title": "Security & Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "minChars": "Min 8 characters required.",
+    "updating": "Updating...",
+    "updatePassword": "Update Password"
+  },
+  "messages": {
+    "photoUpdated": "Profile photo updated successfully",
+    "photoFailed": "Failed to update photo",
+    "nameRequired": "Full name is required",
+    "profileUpdated": "Profile updated successfully",
+    "profileFailed": "Failed to update profile",
+    "pwdRequired": "Current and new password are required",
+    "pwdMismatch": "Passwords do not match",
+    "pwdTooShort": "New password must be at least 8 characters",
+    "pwdChanged": "Password changed successfully",
+    "pwdFailed": "Failed to change password"
+  }
+}

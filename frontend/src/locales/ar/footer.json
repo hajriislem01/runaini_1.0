@@ -1,0 +1,23 @@
+{
+  "description": "المنصة الكاملة لإدارة كرة القدم — صُممت للمسؤولين والمدربين واللاعبين الذين يطلبون الأفضل.",
+  "platform": {
+    "title": "المنصة",
+    "home": "الرئيسية",
+    "pricing": "الخطط",
+    "blog": "المدونة",
+    "about": "حول"
+  },
+  "product": {
+    "title": "المنتج",
+    "adminDashboard": "لوحة تحكم المشرف",
+    "coachSuite": "حزمة المدرب",
+    "playerPortal": "بوابة اللاعب",
+    "requestAccess": "طلب وصول"
+  },
+  "legal": {
+    "title": "قانوني",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة",
+    "cookiePolicy": "سياسة الكوكيز"
+  }
+}

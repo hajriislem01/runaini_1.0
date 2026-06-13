@@ -1,0 +1,80 @@
+{
+  "title": "إدارة المدربين",
+  "subtitle": "إدارة جميع المدربين وتعيين المجموعات وتتبع الحالات.",
+  "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني أو النادي...",
+  "statusFilter": "جميع الحالات",
+  "specializationFilter": "جميع التخصصات",
+  "table": {
+    "name": "المدرب",
+    "group": "المجموعة المعينة",
+    "status": "الحالة",
+    "actions": "الإجراءات"
+  },
+  "actions": {
+    "add": "إضافة مدرب",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "view": "عرض",
+    "save": "حفظ التغييرات",
+    "cancel": "إلغاء"
+  },
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "onLeave": "في إجازة"
+  },
+  "form": {
+    "addTitle": "إضافة مدرب جديد",
+    "editTitle": "تعديل بيانات المدرب",
+    "viewTitle": "تفاصيل المدرب",
+    "firstNameLabel": "الاسم الأول",
+    "lastNameLabel": "اسم العائلة",
+    "usernameLabel": "* اسم المستخدم",
+    "emailLabel": "* البريد الإلكتروني",
+    "passwordLabel": "كلمة المرور",
+    "passwordPlaceholder": "اتركها فارغة للاحتفاظ بالحالية",
+    "phoneLabel": "الهاتف",
+    "phonePlaceholder": "أدخل رقم الهاتف",
+    "clubLabel": "النادي",
+    "clubPlaceholder": "أدخل اسم النادي",
+    "specializationLabel": "التخصص",
+    "specializationPlaceholder": "مثال: تطوير الشباب",
+    "experienceLabel": "سنوات الخبرة",
+    "experiencePlaceholder": "5",
+    "certificationLabel": "الشهادة",
+    "certificationPlaceholder": "رخصة UEFA Pro",
+    "groupLabel": "المجموعات",
+    "groupsCountLabel": "المجموعات المعينة",
+    "selectGroupsLabel": "اختر المجموعات",
+    "chooseDomainsPlaceholder": "اختر المجالات...",
+    "unitsAccessLabel": "صلاحية الوحدات",
+    "openUnitsPlaceholder": "افتح محدد الوحدات...",
+    "pickGroupPlaceholder": "اختر مجموعة أولاً",
+    "activeDomainsLabel": "مجالات المدرب النشطة",
+    "currentlyFocused": "الحالي المحدد",
+    "noDomainsAssigned": "لم يتم تعيين أي مجال. استخدم المحددات أعلاه للبدء.",
+    "noUnitsSelected": "لم يتم اختيار أي وحدة",
+    "syncingUnits": "جارٍ مزامنة الوحدات...",
+    "noUnitsForGroup": "لا توجد وحدات لهذه المجموعة.",
+    "activateGroupFirst": "قم بتفعيل مجموعة أولاً.",
+    "fullAccess": "صلاحية كاملة"
+  },
+  "messages": {
+    "addSuccess": "تمت إضافة المدرب بنجاح!",
+    "editSuccess": "تم تحديث بيانات المدرب بنجاح!",
+    "deleteSuccess": "تم حذف المدرب بنجاح!",
+    "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المدرب؟",
+    "loading": "جارٍ التحميل...",
+    "processing": "جارٍ المعالجة...",
+    "noCoachesFound": "لم يتم العثور على مدربين",
+    "adjustSearch": "حاول تعديل بحثك",
+    "addFirstCoach": "ابدأ بإضافة أول مدرب"
+  },
+  "strength": {
+    "weak": "ضعيف",
+    "fair": "مقبول",
+    "good": "جيد",
+    "strong": "قوي",
+    "excellent": "ممتاز"
+  }
+}

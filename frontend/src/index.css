@@ -12,7 +12,8 @@
   --main-gradient: linear-gradient(var(--gradient-angle), var(--primary-color), var(--secondary-color), var(--color-3));
 }
 
-html, body {
+html,
+body {
   max-width: 100vw;
   overflow-x: hidden;
   margin: 0;
@@ -268,4 +269,55 @@ button:not(.rounded-full),
 
 .animate-count {
   animation: count-up 0.6s ease-out forwards;
+}
+
+/* ── Hide scrollbars ── */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* ── Date input: hide native browser calendar icon (webkit) ── */
+/*
+ * Technique: the ::-webkit-calendar-picker-indicator pseudo-element is
+ * stretched to cover the entire input with position:absolute, then made
+ * fully transparent so only our custom FiCalendar icon is visible.
+ * The cursor remains `pointer` so the date picker still opens on click.
+ */
+input[type="date"].date-input-clean {
+  position: relative;
+  color-scheme: dark; /* forces dark calendar popover on supporting browsers */
+}
+
+input[type="date"].date-input-clean::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+  opacity: 0;
+}
+
+/* Force white text for webkit date inputs that default to system color */
+input[type="date"].date-input-clean::-webkit-datetime-edit,
+input[type="date"].date-input-clean::-webkit-datetime-edit-fields-wrapper,
+input[type="date"].date-input-clean::-webkit-datetime-edit-text,
+input[type="date"].date-input-clean::-webkit-datetime-edit-month-field,
+input[type="date"].date-input-clean::-webkit-datetime-edit-day-field,
+input[type="date"].date-input-clean::-webkit-datetime-edit-year-field {
+  color: #ffffff;
+  padding: 0;
+}
+
+/* Dim the placeholder-like empty state */
+input[type="date"].date-input-clean:not(:valid)::-webkit-datetime-edit {
+  color: #64748b;
 }

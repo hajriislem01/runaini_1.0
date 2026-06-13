@@ -1,0 +1,53 @@
+{
+  "welcome": "Bienvenue à {{name}}",
+  "goTo": "Aller à",
+  "view": "Voir",
+  "stats": {
+    "totalPlayers": "Total Joueurs",
+    "totalCoaches": "Total Entraîneurs",
+    "upcomingEvents": "Événements à venir",
+    "activeGroups": "Groupes Actifs",
+    "active": "Actif",
+    "scheduled": "Planifié",
+    "groups": "Groupes"
+  },
+  "quickActions": {
+    "title": "Actions Rapides",
+    "managePlayers": "Gérer les Joueurs",
+    "managePlayersDesc": "Voir et gérer tous les joueurs",
+    "manageCoaches": "Gérer les Entraîneurs",
+    "manageCoachesDesc": "Voir et gérer les entraîneurs",
+    "createEvent": "Créer un Événement",
+    "createEventDesc": "Planifier un nouvel événement",
+    "viewAgenda": "Voir l'Agenda",
+    "viewAgendaDesc": "Consulter les événements à venir"
+  },
+  "overview": {
+    "title": "Aperçu du Système",
+    "players": "Gestion des Joueurs",
+    "coaches": "Gestion des Entraîneurs",
+    "payments": "Paiements & Facturation",
+    "contact": "Contact & Support"
+  },
+  "activity": {
+    "title": "Activité Récente",
+    "empty": "Aucune activité récente pour le moment",
+    "newPlayer": "Nouveau joueur inscrit : {{name}}",
+    "coachAdded": "Entraîneur ajouté : {{name}}",
+    "newGroup": "Nouveau groupe créé : {{name}}",
+    "loadError": "Impossible de charger les activités récentes"
+  },
+  "footer": {
+    "uptime": "Disponibilité du système",
+    "support": "Support disponible",
+    "security": "Sécurité des données",
+    "sessions": "Sessions Actives"
+  },
+  "time": {
+    "recently": "Récemment",
+    "secondsAgo": "Il y a {{count}} secondes",
+    "minutesAgo": "Il y a {{count}} minutes",
+    "hoursAgo": "Il y a {{count}} heures",
+    "daysAgo": "Il y a {{count}} jours"
+  }
+}

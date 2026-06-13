@@ -1,0 +1,93 @@
+{
+  "header": {
+    "myProfile": "Mon Profil",
+    "personalInformation": "Informations Personnelles",
+    "playerDetails": "Détails du Joueur",
+    "contactInfo": "Coordonnées",
+    "about": "À propos"
+  },
+  "labels": {
+    "fullName": "Nom complet",
+    "dob": "Date de naissance",
+    "nationality": "Nationalité",
+    "position": "Poste",
+    "height": "Taille",
+    "weight": "Poids",
+    "jerseyNumber": "Numéro de maillot",
+    "team": "Équipe",
+    "group": "Groupe",
+    "subgroup": "Sous-groupe"
+  },
+  "actions": {
+    "editProfile": "Modifier le profil",
+    "saveChanges": "Sauvegarder",
+    "changePassword": "Modifier le mot de passe",
+    "updatePhoto": "Mettre à jour la photo",
+    "refresh": "Actualiser"
+  },
+  "status": {
+    "verifiedPlayer": "Joueur vérifié",
+    "memberSince": "Membre depuis",
+    "accountSettings": "Paramètres du compte",
+    "active": "Actif",
+    "injured": "Blessé",
+    "inactive": "Inactif",
+    "good": "Bon"
+  },
+  "sections": {
+    "contact": "Contact",
+    "physical": "Physique",
+    "quickAccess": "Accès rapide",
+    "about": "À propos",
+    "healthStatus": "État de santé"
+  },
+  "stats": {
+    "monthlyScore": "Score mensuel",
+    "attendance": "Présence",
+    "health": "Santé",
+    "schoolGrade": "Moyenne scolaire"
+  },
+  "contact": {
+    "noInfo": "Aucune coordonnée renseignée"
+  },
+  "about": {
+    "noBio": "Aucune description pour le moment."
+  },
+  "evaluation": {
+    "latestTitle": "Dernière évaluation — {{month}}",
+    "viewFullReport": "Voir le rapport complet →",
+    "strengths": "Forces",
+    "toImprove": "Points à améliorer",
+    "noEvaluation": "Aucune évaluation ce mois-ci pour l'instant",
+    "evaluateSoon": "Votre entraîneur vous évaluera bientôt"
+  },
+  "quickAccess": {
+    "myTraining": "Mon Entraînement",
+    "performance": "Performance",
+    "settings": "Paramètres"
+  },
+  "health": {
+    "currentlyInjured": "Actuellement blessé",
+    "fitToPlay": "Apte à jouer",
+    "playerStatus": "Statut du joueur",
+    "valid": "Valide",
+    "invalidExpired": "Invalide / Expiré",
+    "medicalCertificate": "Certificat médical"
+  },
+  "categories": {
+    "technical": "Technique",
+    "tactical": "Tactique",
+    "physical": "Physique",
+    "mental": "Mental"
+  },
+  "positions": {
+    "forward": "Attaquant",
+    "midfielder": "Milieu de terrain",
+    "defender": "Défenseur",
+    "goalkeeper": "Gardien de but"
+  },
+  "common": {
+    "noProfileFound": "Aucun profil trouvé",
+    "notLinked": "Votre compte n'est pas encore lié à un profil de joueur."
+  }
+}

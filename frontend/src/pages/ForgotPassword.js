@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMail, FiArrowLeft, FiSend, FiAlertCircle, FiCheckCircle, FiLock } from 'react-icons/fi';
+import { FiMail, FiArrowLeft, FiArrowRight, FiSend, FiAlertCircle, FiCheckCircle, FiLock } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 /* ── Brand tokens ─────────────────────────────────── */
 const P = '#902bd1';
@@ -24,17 +25,17 @@ const PitchLines = () => (
 
 
 /* ── Gold floating-label input ─────────────────────── */
-const GoldInput = ({ label, icon: Icon, ...props }) => {
+const GoldInput = ({ label, icon: Icon, isRtl, ...props }) => {
   const [focused, setFocused] = useState(false);
   const hasValue = String(props.value || '').length > 0;
   return (
     <div className="relative">
       <label
-        className="absolute left-11 transition-all duration-200 pointer-events-none z-10 font-medium"
+        className={`absolute ${isRtl ? 'right-11' : 'left-11'} transition-all duration-200 pointer-events-none z-10 font-medium`}
         style={{
           top: focused || hasValue ? '-9px' : '50%',
           transform: focused || hasValue ? 'translateY(0) scale(0.78)' : 'translateY(-50%)',
-          transformOrigin: 'left',
+          transformOrigin: isRtl ? 'right' : 'left',
           color: focused ? G : '#6b7280',
           fontSize: focused || hasValue ? '11px' : '14px',
           background: focused || hasValue ? 'rgba(10,15,42,1)' : 'transparent',
@@ -42,7 +43,7 @@ const GoldInput = ({ label, icon: Icon, ...props }) => {
         }}>
         {label}
       </label>
-      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10"
+      <div className={`absolute ${isRtl ? 'right-3.5' : 'left-3.5'} top-1/2 -translate-y-1/2 z-10`}
         style={{ color: focused ? G : '#4b5563' }}>
         <Icon size={15} />
       </div>
@@ -50,11 +51,12 @@ const GoldInput = ({ label, icon: Icon, ...props }) => {
         {...props}
         onFocus={e => { setFocused(true); props.onFocus?.(e); }}
         onBlur={e => { setFocused(false); props.onBlur?.(e); }}
-        className="w-full px-4 py-4 pl-11 bg-transparent rounded-xl text-white text-sm outline-none transition-all duration-300"
+        className={`w-full px-4 py-4 ${isRtl ? 'pr-11 pl-4' : 'pl-11 pr-4'} bg-transparent rounded-xl text-white text-sm outline-none transition-all duration-300`}
         style={{
           border: `1px solid ${focused ? G + 'aa' : 'rgba(255,255,255,0.08)'}`,
           background: 'rgba(255,255,255,0.03)',
           boxShadow: focused ? `0 0 0 3px ${G}18, 0 0 20px ${G}08` : 'none',
+          textAlign: isRtl ? 'right' : 'left',
         }}
       />
     </div>
@@ -63,6 +65,9 @@ const GoldInput = ({ label, icon: Icon, ...props }) => {
 
 /* ════════════════════════════════════════════════════ */
 const ForgotPassword = () => {
+  const { t, i18n } = useTranslation('auth');
+  const isRtl = i18n.dir() === 'rtl';
+
   const [email,     setEmail]     = useState('');
   const [error,     setError]     = useState('');
   const [success,   setSuccess]   = useState('');
@@ -75,7 +80,7 @@ const ForgotPassword = () => {
     setSuccess('');
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
+      setError(t('emailInvalid'));
       return;
     }
 
@@ -83,11 +88,11 @@ const ForgotPassword = () => {
     try {
       // Simulated API call — replace with real endpoint when available
       await new Promise(resolve => setTimeout(resolve, 1800));
-      setSuccess('Reset instructions sent. Check your inbox.');
+      setSuccess(t('resetSentSuccess'));
       setSent(true);
       setEmail('');
     } catch {
-      setError('Failed to send reset instructions. Please try again.');
+      setError(t('resetSentFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +101,7 @@ const ForgotPassword = () => {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      dir={isRtl ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 50%,#180033 100%)' }}>
 
       <PitchLines />
@@ -110,9 +116,9 @@ const ForgotPassword = () => {
 
       {/* Back link */}
       <Link to="/login"
-        className="absolute top-6 left-6 z-20 flex items-center gap-1.5 text-sm text-gray-600 hover:text-white transition-colors group">
-        <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-        Back to Login
+        className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} z-20 flex items-center gap-1.5 text-sm text-gray-600 hover:text-white transition-colors group`}>
+        {isRtl ? <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" /> : <FiArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />}
+        {t('backToLogin')}
       </Link>
 
       <motion.div
@@ -140,7 +146,7 @@ const ForgotPassword = () => {
 
             {/* Logo */}
             <div className="text-center mb-8">
-              <Link to="/" className="inline-flex items-center gap-0.5 text-3xl font-extrabold mb-3">
+              <Link to="/" className="inline-flex items-center gap-0.5 text-3xl font-extrabold mb-3" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                 <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RUN</span>
                 <span className="text-white">AI</span>
                 <span style={{ color: T }}>NI</span>
@@ -155,9 +161,9 @@ const ForgotPassword = () => {
                 <FiLock size={22} style={{ color: G }} />
               </div>
 
-              <h1 className="text-xl font-extrabold text-white mb-1">Forgot your password?</h1>
+              <h1 className="text-xl font-extrabold text-white mb-1">{t('forgotPassword')}</h1>
               <p className="text-xs text-gray-500 leading-relaxed max-w-xs mx-auto">
-                No worries. Enter your academy email and we'll send reset instructions instantly.
+                {t('forgotPasswordInstructions')}
               </p>
             </div>
 
@@ -182,7 +188,7 @@ const ForgotPassword = () => {
                     style={{ background: `${T}20`, border: `1px solid ${T}40` }}>
                     <FiCheckCircle size={22} style={{ color: T }} />
                   </div>
-                  <p className="text-sm font-semibold text-white mb-1">Email Sent!</p>
+                  <p className="text-sm font-semibold text-white mb-1">{t('emailSent')}</p>
                   <p className="text-xs text-gray-400">{success}</p>
                 </motion.div>
               )}
@@ -192,11 +198,12 @@ const ForgotPassword = () => {
             {!sent && (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <GoldInput
-                  label="Academy Email" icon={FiMail} type="email"
+                  label={t('academyEmail')} icon={FiMail} type="email"
                   value={email}
                   onChange={e => { setEmail(e.target.value); setError(''); }}
                   autoComplete="email"
                   required
+                  isRtl={isRtl}
                 />
 
                 <motion.button
@@ -211,9 +218,9 @@ const ForgotPassword = () => {
                     boxShadow: isLoading ? 'none' : `0 0 28px ${P}35`,
                   }}>
                   {isLoading ? (
-                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
+                    <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('sending')}</>
                   ) : (
-                    <><FiSend size={14} /> Send Reset Link</>
+                    <><FiSend size={14} /> {t('sendResetLink')}</>
                   )}
                 </motion.button>
               </form>
@@ -227,7 +234,7 @@ const ForgotPassword = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="w-full py-3 rounded-xl text-xs font-medium text-gray-500 transition-all hover:text-white"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                Didn't get it? Try again
+                {t('didNotGetEmail')}
               </motion.button>
             )}
 
@@ -235,15 +242,15 @@ const ForgotPassword = () => {
             <div className="mt-6 pt-5 border-t text-center space-y-2"
               style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
               <p className="text-xs text-gray-600">
-                Remember your password?{' '}
+                {t('rememberPasswordQuestion')}{' '}
                 <Link to="/login" className="font-semibold" style={{ color: G }}>
-                  Sign in →
+                  {t('signIn')} {isRtl ? '←' : '→'}
                 </Link>
               </p>
               <p className="text-xs text-gray-600">
-                New here?{' '}
-                <Link to="/signup" className="font-semibold" style={{ color: B }}>
-                  Create an academy →
+                {t('newHereQuestion')}{' '}
+                <Link to="/request-academy" className="font-semibold" style={{ color: B }}>
+                  {t('createAcademy')} {isRtl ? '←' : '→'}
                 </Link>
               </p>
             </div>

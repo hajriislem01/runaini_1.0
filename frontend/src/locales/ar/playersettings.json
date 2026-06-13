@@ -1,0 +1,47 @@
+{
+  "header": {
+    "title": "الإعدادات",
+    "subtitle": "إدارة ملف حسابك وتفضيلات الأمان."
+  },
+  "profile": {
+    "title": "تفاصيل الملف الشخصي",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف",
+    "location": "الموقع",
+    "systemInfo": "معلومات النظام",
+    "position": "المركز",
+    "group": "المجموعة",
+    "height": "الطول (سم)",
+    "weight": "الوزن (كغ)",
+    "bio": "نبذة / ملاحظات",
+    "bioPlaceholder": "أخبرنا عن نفسك...",
+    "choosePhoto": "اختر صورة جديدة",
+    "confirmPhoto": "تأكيد الصورة",
+    "cancel": "إلغاء",
+    "saving": "جاري الحفظ...",
+    "saveChanges": "حفظ التغييرات",
+    "photoSizeWarning": "JPG أو PNG. الحجم الأقصى 5MB.",
+    "photoMaxSize": "يجب أن تكون الصورة أقل من 5MB"
+  },
+  "security": {
+    "title": "الأمان وكلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "minChars": "8 أحرف على الأقل.",
+    "updating": "جاري التحديث...",
+    "updatePassword": "تحديث كلمة المرور"
+  },
+  "messages": {
+    "photoUpdated": "تم تحديث صورة الملف الشخصي بنجاح",
+    "photoFailed": "فشل تحديث الصورة",
+    "nameRequired": "الاسم الكامل مطلوب",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+    "profileFailed": "فشل تحديث الملف الشخصي",
+    "pwdRequired": "كلمة المرور الحالية والجديدة مطلوبتان",
+    "pwdMismatch": "كلمتا المرور غير متطابقتين",
+    "pwdTooShort": "يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل",
+    "pwdChanged": "تم تغيير كلمة المرور بنجاح",
+    "pwdFailed": "فشل تغيير كلمة المرور"
+  }
+}

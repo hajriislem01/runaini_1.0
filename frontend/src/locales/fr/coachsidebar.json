@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "players": "Joueurs",
+    "training": "Entraînement",
+    "agenda": "Agenda",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "coachPanel": "Panneau de l'entraîneur",
+    "verifiedCoach": "Entraîneur vérifié",
+    "coachSpace": "Espace Entraîneur"
+  }
+}

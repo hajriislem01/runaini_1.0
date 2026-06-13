@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "players": "Players",
+    "training": "Training",
+    "agenda": "Agenda",
+    "settings": "Settings",
+    "logout": "Logout",
+    "coachPanel": "Coach Panel",
+    "verifiedCoach": "Verified Coach",
+    "coachSpace": "Coach Space"
+  }
+}

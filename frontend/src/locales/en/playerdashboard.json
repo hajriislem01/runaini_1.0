@@ -1,0 +1,108 @@
+{
+  "header": {
+    "playerDashboard": "Player Hub",
+    "welcomeBack": "Welcome back, {{name}}",
+    "nextMatch": "Next Match",
+    "upcomingTraining": "Upcoming Training"
+  },
+  "stats": {
+    "monthlyScore": "Monthly score",
+    "attendance": "Attendance",
+    "myGroup": "My group",
+    "position": "Position",
+    "totalMatches": "Total Matches",
+    "goals": "Goals",
+    "assists": "Assists",
+    "fitnessLevel": "Fitness Level",
+    "overallRating": "Overall Rating"
+  },
+  "activity": {
+    "recentActivity": "Recent Activity",
+    "matchReport": "Match Report",
+    "trainingSummary": "Training Summary",
+    "viewAll": "View All"
+  },
+  "status": {
+    "active": "Active",
+    "injured": "Injured",
+    "onTrial": "On Trial"
+  },
+  "session": {
+    "todaysSession": "Today's session",
+    "nextSession": "Next session",
+    "nextSessions": "Next sessions",
+    "inProgress": "In progress",
+    "inMinutes": "In {{minutes}}min",
+    "inHoursMinutes": "In {{hours}}h {{minutes}}min",
+    "inHoursOnly": "In {{hours}}h",
+    "personal": "personal",
+    "viewDetails": "View details →",
+    "noUpcoming": "No upcoming sessions",
+    "session": "Session",
+    "today": "Today",
+    "more": "more"
+  },
+  "medical": {
+    "valid": "Medical certificate valid",
+    "expired": "Medical certificate missing or expired"
+  },
+  "categories": {
+    "technical": "Technical",
+    "tactical": "Tactical",
+    "physical": "Physical",
+    "mental": "Mental",
+    "match_prep": "Match Prep",
+    "recovery": "Recovery",
+    "session": "Session"
+  },
+  "evaluation": {
+    "monthlyReportTitle": "{{month}} Report",
+    "vsGroupAverage": "vs group average",
+    "above": "above",
+    "below": "below",
+    "trend": "trend",
+    "lastMonths": "Last {{count}} months",
+    "goalReach": "Goal: reach {{score}}/10",
+    "viewFullReport": "View full report →",
+    "noReportYet": "No report this month yet",
+    "evaluateSoon": "Your coach will evaluate you soon",
+    "monthlyEvaluation": "monthly evaluation",
+    "strengths": "Strengths",
+    "toImprove": "To improve"
+  },
+  "streak": {
+    "thisWeek": "This week",
+    "noAttended": "No sessions attended yet this week",
+    "attendedCount_one": "1 session attended this week",
+    "attendedCount_other": "{{count}} sessions attended this week"
+  },
+  "exercises": {
+    "personalExercises": "Personal exercises assigned to you",
+    "viewAll": "View all personal exercises →"
+  },
+  "quickAccess": {
+    "title": "Quick access",
+    "myTraining": "My Training",
+    "myTrainingDesc": "Sessions & exercises",
+    "performance": "Performance",
+    "performanceDesc": "Monthly report",
+    "myProfile": "My Profile",
+    "myProfileDesc": "View & edit",
+    "settings": "Settings",
+    "settingsDesc": "Account settings"
+  },
+  "alerts": {
+    "injured": "You are currently marked as {{status}}. Contact your coach.",
+    "lowAttendance": "Attendance this month is {{percent}}% — below 75%.",
+    "lowScore": "Your score this month is {{score}}/10. Keep pushing!"
+  },
+  "motivation": {
+    "ready": "Ready to train? Give your best today!",
+    "reachedGoal": "You reached your goal of {{goal}}/10. Outstanding!",
+    "nearGoal": "You're at {{score}}/10 — just {{diff}} pts from your goal of {{goal}}. Keep it up!",
+    "farGoal": "Score: {{score}}/10. Focus on training to reach your {{goal}}/10 goal!"
+  },
+  "common": {
+    "failedLoad": "Failed to load data"
+  }
+}

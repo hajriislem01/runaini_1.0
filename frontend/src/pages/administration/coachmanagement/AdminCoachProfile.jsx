@@ -103,8 +103,8 @@ const AdminCoachProfile = () => {
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 w-full">
 
             {/* Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 overflow-hidden border-4 shadow-xl"
+            <div className="relative flex-shrink-0 w-32 h-32 md:w-40 md:h-40">
+              <div className="w-full h-full overflow-hidden border-4 shadow-xl"
                 style={{ 
                   borderColor: 'rgba(255,255,255,.2)',
                   borderRadius: 'var(--dashboard-radius)'
@@ -120,7 +120,7 @@ const AdminCoachProfile = () => {
               </div>
               {/* Status dot */}
               {cp.status && (
-                <div className={`absolute bottom-2 right-2 w-5 h-5 rounded-full border-4 border-[#0a0f2a] ${cp.status === 'Active' ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,.7)]' : 'bg-red-500'}`} />
+                <div className={`absolute bottom-0 right-0 w-5 h-5 md:w-6 md:h-6 rounded-full border-4 border-[#0a0f2a] ${cp.status === 'Active' ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,.7)]' : 'bg-red-500'}`} />
               )}
             </div>
 

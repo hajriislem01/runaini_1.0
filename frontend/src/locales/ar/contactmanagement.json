@@ -1,0 +1,50 @@
+{
+  "title": "دليل الأكاديميات",
+  "subtitle": "البحث والتواصل مع أكاديميات كرة القدم على منصتنا",
+  "stats": {
+    "total": "إجمالي الأكاديميات",
+    "countries": "الدول",
+    "withContact": "مع معلومات اتصال"
+  },
+  "filters": {
+    "title": "البحث والتصفية",
+    "country": "الدولة",
+    "allCountries": "جميع الدول",
+    "city": "المدينة",
+    "placeholderCity": "أدخل اسم المدينة...",
+    "search": "البحث",
+    "placeholderSearch": "البحث بالاسم...",
+    "noAcademiesFound": "لم يتم العثور على أكاديميات",
+    "tryAdjusting": "جرّب تعديل معايير البحث الخاصة بك",
+    "clearFilters": "مسح التصفية"
+  },
+  "meta": {
+    "showing": "عرض {{count}} من أصل {{total}} أكاديميات"
+  },
+  "card": {
+    "contactInfo": "معلومات الاتصال",
+    "location": "الموقع"
+  },
+  "countries": {
+    "TN": "تونس",
+    "DZ": "الجزائر",
+    "MA": "المغرب",
+    "LY": "ليبيا",
+    "EG": "مصر",
+    "MR": "موريتانيا"
+  },
+  "modal": {
+    "facilities": "المرافق",
+    "gym": "صالة ألعاب رياضية",
+    "cafeteria": "كافيتيريا",
+    "dormitory": "سكن طلابي",
+    "staff": "طاقم العمل",
+    "technicalDirector": "المدير الفني",
+    "headCoach": "المدرب الرئيسي",
+    "fitnessCoach": "مدرب اللياقة بدنية",
+    "philosophy": "الفلسفة",
+    "achievements": "الإنجازات",
+    "homeKit": "الزي الأساسي",
+    "awayKit": "الزي الاحتياطي"
+  }
+}

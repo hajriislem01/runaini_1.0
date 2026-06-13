@@ -1,0 +1,108 @@
+{
+  "header": {
+    "playerDashboard": "مساحة اللاعب",
+    "welcomeBack": "مرحباً بعودتك، {{name}}",
+    "nextMatch": "المباراة القادمة",
+    "upcomingTraining": "التدريب القادم"
+  },
+  "stats": {
+    "monthlyScore": "النتيجة الشهرية",
+    "attendance": "الحضور",
+    "myGroup": "مجموعتي",
+    "position": "المركز",
+    "totalMatches": "إجمالي المباريات",
+    "goals": "الأهداف",
+    "assists": "التمريرات الحاسمة",
+    "fitnessLevel": "مستوى اللياقة",
+    "overallRating": "التقييم العام"
+  },
+  "activity": {
+    "recentActivity": "النشاط الأخير",
+    "matchReport": "تقرير المباراة",
+    "trainingSummary": "ملخص التدريب",
+    "viewAll": "عرض الكل"
+  },
+  "status": {
+    "active": "نشط",
+    "injured": "مصاب",
+    "onTrial": "قيد التجربة"
+  },
+  "session": {
+    "todaysSession": "حصة اليوم",
+    "nextSession": "الحصة القادمة",
+    "nextSessions": "الحصص القادمة",
+    "inProgress": "جارية حالياً",
+    "inMinutes": "خلال {{minutes}} دقيقة",
+    "inHoursMinutes": "خلال {{hours}} ساعة و {{minutes}} دقيقة",
+    "inHoursOnly": "خلال {{hours}} ساعة",
+    "personal": "شخصي",
+    "viewDetails": "عرض التفاصيل ←",
+    "noUpcoming": "لا توجد حصص قادمة",
+    "session": "حصة",
+    "today": "اليوم",
+    "more": "أكثر"
+  },
+  "medical": {
+    "valid": "الشهادة الطبية صالحة",
+    "expired": "الشهادة الطبية مفقودة أو منتهية الصلاحية"
+  },
+  "categories": {
+    "technical": "فني",
+    "tactical": "تكتيكي",
+    "physical": "بدني",
+    "mental": "ذهني",
+    "match_prep": "تحضير للمباراة",
+    "recovery": "استشفاء",
+    "session": "حصة"
+  },
+  "evaluation": {
+    "monthlyReportTitle": "تقرير شهر {{month}}",
+    "vsGroupAverage": "مقارنة بمتوسط المجموعة",
+    "above": "أعلى",
+    "below": "أقل",
+    "trend": "مؤشر الأداء",
+    "lastMonths": "آخر {{count}} أشهر",
+    "goalReach": "الهدف: الوصول إلى {{score}}/10",
+    "viewFullReport": "عرض التقرير الكامل ←",
+    "noReportYet": "لا يوجد تقرير لهذا الشهر بعد",
+    "evaluateSoon": "سيقوم مدربك بتقييمك قريباً",
+    "monthlyEvaluation": "التقييم الشهري",
+    "strengths": "نقاط القوة",
+    "toImprove": "نقاط التحسين"
+  },
+  "streak": {
+    "thisWeek": "هذا الأسبوع",
+    "noAttended": "لم تحضر أي حصة هذا الأسبوع بعد",
+    "attendedCount_one": "حضر حصة واحدة هذا الأسبوع",
+    "attendedCount_other": "حضر {{count}} حصص هذا الأسبوع"
+  },
+  "exercises": {
+    "personalExercises": "التمارين الشخصية المخصصة لك",
+    "viewAll": "عرض جميع التمارين الشخصية ←"
+  },
+  "quickAccess": {
+    "title": "الوصول السريع",
+    "myTraining": "تدريباتي",
+    "myTrainingDesc": "الحصص والتمارين",
+    "performance": "الأداء",
+    "performanceDesc": "التقرير الشهري",
+    "myProfile": "ملفي الشخصي",
+    "myProfileDesc": "عرض وتعديل",
+    "settings": "الإعدادات",
+    "settingsDesc": "إعدادات الحساب"
+  },
+  "alerts": {
+    "injured": "لقد تم تسجيلك حالياً كـ {{status}}. يرجى التواصل مع مدربك.",
+    "lowAttendance": "حضورك هذا الشهر هو {{percent}}% — أقل من 75%.",
+    "lowScore": "تقييمك هذا الشهر هو {{score}}/10. واصل العمل الجاد!"
+  },
+  "motivation": {
+    "ready": "جاهز للتدريب؟ قدم أفضل ما لديك اليوم!",
+    "reachedGoal": "لقد وصلت إلى هدفك {{goal}}/10. أداء رائع!",
+    "nearGoal": "تقييمك الحالي هو {{score}}/10 — يتبقى لك {{diff}} نقاط فقط للوصول لهدفك {{goal}}. واصل التقدم!",
+    "farGoal": "تقييمك الحالي هو {{score}}/10. ركز في التدريب للوصول إلى هدفك وهو {{goal}}/10!"
+  },
+  "common": {
+    "failedLoad": "فشل تحميل البيانات"
+  }
+}

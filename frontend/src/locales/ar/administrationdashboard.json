@@ -1,0 +1,53 @@
+{
+  "welcome": "مرحباً بكم في {{name}}",
+  "goTo": "الانتقال إلى",
+  "view": "عرض",
+  "stats": {
+    "totalPlayers": "إجمالي اللاعبين",
+    "totalCoaches": "إجمالي المدربين",
+    "upcomingEvents": "الفعاليات القادمة",
+    "activeGroups": "المجموعات النشطة",
+    "active": "نشط",
+    "scheduled": "مجدول",
+    "groups": "مجموعات"
+  },
+  "quickActions": {
+    "title": "إجراءات سريعة",
+    "managePlayers": "إدارة اللاعبين",
+    "managePlayersDesc": "عرض وإدارة جميع اللاعبين",
+    "manageCoaches": "إدارة المدربين",
+    "manageCoachesDesc": "عرض وإدارة المدربين",
+    "createEvent": "إنشاء فعالية",
+    "createEventDesc": "جدولة فعالية جديدة",
+    "viewAgenda": "عرض الأجندة",
+    "viewAgendaDesc": "التحقق من الفعاليات القادمة"
+  },
+  "overview": {
+    "title": "نظرة عامة على النظام",
+    "players": "إدارة اللاعبين",
+    "coaches": "إدارة المدربين",
+    "payments": "المدفوعات والفواتير",
+    "contact": "التواصل والدعم"
+  },
+  "activity": {
+    "title": "النشاط الأخير",
+    "empty": "لا يوجد نشاط أخير بعد",
+    "newPlayer": "تم تسجيل لاعب جديد: {{name}}",
+    "coachAdded": "تمت إضافة مدرب جديد: {{name}}",
+    "newGroup": "تم إنشاء مجموعة جديدة: {{name}}",
+    "loadError": "تعذر تحميل الأنشطة الأخيرة"
+  },
+  "footer": {
+    "uptime": "جاهزية النظام",
+    "support": "الدعم الفني متاح",
+    "security": "أمن البيانات",
+    "sessions": "الجلسات النشطة"
+  },
+  "time": {
+    "recently": "مؤخراً",
+    "secondsAgo": "منذ {{count}} ثانية",
+    "minutesAgo": "منذ {{count}} دقيقة",
+    "hoursAgo": "منذ {{count}} ساعة",
+    "daysAgo": "منذ {{count}} يوم"
+  }
+}

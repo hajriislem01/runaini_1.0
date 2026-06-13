@@ -8,8 +8,17 @@ import { FiSave, FiUpload, FiUsers, FiCalendar, FiAward, FiTarget, FiLock, FiEye
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { useCoachSession } from '../../context/CoachSessionContext';
+import { useTranslation } from 'react-i18next';
+
+const toWestern = (num) =>
+  String(num).replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) =>
+    String(d.charCodeAt(0) - (d.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660))
+  );
 
 const CoachSettings = () => {
+  const { t, i18n } = useTranslation('coachprofile');
+  const isRtl = i18n.language === 'ar';
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -193,9 +202,9 @@ const CoachSettings = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        phone: formData.phone,
+        phone: toWestern(formData.phone),
         specialization: formData.specialization,
-        years_of_experience: formData.years_of_experience,
+        years_of_experience: toWestern(formData.years_of_experience),
         certification: formData.certification,
         address: formData.address,
         notes: notesData,
@@ -236,6 +245,7 @@ const CoachSettings = () => {
       className="min-h-screen text-white p-4 sm:p-6 md:p-8 lg:p-10"
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
+      dir={isRtl ? 'rtl' : 'ltr'}
     >
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
@@ -243,9 +253,9 @@ const CoachSettings = () => {
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-8 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-            Coach Settings
+            {t('coachSettings')}
           </h1>
-          <p className="text-lg text-gray-300 mt-3">Manage your professional profile</p>
+          <p className="text-lg text-gray-300 mt-3">{t('manageProfile')}</p>
         </motion.div>
 
         <motion.form variants={itemVariants} onSubmit={handleSubmit}>
@@ -268,7 +278,7 @@ const CoachSettings = () => {
                     )}
                   </div>
                   <button type="button" onClick={() => fileRef.current?.click()}
-                    className="absolute bottom-0 right-0 w-10 h-10 rounded-full flex items-center justify-center text-white border-2 border-gray-900"
+                    className={`absolute bottom-0 w-10 h-10 rounded-full flex items-center justify-center text-white border-2 border-gray-900 ${isRtl ? 'left-0' : 'right-0'}`}
                     style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
                     <FiCamera size={16} />
                   </button>
@@ -284,7 +294,7 @@ const CoachSettings = () => {
                         {uploadingPhoto ? (
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
-                          <><FiCheck /> Save Photo</>
+                          <><FiCheck /> {t('savePhoto')}</>
                         )}
                       </button>
                       <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(formData.photo); }}
@@ -300,21 +310,22 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FaEnvelope className="text-[#4fb0ff]" />Personal Information
+                  <FaEnvelope className="text-[#4fb0ff]" />{t('personalInformation')}
                 </h2>
                 <div className="space-y-4">
                   {[
-                    { name: 'first_name', label: 'First Name', placeholder: 'John', type: 'text' },
-                    { name: 'last_name', label: 'Last Name', placeholder: 'Doe', type: 'text' },
-                    { name: 'email', label: 'Email', placeholder: 'coach@example.com', type: 'email' },
-                    { name: 'phone', label: 'Phone', placeholder: '+216 12 345 678', type: 'tel' },
-                    { name: 'address', label: 'Address', placeholder: 'City, Country', type: 'text' },
+                    { name: 'first_name', label: t('firstName'), placeholder: 'John', type: 'text' },
+                    { name: 'last_name', label: t('lastName'), placeholder: 'Doe', type: 'text' },
+                    { name: 'email', label: t('email'), placeholder: 'coach@example.com', type: 'email', dir: 'ltr' },
+                    { name: 'phone', label: t('phone'), placeholder: '+216 12 345 678', type: 'tel', dir: 'ltr' },
+                    { name: 'address', label: t('address'), placeholder: 'City, Country', type: 'text' },
                   ].map(field => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{field.label}</label>
                       <input type={field.type} name={field.name} value={formData[field.name]}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
+                        dir={field.dir || (isRtl ? 'rtl' : 'ltr')}
+                        className={`w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] ${field.dir === 'ltr' && isRtl ? 'text-right' : ''}`}
                         placeholder={field.placeholder} />
                     </div>
                   ))}
@@ -325,28 +336,29 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FaUserTie className="text-[#00d0cb]" />Professional Info
+                  <FaUserTie className="text-[#00d0cb]" />{t('professionalInfo')}
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Specialization</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('specialization')}</label>
                     <input type="text" name="specialization" value={formData.specialization}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
                       placeholder="e.g., Youth Development" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Years of Experience</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('experience')}</label>
                     <input type="number" name="years_of_experience" value={formData.years_of_experience}
                       onChange={handleInputChange} min="0"
                       className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
                       placeholder="5" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Main Certification</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('certification')}</label>
                     <input type="text" name="certification" value={formData.certification}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
+                      dir="ltr"
+                      className={`w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] ${isRtl ? 'text-right' : ''}`}
                       placeholder="UEFA Pro License" />
                   </div>
                 </div>
@@ -356,13 +368,13 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FiLock className="text-[#902bd1]" />Change Password
+                  <FiLock className="text-[#902bd1]" />{t('changePassword')}
                 </h2>
                 <div className="space-y-4">
                   {[
-                    { key: 'current_password', label: 'Current Password', placeholder: '••••••' },
-                    { key: 'new_password', label: 'New Password', placeholder: 'New password' },
-                    { key: 'confirm_password', label: 'Confirm Password', placeholder: 'Confirm password' },
+                    { key: 'current_password', label: t('currentPassword'), placeholder: '••••••' },
+                    { key: 'new_password', label: t('newPassword'), placeholder: '••••••' },
+                    { key: 'confirm_password', label: t('confirmPassword'), placeholder: '••••••' },
                   ].map(field => (
                     <div key={field.key}>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{field.label}</label>
@@ -370,10 +382,11 @@ const CoachSettings = () => {
                         <input type={showPassword ? 'text' : 'password'}
                           value={passwords[field.key]}
                           onChange={(e) => setPasswords(p => ({ ...p, [field.key]: e.target.value }))}
-                          className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] pr-12"
+                          dir="ltr"
+                          className={`w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] ${isRtl ? 'pl-12 text-right' : 'pr-12 text-left'}`}
                           placeholder={field.placeholder} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                          className={`absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-white ${isRtl ? 'left-3' : 'right-3'}`}>
                           {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                         </button>
                       </div>
@@ -390,14 +403,14 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FiTarget className="text-yellow-400" />Coaching Philosophy
+                  <FiTarget className="text-yellow-400" />{t('coachingPhilosophy')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { name: 'development', label: 'Player Development', color: '#4fb0ff' },
-                    { name: 'tactical', label: 'Tactical Approach', color: '#00d0cb' },
-                    { name: 'mental', label: 'Mental Conditioning', color: '#902bd1' },
-                    { name: 'culture', label: 'Team Culture', color: '#10B981' },
+                    { name: 'development', label: t('playerDevelopment'), color: '#4fb0ff' },
+                    { name: 'tactical', label: t('tacticalApproach'), color: '#00d0cb' },
+                    { name: 'mental', label: t('mentalConditioning'), color: '#902bd1' },
+                    { name: 'culture', label: t('teamCulture'), color: '#10B981' },
                   ].map(item => (
                     <div key={item.name} className="bg-gray-800/30 p-4 rounded-xl border border-gray-700/30">
                       <label className="block text-sm font-medium mb-2" style={{ color: item.color }}>
@@ -406,7 +419,7 @@ const CoachSettings = () => {
                       <textarea name={item.name} value={formData.philosophy[item.name]}
                         onChange={handlePhilosophyChange} rows={3}
                         className="w-full text-sm p-3 bg-gray-800/65 rounded-xl border border-gray-700/30 text-white focus:outline-none focus:ring-1 focus:ring-[#00d0cb]"
-                        placeholder={`Describe your ${item.label.toLowerCase()}...`} />
+                        placeholder="..." />
                     </div>
                   ))}
                 </div>
@@ -416,20 +429,20 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FiCalendar className="text-[#4fb0ff]" />Training Methodology
+                  <FiCalendar className="text-[#4fb0ff]" />{t('trainingMethodology')}
                 </h2>
                 <div className="space-y-4">
                   {formData.methodology.map((method, index) => (
                     <div key={index} className="flex gap-4">
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white mt-2 text-sm">
-                        {index + 1}
+                        {toWestern(index + 1)}
                       </div>
                       <div className="flex-1">
                         <textarea value={method}
                           onChange={(e) => handleMethodologyChange(index, e.target.value)}
                           rows={2}
                           className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-sm"
-                          placeholder={`Training method ${index + 1}...`} />
+                          placeholder="..." />
                       </div>
                     </div>
                   ))}
@@ -440,12 +453,12 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FiCalendar className="text-[#4fb0ff]" />Professional Experience
+                  <FiCalendar className="text-[#4fb0ff]" />{t('professionalExperience')}
                 </h2>
 
                 <div className="space-y-4 mb-6">
                   {experiences.map((exp, index) => (
-                    <motion.div key={index} whileHover={{ x: 4 }}
+                    <motion.div key={index} whileHover={isRtl ? { x: -4 } : { x: 4 }}
                       className="flex gap-4 pb-4 border-b border-gray-700/50 group">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center flex-shrink-0">
                         <FiUsers size={14} />
@@ -455,7 +468,7 @@ const CoachSettings = () => {
                           <div>
                             <h4 className="font-bold text-white">{exp.role}</h4>
                             <div className="text-[#00d0cb] text-sm">{exp.club}</div>
-                            <div className="text-gray-400 text-xs mt-1">{exp.period}</div>
+                            <div className="text-gray-400 text-xs mt-1" dir="ltr" style={isRtl ? { textAlign: 'right' } : {}}>{exp.period}</div>
                             {exp.description && <p className="text-gray-300 text-xs mt-1">{exp.description}</p>}
                           </div>
                           <button type="button" onClick={() => setExperiences(prev => prev.filter((_, i) => i !== index))}
@@ -469,18 +482,19 @@ const CoachSettings = () => {
                 </div>
 
                 <div className="border-t border-gray-700/50 pt-5">
-                  <h3 className="text-lg font-semibold mb-4">Add Experience</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('addExperience')}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[
-                      { name: 'role', placeholder: 'Head Coach' },
-                      { name: 'club', placeholder: 'FC Barcelona' },
-                      { name: 'period', placeholder: '2018-2021' },
-                      { name: 'description', placeholder: 'Key achievements' },
+                      { name: 'role', placeholder: t('role') },
+                      { name: 'club', placeholder: t('club') },
+                      { name: 'period', placeholder: '2018-2021', dir: 'ltr' },
+                      { name: 'description', placeholder: t('description') },
                     ].map(field => (
                       <div key={field.name}>
                         <input type="text" name={field.name} value={newExperience[field.name]}
                           onChange={(e) => setNewExperience(p => ({ ...p, [field.name]: e.target.value }))}
-                          className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
+                          dir={field.dir || (isRtl ? 'rtl' : 'ltr')}
+                          className={`w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] ${field.dir === 'ltr' && isRtl ? 'text-right' : ''}`}
                           placeholder={field.placeholder} />
                       </div>
                     ))}
@@ -488,7 +502,7 @@ const CoachSettings = () => {
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="button" onClick={addExperience}
                     className="mt-4 flex items-center gap-2 text-white bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] px-5 py-3 rounded-xl font-medium text-sm">
-                    <FaPlus />Add Experience
+                    <FaPlus />{t('addExperience')}
                   </motion.button>
                 </div>
               </motion.div>
@@ -497,7 +511,7 @@ const CoachSettings = () => {
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-gray-600 transition-all">
                 <h2 className="text-xl font-bold mb-5 pb-4 border-b border-gray-700/50 flex items-center gap-3">
-                  <FiAward className="text-yellow-400" />Certifications
+                  <FiAward className="text-yellow-400" />{t('certifications')}
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
@@ -508,11 +522,11 @@ const CoachSettings = () => {
                         <FaTrophy size={14} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-white text-sm">{cert.name}</h4>
-                        <div className="text-gray-400 text-xs">Year: {cert.year}</div>
+                        <h4 className="font-bold text-white text-sm" dir="ltr" style={isRtl ? { textAlign: 'right' } : {}}>{cert.name}</h4>
+                        <div className="text-gray-400 text-xs">{t('year')}: {toWestern(cert.year)}</div>
                       </div>
                       <button type="button" onClick={() => setCertifications(prev => prev.filter((_, i) => i !== index))}
-                        className="absolute top-2 right-2 text-red-400 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-900/30 rounded-lg">
+                        className={`absolute top-2 text-red-400 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-900/30 rounded-lg ${isRtl ? 'left-2' : 'right-2'}`}>
                         <FaTrash size={12} />
                       </button>
                     </motion.div>
@@ -520,21 +534,22 @@ const CoachSettings = () => {
                 </div>
 
                 <div className="border-t border-gray-700/50 pt-5">
-                  <h3 className="text-lg font-semibold mb-4">Add Certification</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('addCertification')}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input type="text" value={newCertification.name}
                       onChange={(e) => setNewCertification(p => ({ ...p, name: e.target.value }))}
-                      className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
-                      placeholder="UEFA Pro License" />
+                      dir="ltr"
+                      className={`w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] ${isRtl ? 'text-right' : ''}`}
+                      placeholder={t('name')} />
                     <input type="text" value={newCertification.year}
                       onChange={(e) => setNewCertification(p => ({ ...p, year: e.target.value }))}
                       className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
-                      placeholder="2018" />
+                      placeholder={t('year')} />
                   </div>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="button" onClick={addCertification}
                     className="mt-4 flex items-center gap-2 text-white bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] px-5 py-3 rounded-xl font-medium text-sm">
-                    <FaPlus />Add Certification
+                    <FaPlus />{t('addCertification')}
                   </motion.button>
                 </div>
               </motion.div>
@@ -542,15 +557,15 @@ const CoachSettings = () => {
               {/* Submit */}
               <motion.div whileHover={{ y: -4 }}
                 className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-400 text-sm">* All changes will be saved to your profile</p>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <p className="text-gray-400 text-sm text-center sm:text-left">{t('saveChangesWarning')}</p>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     type="submit" disabled={isSubmitting}
-                    className="bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white px-8 py-4 rounded-xl font-bold flex items-center gap-3 text-lg disabled:opacity-70">
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white px-8 py-4 rounded-xl font-bold flex justify-center items-center gap-3 text-lg disabled:opacity-70">
                     {isSubmitting ? (
-                      <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Saving...</>
+                      <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{t('saving')}</>
                     ) : (
-                      <><FiSave className="text-xl" />Save All Changes</>
+                      <><FiSave className="text-xl" />{t('saveAllChanges')}</>
                     )}
                   </motion.button>
                 </div>

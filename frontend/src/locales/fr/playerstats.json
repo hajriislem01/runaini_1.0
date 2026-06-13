@@ -1,0 +1,66 @@
+{
+  "header": {
+    "title": "Rapport de Performance",
+    "subtitle": "Évaluation mensuelle · Vue joueur & parent",
+    "exportPdf": "Exporter PDF",
+    "generating": "Génération..."
+  },
+  "tabs": {
+    "report": "Rapport",
+    "progress": "Progression",
+    "history": "Historique"
+  },
+  "empty": {
+    "noReport": "Pas encore de rapport ce mois-ci",
+    "noReportDesc": "Votre coach vous évaluera bientôt",
+    "notEnoughData": "Pas assez de données",
+    "notEnoughDataDesc": "Au moins 2 rapports mensuels sont nécessaires",
+    "noReportsYet": "Pas encore de rapports",
+    "noData": "Pas de données"
+  },
+  "stats": {
+    "vsGroupAvg": "vs moy groupe",
+    "vsLastMonth": "vs mois dernier",
+    "topPct": "Top {{pct}}% du groupe",
+    "playerProfile": "Profil du joueur",
+    "player": "Joueur",
+    "groupAvg": "Moy groupe",
+    "fourPillars": "4 Piliers",
+    "tapToExpand": "Appuyez pour voir les critères",
+    "topStrengths": "Points forts",
+    "toImprove": "À améliorer",
+    "health": "Santé",
+    "fatigue": "Fatigue",
+    "sleep": "Sommeil",
+    "injury": "Blessure",
+    "medCert": "Certif méd",
+    "none": "Aucune",
+    "injured": "Blessé",
+    "valid": "Valide",
+    "invalid": "Invalide",
+    "school": "Scolarité",
+    "grade": "Note",
+    "attendance": "Assiduité",
+    "behaviour": "Comportement",
+    "sessions": "sessions",
+    "monthsProgression": "Progression sur {{count}} mois",
+    "pts": "pts",
+    "coachMessage": "Votre coach",
+    "monthlyEval": "évaluation mensuelle",
+    "monthlyGoal": "Objectif mensuel",
+    "pillarProgression": "Progression des piliers — {{count}} mois",
+    "monthTrends": "Tendances sur {{count}} mois",
+    "profileComparison": "Comparaison de profil",
+    "reportsCount": "{{count}} rapport mensuel",
+    "reportsCountPlural": "{{count}} rapports mensuels",
+    "tapToSeeDetails": "Appuyez sur un mois pour voir les détails"
+  },
+  "categories": {
+    "technical": "Technique",
+    "tactical": "Tactique",
+    "physical": "Physique",
+    "mental": "Mental",
+    "health": "Santé",
+    "school": "Scolarité"
+  }
+}

@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiPlus, FiCheck } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const GroupModal = ({
   showGroupModal, setShowGroupModal, resetGroupForm, handleGroupSubmit,
   isEditingGroup, groupForm, setGroupForm, coaches, addSubgroup, 
   removeSubgroup, handleSubgroupChange, apiError
 }) => {
+  const { t } = useTranslation('playermanagement');
+
   if (!showGroupModal) return null;
 
   return (
@@ -28,7 +31,7 @@ const GroupModal = ({
           <div className="p-5 md:p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] bg-clip-text text-transparent">
-                {isEditingGroup ? 'Edit Group' : 'Create Group'}
+                {isEditingGroup ? t('form.editGroupTitle', 'Edit Group') : t('form.createGroupTitle', 'Create Group')}
               </h2>
               <motion.button
                 whileHover={{ rotate: 90, scale: 1.1 }}
@@ -52,7 +55,9 @@ const GroupModal = ({
                 </motion.div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Group Name *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('form.groupNameLabel', 'Group Name *')}
+                </label>
                 <input
                   type="text"
                   value={groupForm.name}
@@ -63,18 +68,18 @@ const GroupModal = ({
                 />
               </div>
 
-
-
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">Sub-groups</label>
+                  <label className="block text-sm font-medium text-gray-300">
+                    {t('form.subgroupsLabel', 'Subgroups')}
+                  </label>
                   <button
                     type="button"
                     onClick={addSubgroup}
                     className="text-sm text-[#80a8ff] hover:text-[#00d0cb] flex items-center gap-1"
                   >
                     <FiPlus size={14} />
-                    Add sub-group
+                    {t('form.addSubgroup', 'Add sub-group')}
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -85,21 +90,23 @@ const GroupModal = ({
                         value={sg}
                         onChange={(e) => handleSubgroupChange(index, e.target.value)}
                         className="flex-1 px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
-                        placeholder={`Sub-group ${index + 1}`}
+                        placeholder={`${t('form.subgroupLabel', 'Sub-group')} ${index + 1}`}
                       />
                       <button
                         type="button"
                         onClick={() => removeSubgroup(index)}
                         disabled={groupForm.subgroups.length <= 1}
                         className="p-2.5 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Remove sub-group"
+                        title={t('actions.delete', 'Remove')}
                       >
                         <FiX size={18} />
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 mt-1">Add nested sub-groups inside this group.</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {t('form.subgroupsHelp', 'Add nested sub-groups inside this group.')}
+                </p>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50">
@@ -110,7 +117,7 @@ const GroupModal = ({
                   onClick={() => { setShowGroupModal(false); resetGroupForm(); }}
                   className="px-5 py-2.5 bg-gray-800/50 text-gray-300 rounded-xl font-medium hover:bg-gray-700/50 transition-all border border-gray-700/50"
                 >
-                  Cancel
+                  {t('actions.cancel', 'Cancel')}
                 </motion.button>
                 <motion.button
                   type="submit"
@@ -119,7 +126,7 @@ const GroupModal = ({
                   className="px-5 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:from-[#00d0cb] hover:to-[#4fb0ff] text-white rounded-xl font-medium transition-all flex items-center gap-2"
                 >
                   <FiCheck />
-                  {isEditingGroup ? 'Save Changes' : 'Create Group'}
+                  {isEditingGroup ? t('actions.save', 'Save Changes') : t('actions.createGroup', 'Create Group')}
                 </motion.button>
               </div>
             </form>

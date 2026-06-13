@@ -1,0 +1,47 @@
+{
+  "header": {
+    "title": "Paramètres",
+    "subtitle": "Gérez le profil de votre compte et vos préférences de sécurité."
+  },
+  "profile": {
+    "title": "Détails du profil",
+    "fullName": "Nom complet",
+    "phone": "Téléphone",
+    "location": "Localisation",
+    "systemInfo": "Infos Système",
+    "position": "Position",
+    "group": "Groupe",
+    "height": "Taille (cm)",
+    "weight": "Poids (kg)",
+    "bio": "Bio / Notes",
+    "bioPlaceholder": "Parlez-nous de vous...",
+    "choosePhoto": "Choisir une nouvelle photo",
+    "confirmPhoto": "Confirmer la photo",
+    "cancel": "Annuler",
+    "saving": "Enregistrement...",
+    "saveChanges": "Enregistrer les modifications",
+    "photoSizeWarning": "JPG ou PNG. Taille max 5MB.",
+    "photoMaxSize": "La photo doit faire moins de 5MB"
+  },
+  "security": {
+    "title": "Sécurité & Mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "minChars": "8 caractères minimum requis.",
+    "updating": "Mise à jour...",
+    "updatePassword": "Mettre à jour"
+  },
+  "messages": {
+    "photoUpdated": "Photo de profil mise à jour avec succès",
+    "photoFailed": "Échec de la mise à jour de la photo",
+    "nameRequired": "Le nom complet est requis",
+    "profileUpdated": "Profil mis à jour avec succès",
+    "profileFailed": "Échec de la mise à jour du profil",
+    "pwdRequired": "Le mot de passe actuel et le nouveau sont requis",
+    "pwdMismatch": "Les mots de passe ne correspondent pas",
+    "pwdTooShort": "Le nouveau mot de passe doit comporter au moins 8 caractères",
+    "pwdChanged": "Mot de passe modifié avec succès",
+    "pwdFailed": "Échec de la modification du mot de passe"
+  }
+}

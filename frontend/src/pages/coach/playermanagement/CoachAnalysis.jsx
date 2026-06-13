@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiActivity, FiAlertTriangle, FiCheckCircle, FiInfo, FiChevronDown, FiChevronUp, FiCalendar, FiCheck, FiTag, FiEdit3, FiUsers } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
+import { FiX, FiActivity, FiAlertTriangle, FiCheckCircle, FiInfo, FiChevronDown, FiCalendar, FiCheck, FiTag, FiEdit3, FiUsers } from 'react-icons/fi';
 import { FaStar, FaRegStar, FaHeartbeat, FaGraduationCap } from 'react-icons/fa';
 import {
   Chart as ChartJS,
@@ -19,48 +20,49 @@ ChartJS.register(
   Title, Tooltip, Legend
 );
 
-// ─── KPI Groups ────────────────────────────────────────────────────────────────
+// ─── KPI Groups ─────────────────────────────────────────────────────────────────
+// keys match translation keys: t('kpi_' + kpi.key)
 const KPI_GROUPS = {
   'Technical': [
-    { key: 'finishing',    label: 'Finishing',       pillar: 'technical' },
-    { key: 'dribbling',    label: 'Dribbling',       pillar: 'technical' },
-    { key: 'ball_control', label: 'Ball control',    pillar: 'technical' },
-    { key: 'shooting',     label: 'Shooting',        pillar: 'technical' },
-    { key: 'passing',      label: 'Passing',         pillar: 'technical' },
-    { key: 'heading',      label: 'Heading',         pillar: 'technical' },
-    { key: 'tackling',     label: 'Tackling',        pillar: 'technical' },
+    { key: 'finishing',    pillar: 'technical' },
+    { key: 'dribbling',    pillar: 'technical' },
+    { key: 'ball_control', pillar: 'technical' },
+    { key: 'shooting',     pillar: 'technical' },
+    { key: 'passing',      pillar: 'technical' },
+    { key: 'heading',      pillar: 'technical' },
+    { key: 'tackling',     pillar: 'technical' },
   ],
   'Tactical': [
-    { key: 'positioning',  label: 'Positioning',     pillar: 'tactical' },
-    { key: 'game_reading', label: 'Game reading',    pillar: 'tactical' },
-    { key: 'pressing',     label: 'Pressing',        pillar: 'tactical' },
-    { key: 'decision',     label: 'Decision making', pillar: 'tactical' },
-    { key: 'off_ball',     label: 'Off-the-ball',    pillar: 'tactical' },
-    { key: 'transition',   label: 'Transition',      pillar: 'tactical' },
+    { key: 'positioning',  pillar: 'tactical' },
+    { key: 'game_reading', pillar: 'tactical' },
+    { key: 'pressing',     pillar: 'tactical' },
+    { key: 'decision',     pillar: 'tactical' },
+    { key: 'off_ball',     pillar: 'tactical' },
+    { key: 'transition',   pillar: 'tactical' },
   ],
   'Physical': [
-    { key: 'speed',        label: 'Speed',           pillar: 'physical' },
-    { key: 'endurance',    label: 'Endurance',       pillar: 'physical' },
-    { key: 'strength',     label: 'Strength',        pillar: 'physical' },
-    { key: 'agility',      label: 'Agility',         pillar: 'physical' },
-    { key: 'explosivity',  label: 'Explosivity',     pillar: 'physical' },
+    { key: 'speed',        pillar: 'physical' },
+    { key: 'endurance',    pillar: 'physical' },
+    { key: 'strength',     pillar: 'physical' },
+    { key: 'agility',      pillar: 'physical' },
+    { key: 'explosivity',  pillar: 'physical' },
   ],
   'Mental': [
-    { key: 'attitude',      label: 'Attitude',       pillar: 'mental' },
-    { key: 'resilience',    label: 'Resilience',     pillar: 'mental' },
-    { key: 'leadership',    label: 'Leadership',     pillar: 'mental' },
-    { key: 'concentration', label: 'Concentration',  pillar: 'mental' },
-    { key: 'confidence',    label: 'Confidence',     pillar: 'mental' },
+    { key: 'attitude',      pillar: 'mental' },
+    { key: 'resilience',    pillar: 'mental' },
+    { key: 'leadership',    pillar: 'mental' },
+    { key: 'concentration', pillar: 'mental' },
+    { key: 'confidence',    pillar: 'mental' },
   ],
   'Health': [
-    { key: 'fatigue',      label: 'Fatigue (inv)',   pillar: 'health' },
-    { key: 'sleep',        label: 'Sleep quality',   pillar: 'health' },
-    { key: 'injury_risk',  label: 'Injury risk (inv)',pillar: 'health' },
+    { key: 'fatigue',      pillar: 'health' },
+    { key: 'sleep',        pillar: 'health' },
+    { key: 'injury_risk',  pillar: 'health' },
   ],
   'Academic': [
-    { key: 'school_grade', label: 'School grade',   pillar: 'academic' },
-    { key: 'school_att',   label: 'Attendance %',   pillar: 'academic' },
-    { key: 'behaviour',    label: 'Behaviour',      pillar: 'academic' },
+    { key: 'school_grade', pillar: 'academic' },
+    { key: 'school_att',   pillar: 'academic' },
+    { key: 'behaviour',    pillar: 'academic' },
   ],
 };
 
@@ -79,7 +81,7 @@ const GROUP_COLORS = {
 const fetchKpiAnalysis = async (playerId, months) => {
   try {
     const res = await API.get('reports/kpi-analysis/', { params: { player: playerId, months } });
-    return res.data; // { player, reports: [...], group_avg: [...] }
+    return res.data;
   } catch {
     return { reports: [], group_avg: [] };
   }
@@ -108,49 +110,55 @@ const getKpiValue = (report, kpiKey) => {
 };
 
 // ─── Smart Alert engine ────────────────────────────────────────────────────────
-const computeAlerts = (playerId, reports, playerName) => {
+// Returns raw data — labels are applied in render using t()
+const computeAlerts = (playerId, reports) => {
   if (!reports || reports.length < 2) return [];
   const alerts = [];
-  const latest  = reports[reports.length - 1];
-  const prev    = reports[reports.length - 2];
-  const attPct  = latest.attendance_total > 0
+  const latest = reports[reports.length - 1];
+  const prev   = reports[reports.length - 2];
+  const attPct = latest.attendance_total > 0
     ? (latest.attendance_present / latest.attendance_total) * 100 : 100;
 
   if (latest.overall_score < prev.overall_score - 1.0)
-    alerts.push({ type: 'danger', icon: 'regression',
-      title: 'Performance regression',
-      msg: `Score dropped ${(prev.overall_score - latest.overall_score).toFixed(1)} pts vs last month.` });
+    alerts.push({ icon: 'regression', type: 'danger',
+      titleKey: 'alertRegression_title',
+      msgKey:   'alertRegression_msg',
+      msgVars:  { delta: (prev.overall_score - latest.overall_score).toFixed(1) } });
 
   if (attPct < 75)
-    alerts.push({ type: 'warning', icon: 'attendance',
-      title: 'Low attendance',
-      msg: `Only ${Math.round(attPct)}% this month (${latest.attendance_present}/${latest.attendance_total} sessions).` });
+    alerts.push({ icon: 'attendance', type: 'warning',
+      titleKey: 'alertAttendance_title',
+      msgKey:   'alertAttendance_msg',
+      msgVars:  { pct: Math.round(attPct), present: latest.attendance_present, total: latest.attendance_total } });
 
   const fatigue3 = reports.slice(-3).every(r => r.fatigue_level >= 4);
   if (fatigue3)
-    alerts.push({ type: 'warning', icon: 'fatigue',
-      title: 'Chronic fatigue risk',
-      msg: 'Fatigue level ≥ 4 for 3 consecutive months — consider reducing training load.' });
+    alerts.push({ icon: 'fatigue', type: 'warning',
+      titleKey: 'alertFatigue_title',
+      msgKey:   'alertFatigue_msg',
+      msgVars:  {} });
 
   if (latest.is_injured)
-    alerts.push({ type: 'danger', icon: 'injury',
-      title: 'Currently injured',
-      msg: 'Player is marked as injured this month.' });
+    alerts.push({ icon: 'injury', type: 'danger',
+      titleKey: 'alertInjury_title',
+      msgKey:   'alertInjury_msg',
+      msgVars:  {} });
 
   if (latest.school_grade_avg && latest.school_grade_avg < 10)
-    alerts.push({ type: 'purple', icon: 'academic',
-      title: 'Academic alert',
-      msg: `School average is ${latest.school_grade_avg.toFixed(1)}/20 — below passing threshold.` });
+    alerts.push({ icon: 'academic', type: 'purple',
+      titleKey: 'alertAcademic_title',
+      msgKey:   'alertAcademic_msg',
+      msgVars:  { avg: latest.school_grade_avg.toFixed(1) } });
 
   if (latest.overall_score > prev.overall_score + 0.8)
-    alerts.push({ type: 'success', icon: 'progress',
-      title: 'Strong progress',
-      msg: `+${(latest.overall_score - prev.overall_score).toFixed(1)} pts vs last month. Keep it up!` });
+    alerts.push({ icon: 'progress', type: 'success',
+      titleKey: 'alertProgress_title',
+      msgKey:   'alertProgress_msg',
+      msgVars:  { delta: (latest.overall_score - prev.overall_score).toFixed(1) } });
 
   return alerts;
 };
 
-// ─── Alert badge ───────────────────────────────────────────────────────────────
 const ALERT_STYLES = {
   danger:  { bg:'bg-red-500/10',    border:'border-red-500/30',    icon:'text-red-400',    title:'text-red-300',    text:'text-red-200' },
   warning: { bg:'bg-amber-500/10',  border:'border-amber-500/30',  icon:'text-amber-400',  title:'text-amber-300',  text:'text-amber-200' },
@@ -163,19 +171,24 @@ const AlertIcon = ({ icon, className }) => {
   if (icon === 'regression' || icon === 'injury') return <FiAlertTriangle className={cls} size={16}/>;
   if (icon === 'progress')   return <FiCheckCircle className={cls} size={16}/>;
   if (icon === 'academic')   return <FaGraduationCap className={cls} style={{fontSize:16}}/>;
-  if (icon === 'fatigue' || icon === 'attendance') return <FiInfo className={cls} size={16}/>;
   return <FiInfo className={cls} size={16}/>;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 const CoachAnalysis = () => {
+  const { t, i18n } = useTranslation('coachplayers');
+  const isRtl = i18n.language === 'ar';
+
+  // Helper: get translated label for a KPI key
+  const kpiLabel = (key) => t('kpi_' + key) || key;
+
   const [players,       setPlayers]       = useState([]);
   const [groups,        setGroups]        = useState([]);
   const [isLoading,     setIsLoading]     = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('');
   const [monthsRange,   setMonthsRange]   = useState(6);
   const [progType,      setProgType]      = useState('line');
-  const [activeView,    setActiveView]    = useState('advanced'); // 'simple' | 'advanced'
+  const [activeView,    setActiveView]    = useState('advanced');
 
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [selectedKpis,    setSelectedKpis]    = useState(['finishing','dribbling','speed','positioning','attitude','school_grade']);
@@ -191,7 +204,6 @@ const CoachAnalysis = () => {
   const [showGroupDropdown,    setShowGroupDropdown]    = useState(false);
   const [showNoteTypeDropdown, setShowNoteTypeDropdown] = useState(false);
 
-  // Close menus on click outside
   useEffect(() => {
     const closeAll = () => {
       setShowRangeDropdown(false);
@@ -208,7 +220,6 @@ const CoachAnalysis = () => {
     success: { bg:'bg-green-500/10', border:'border-green-500/30', title:'text-green-300', text:'text-green-200' },
   };
 
-  // Load players & groups
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
@@ -223,14 +234,13 @@ const CoachAnalysis = () => {
           setReportsData({ [first.id]: data.reports });
           setGroupAvgData(data.group_avg);
         }
-      } catch { toast.error('Failed to load data'); }
+      } catch { toast.error(t('failedToLoad')); }
       finally   { setIsLoading(false); }
     };
     load();
   // eslint-disable-next-line
   }, []);
 
-  // Re-fetch when monthsRange changes
   useEffect(() => {
     if (selectedPlayers.length === 0) return;
     const reload = async () => {
@@ -285,27 +295,27 @@ const CoachAnalysis = () => {
   const toggleKpi = (k) => {
     if (selectedKpis.includes(k)) setSelectedKpis(prev => prev.filter(x => x !== k));
     else if (selectedKpis.length < 8) setSelectedKpis(prev => [...prev, k]);
-    else toast.error('Max 8 KPIs');
+    else toast.error(t('maxKpis'));
   };
 
   const filteredPlayers = useMemo(() =>
     players.filter(p => !selectedGroup || p.group?.id === parseInt(selectedGroup))
   , [players, selectedGroup]);
 
-  // ── All alerts for selected players ─────────────────────────────────────────
   const allAlerts = useMemo(() => {
     const result = [];
     selectedPlayers.forEach(pid => {
-      const alerts = computeAlerts(pid, reportsData[pid], getPlayerName(pid));
+      const alerts = computeAlerts(pid, reportsData[pid]);
       alerts.forEach(a => result.push({ ...a, playerName: getPlayerName(pid), pid }));
     });
     return result;
+  // eslint-disable-next-line
   }, [selectedPlayers, reportsData]);
 
-  // ── Radar ────────────────────────────────────────────────────────────────────
+  // ── Radar ─────────────────────────────────────────────────────────────────────
   const radarData = useMemo(() => {
     if (!selectedPlayers.length || !selectedKpis.length) return null;
-    const labels = selectedKpis.map(k => Object.values(KPI_GROUPS).flat().find(x => x.key === k)?.label || k);
+    const labels = selectedKpis.map(k => kpiLabel(k));
     const datasets = selectedPlayers.map((pid, i) => ({
       label: getPlayerName(pid),
       data:  selectedKpis.map(k => getKpiValue(getLatest(pid), k)),
@@ -315,21 +325,21 @@ const CoachAnalysis = () => {
       pointBackgroundColor: KPI_COLORS[i % KPI_COLORS.length],
     }));
     datasets.push({
-      label:'Group avg', data: selectedKpis.map(k => getGroupKpiAvg(k)),
+      label: t('groupAvg'),
+      data: selectedKpis.map(k => getGroupKpiAvg(k)),
       borderColor:'rgba(156,163,175,0.5)', backgroundColor:'rgba(156,163,175,0.06)',
       borderWidth:1.5, borderDash:[4,4], pointRadius:2,
       pointBackgroundColor:'rgba(156,163,175,0.5)',
     });
     return { labels, datasets };
   // eslint-disable-next-line
-  }, [selectedPlayers, selectedKpis, reportsData, groupAvgData]);
+  }, [selectedPlayers, selectedKpis, reportsData, groupAvgData, i18n.language]);
 
-  // ── Bar (current month) ──────────────────────────────────────────────────────
+  // ── Bar ───────────────────────────────────────────────────────────────────────
   const barData = useMemo(() => {
     if (!selectedPlayers.length || !selectedKpis.length) return null;
-    const labels = selectedKpis.map(k => Object.values(KPI_GROUPS).flat().find(x => x.key === k)?.label || k);
     return {
-      labels,
+      labels: selectedKpis.map(k => kpiLabel(k)),
       datasets: selectedPlayers.map((pid, i) => ({
         label: getPlayerName(pid),
         data:  selectedKpis.map(k => parseFloat(getKpiValue(getLatest(pid), k).toFixed(1))),
@@ -337,18 +347,19 @@ const CoachAnalysis = () => {
         borderRadius: 4,
       })),
     };
-  }, [selectedPlayers, selectedKpis, reportsData]);
+  // eslint-disable-next-line
+  }, [selectedPlayers, selectedKpis, reportsData, i18n.language]);
 
-  // ── Progression ──────────────────────────────────────────────────────────────
+  // ── Progression ───────────────────────────────────────────────────────────────
   const progData = useMemo(() => {
     if (!selectedPlayers.length || !selectedKpis.length) return null;
-    const months   = (reportsData[selectedPlayers[0]] || []).map(r => r.month);
+    const months = (reportsData[selectedPlayers[0]] || []).map(r => r.month);
     const datasets = [];
     selectedPlayers.forEach((pid, pi) =>
       selectedKpis.forEach((kk, ki) => {
         const rpts  = reportsData[pid] || [];
         const color = selectedPlayers.length > 1 ? KPI_COLORS[pi % KPI_COLORS.length] : KPI_COLORS[ki % KPI_COLORS.length];
-        const label = Object.values(KPI_GROUPS).flat().find(x => x.key === kk)?.label || kk;
+        const label = kpiLabel(kk);
         datasets.push({
           label: selectedPlayers.length > 1 ? `${getPlayerName(pid).split(' ')[0]} – ${label}` : label,
           data: rpts.map(r => parseFloat(getKpiValue(r, kk).toFixed(1))),
@@ -360,19 +371,24 @@ const CoachAnalysis = () => {
       })
     );
     datasets.push({
-      label:'Group avg', data: groupAvgData.map(r => r.avg_overall || 0),
+      label: t('groupAvg'),
+      data: groupAvgData.map(r => r.avg_overall || 0),
       borderColor:'rgba(156,163,175,0.4)', backgroundColor:'transparent',
       borderDash:[5,5], tension:0.4, borderWidth:1.5, pointRadius:2,
       pointBackgroundColor:'rgba(156,163,175,0.4)',
     });
     return { labels: months, datasets };
-  }, [selectedPlayers, selectedKpis, reportsData, groupAvgData, progType]);
+  // eslint-disable-next-line
+  }, [selectedPlayers, selectedKpis, reportsData, groupAvgData, progType, i18n.language]);
 
-  // ── Pillar breakdown ─────────────────────────────────────────────────────────
+  // ── Pillar breakdown ──────────────────────────────────────────────────────────
   const pillarData = useMemo(() => {
     if (!selectedPlayers.length) return null;
     return {
-      labels: ['Technical','Tactical','Physical','Mental','Health','Academic'],
+      labels: [
+        t('kpiGroup_Technical'), t('kpiGroup_Tactical'), t('kpiGroup_Physical'),
+        t('kpiGroup_Mental'), t('kpiGroup_Health'), t('kpiGroup_Academic'),
+      ],
       datasets: [
         ...selectedPlayers.map((pid, i) => {
           const r = getLatest(pid);
@@ -392,7 +408,7 @@ const CoachAnalysis = () => {
           };
         }),
         {
-          label:'Group avg',
+          label: t('groupAvg'),
           data: groupAvgData.length > 0
             ? (() => { const g = groupAvgData[groupAvgData.length-1];
                 return [g.avg_technical||0,g.avg_tactical||0,g.avg_physical||0,g.avg_mental||0,g.avg_overall||0,g.avg_overall||0]; })()
@@ -401,7 +417,8 @@ const CoachAnalysis = () => {
         },
       ],
     };
-  }, [selectedPlayers, reportsData, groupAvgData]);
+  // eslint-disable-next-line
+  }, [selectedPlayers, reportsData, groupAvgData, i18n.language]);
 
   const chartOpts = {
     responsive:true, maintainAspectRatio:false,
@@ -424,7 +441,7 @@ const CoachAnalysis = () => {
   };
 
   const addNote = () => {
-    if (!noteTitle.trim() || !noteText.trim()) { toast.error('Title and note required'); return; }
+    if (!noteTitle.trim() || !noteText.trim()) { toast.error(t('noteTitleRequired')); return; }
     setNotes(prev => [{ id:Date.now(), type:noteType, title:noteTitle, text:noteText, date:format(new Date(),'MMM d, yyyy') }, ...prev]);
     setNoteTitle(''); setNoteText('');
   };
@@ -432,14 +449,14 @@ const CoachAnalysis = () => {
   const iV = { hidden:{ y:16, opacity:0 }, visible:{ y:0, opacity:1 } };
   const cV = { hidden:{ opacity:0 }, visible:{ opacity:1, transition:{ staggerChildren:0.07 } } };
 
-  // ── Simple Quick View ────────────────────────────────────────────────────────
+  // ── Simple Quick View ─────────────────────────────────────────────────────────
   const SimpleView = () => (
     <motion.div variants={iV} className="space-y-3">
       {filteredPlayers.length === 0 && (
         <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50">
           <FiUsers className="mx-auto text-4xl text-gray-600 mb-3"/>
-          <p className="text-gray-300 font-medium">No players found</p>
-          <p className="text-gray-500 text-sm mt-1">Add players to your academy to see their overview here.</p>
+          <p className="text-gray-300 font-medium">{t('noPlayersFoundKpi')}</p>
+          <p className="text-gray-500 text-sm mt-1">{t('addPlayersToSee')}</p>
         </div>
       )}
       {filteredPlayers.map((p, idx) => {
@@ -447,26 +464,20 @@ const CoachAnalysis = () => {
         const r     = reports[reports.length - 1] || null;
         const prev  = reports[reports.length - 2] || null;
         const delta = r && prev ? (r.overall_score - prev.overall_score) : 0;
-        const alerts= computeAlerts(p.id, reports, p.full_name);
+        const alerts= computeAlerts(p.id, reports);
         const danger = alerts.filter(a => a.type === 'danger').length;
         const warn   = alerts.filter(a => a.type === 'warning').length;
-        const attPct = r ? Math.round((r.attendance_present / r.attendance_total) * 100) : 0;
+        const attPct = r && r.attendance_total > 0 ? Math.round((r.attendance_present / r.attendance_total) * 100) : 0;
         const color  = KPI_COLORS[idx % KPI_COLORS.length];
 
         return (
           <div key={p.id} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 p-4">
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className={`flex items-center gap-4 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 relative overflow-hidden"
                 style={{ background: color + '50', border: `1.5px solid ${color}` }}>
                 {p.profile_picture || p.photo_url ? (
-                  <img 
-                    src={p.profile_picture || p.photo_url} 
-                    alt="" 
-                    className="absolute inset-0 w-full h-full object-cover z-10"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                  <img src={p.profile_picture || p.photo_url} alt="" className="absolute inset-0 w-full h-full object-cover z-10"
+                    onError={(e) => { e.target.style.display = 'none'; }}/>
                 ) : null}
                 <span className="relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
               </div>
@@ -475,65 +486,59 @@ const CoachAnalysis = () => {
                 <div className="text-xs text-gray-500">{p.position} · {p.group?.name || '—'}</div>
               </div>
 
-              {/* Overall score */}
               <div className="text-center">
                 <div className="text-2xl font-bold" style={{ color }}>{r?.overall_score?.toFixed(1) || '—'}</div>
-                <div className="text-xs text-gray-500">Overall</div>
+                <div className="text-xs text-gray-500">{t('overall')}</div>
               </div>
 
-              {/* Trend */}
               <div className={`text-center px-3 py-1 rounded-xl text-sm font-bold ${
                 delta > 0 ? 'bg-green-500/20 text-green-400' :
                 delta < 0 ? 'bg-red-500/20 text-red-400' : 'bg-gray-700/50 text-gray-400'
               }`}>
-                {delta > 0 ? `↑ +${delta.toFixed(1)}` : delta < 0 ? `↓ ${delta.toFixed(1)}` : '→ Stable'}
+                {delta > 0 ? `↑ +${delta.toFixed(1)}` : delta < 0 ? `↓ ${delta.toFixed(1)}` : t('stable')}
               </div>
 
-              {/* Attendance */}
               <div className="text-center">
                 <div className={`text-lg font-bold ${!r ? 'text-gray-500' : attPct >= 80 ? 'text-green-400' : attPct >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
                   {r ? `${attPct}%` : '—'}
                 </div>
-                <div className="text-xs text-gray-500">Attendance</div>
+                <div className="text-xs text-gray-500">{t('attendance')}</div>
               </div>
 
-              {/* School grade */}
               <div className="text-center">
                 <div className={`text-lg font-bold ${
                   (r?.school_grade_avg||0) >= 14 ? 'text-green-400' :
                   (r?.school_grade_avg||0) >= 10 ? 'text-amber-400' : 'text-red-400'
                 }`}>{r?.school_grade_avg ? r.school_grade_avg.toFixed(1) : '—'}</div>
-                <div className="text-xs text-gray-500">School /20</div>
+                <div className="text-xs text-gray-500">{t('schoolScore')}</div>
               </div>
 
-              {/* Alerts */}
               <div className="flex gap-2">
                 {!r ? (
-                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-gray-700/50 text-gray-400">No data</span>
+                  <span className="px-2 py-1 rounded-lg text-xs font-bold bg-gray-700/50 text-gray-400">{t('noData')}</span>
                 ) : (
                   <>
                     {danger > 0 && (
                       <span className="px-2 py-1 rounded-lg text-xs font-bold bg-red-500/20 text-red-400">
-                        {danger} alert{danger > 1 ? 's' : ''}
+                        {t('alertCount_other', { count: danger })}
                       </span>
                     )}
                     {warn > 0 && (
                       <span className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400">
-                        {warn} warning{warn > 1 ? 's' : ''}
+                        {t('warningCount_other', { count: warn })}
                       </span>
                     )}
                     {danger === 0 && warn === 0 && (
-                      <span className="px-2 py-1 rounded-lg text-xs font-bold bg-green-500/20 text-green-400">OK</span>
+                      <span className="px-2 py-1 rounded-lg text-xs font-bold bg-green-500/20 text-green-400">{t('ok')}</span>
                     )}
                   </>
                 )}
               </div>
 
-              {/* Go deeper */}
               <button onClick={() => selectPlayerForDeepAnalysis(p)}
                 className="px-3 py-2 rounded-xl text-xs font-medium text-white transition-all hover:opacity-80"
                 style={{ background: `linear-gradient(135deg, ${color}80, ${color})` }}>
-                Deep analysis →
+                {t('deepAnalysis')}
               </button>
             </div>
           </div>
@@ -545,7 +550,8 @@ const CoachAnalysis = () => {
   return (
     <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
       style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
-      initial="hidden" animate="visible" variants={cV}>
+      initial="hidden" animate="visible" variants={cV}
+      dir={isRtl ? 'rtl' : 'ltr'}>
       <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
@@ -554,48 +560,41 @@ const CoachAnalysis = () => {
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-                KPI Analysis
+                {t('kpiPageTitle')}
               </h1>
-              <p className="text-gray-400 mt-1 text-sm">Private workspace — not included in official reports</p>
+              <p className="text-gray-400 mt-1 text-sm">{t('kpiPrivateWorkspace')}</p>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className={`flex items-center gap-3 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
               {/* View toggle */}
               <div className="flex bg-gray-800/50 rounded-xl p-1 border border-gray-700/50 mr-2">
                 <button onClick={() => setActiveView('simple')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeView === 'simple' ? 'bg-[#4fb0ff] text-white' : 'text-gray-400 hover:text-white'}`}>
-                  Quick view
+                  {t('quickView')}
                 </button>
                 <button onClick={() => setActiveView('advanced')}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeView === 'advanced' ? 'bg-[#902bd1] text-white' : 'text-gray-400 hover:text-white'}`}>
-                  KPI Advanced
+                  {t('kpiAdvanced')}
                 </button>
               </div>
 
-              {/* Luxury Range Filter */}
+              {/* Range Filter */}
               <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
-                <button 
-                  onClick={() => { setShowRangeDropdown(!showRangeDropdown); setShowGroupDropdown(false); }}
-                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[140px]"
-                >
+                <button onClick={() => { setShowRangeDropdown(!showRangeDropdown); setShowGroupDropdown(false); }}
+                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[140px]">
                   <FiCalendar className={monthsRange ? 'text-[#00d0cb]' : 'text-gray-500'} />
-                  <span className="font-medium">{monthsRange} months</span>
+                  <span className="font-medium">{t('months', { n: monthsRange })}</span>
                   <FiChevronDown className={`transition-transform duration-200 ${showRangeDropdown ? 'rotate-180' : ''}`} />
                 </button>
-
                 <AnimatePresence>
                   {showRangeDropdown && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
-                    >
+                    <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
+                      className="absolute top-full mt-2 left-0 w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1">
                       {[3, 6, 12, 24].map(range => (
-                        <div key={range} 
-                          onClick={() => { setMonthsRange(range); setShowRangeDropdown(false); }} 
-                          className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group"
-                        >
-                          <span className="font-medium">{range} months</span>
+                        <div key={range} onClick={() => { setMonthsRange(range); setShowRangeDropdown(false); }}
+                          className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
+                          <span className="font-medium">{t('months', { n: range })}</span>
                           {monthsRange === range && <FiCheck className="text-[#00d0cb]" />}
                         </div>
                       ))}
@@ -604,31 +603,28 @@ const CoachAnalysis = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Luxury Group Filter */}
+              {/* Group Filter */}
               <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
-                <button 
-                  onClick={() => { setShowGroupDropdown(!showGroupDropdown); setShowRangeDropdown(false); }}
-                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[150px]"
-                >
+                <button onClick={() => { setShowGroupDropdown(!showGroupDropdown); setShowRangeDropdown(false); }}
+                  className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[150px]">
                   <FiUsers className={selectedGroup ? 'text-[#00d0cb]' : 'text-gray-500'} />
                   <span className="font-medium truncate max-w-[100px]">
-                    {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : 'All groups'}
+                    {selectedGroup ? groups.find(g => Number(g.id) === Number(selectedGroup))?.name : t('allGroups_kpi')}
                   </span>
                   <FiChevronDown className={`transition-transform duration-200 ${showGroupDropdown ? 'rotate-180' : ''}`} />
                 </button>
-
                 <AnimatePresence>
                   {showGroupDropdown && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full mt-2 right-0 w-max min-w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1"
-                    >
-                      <div onClick={() => { setSelectedGroup(''); setShowGroupDropdown(false); }} className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
-                        <span className="font-medium">All groups</span>
+                    <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
+                      className="absolute top-full mt-2 right-0 w-max min-w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1">
+                      <div onClick={() => { setSelectedGroup(''); setShowGroupDropdown(false); }}
+                        className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
+                        <span className="font-medium">{t('allGroups_kpi')}</span>
                         {!selectedGroup && <FiCheck className="text-[#00d0cb]" />}
                       </div>
                       {groups.map(g => (
-                        <div key={g.id} onClick={() => { setSelectedGroup(g.id); setShowGroupDropdown(false); }} className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
+                        <div key={g.id} onClick={() => { setSelectedGroup(g.id); setShowGroupDropdown(false); }}
+                          className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
                           <span className="font-medium">{g.name}</span>
                           {Number(selectedGroup) === Number(g.id) && <FiCheck className="text-[#00d0cb]" />}
                         </div>
@@ -644,10 +640,10 @@ const CoachAnalysis = () => {
         {/* ── SIMPLE VIEW ── */}
         {activeView === 'simple' && (
           <>
-            <motion.div variants={iV} className="mb-4 flex items-center gap-2">
+            <motion.div variants={iV} className={`mb-4 flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <FiActivity className="text-[#4fb0ff]" size={16}/>
-              <span className="text-sm text-gray-300 font-medium">All players — quick snapshot</span>
-              <span className="ml-2 text-xs text-gray-500">Click "Deep analysis" to go to advanced KPI mode</span>
+              <span className="text-sm text-gray-300 font-medium">{t('allPlayersSnapshot')}</span>
+              <span className="ml-2 text-xs text-gray-500">{t('clickDeepAnalysis')}</span>
             </motion.div>
             {isLoading ? (
               <div className="flex justify-center py-16">
@@ -663,9 +659,9 @@ const CoachAnalysis = () => {
             {/* Smart Alerts */}
             {allAlerts.length > 0 && (
               <motion.div variants={iV} className="mb-6">
-                <div className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                <div className={`text-sm font-medium text-gray-300 mb-3 flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <FiAlertTriangle className="text-amber-400" size={15}/>
-                  Smart alerts
+                  {t('smartAlerts')}
                   <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold">
                     {allAlerts.length}
                   </span>
@@ -674,11 +670,11 @@ const CoachAnalysis = () => {
                   {allAlerts.map((a, i) => {
                     const s = ALERT_STYLES[a.type] || ALERT_STYLES.warning;
                     return (
-                      <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${s.bg} ${s.border}`}>
+                      <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${s.bg} ${s.border} ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                         <AlertIcon icon={a.icon} className={s.icon}/>
                         <div>
-                          <div className={`text-xs font-semibold ${s.title}`}>{a.playerName} — {a.title}</div>
-                          <div className={`text-xs mt-0.5 ${s.text}`}>{a.msg}</div>
+                          <div className={`text-xs font-semibold ${s.title}`}>{a.playerName} — {t(a.titleKey)}</div>
+                          <div className={`text-xs mt-0.5 ${s.text}`}>{t(a.msgKey, a.msgVars)}</div>
                         </div>
                       </div>
                     );
@@ -690,17 +686,17 @@ const CoachAnalysis = () => {
             {/* Player selector */}
             <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl p-5 border border-gray-700/50 mb-5">
               <div className="text-sm font-medium text-gray-300 mb-3">
-                Select players <span className="text-gray-500">(click to add/remove)</span>
+                {t('selectPlayersHint')}
               </div>
               <div className="flex flex-wrap gap-3">
                 {isLoading ? [1,2,3,4].map(i => <div key={i} className="h-10 w-32 bg-gray-700/50 rounded-xl animate-pulse"/>) :
                   filteredPlayers.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">No players found. Add players to your academy first.</p>
+                    <p className="text-sm text-gray-500 py-2">{t('noPlayersAddFirst')}</p>
                   ) :
                   filteredPlayers.map((p, idx) => {
                     const sel   = selectedPlayers.includes(p.id);
                     const color = KPI_COLORS[idx % KPI_COLORS.length];
-                    const pAlerts = computeAlerts(p.id, reportsData[p.id] || [], p.full_name);
+                    const pAlerts = computeAlerts(p.id, reportsData[p.id] || []);
                     return (
                       <motion.button key={p.id} whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
                         onClick={() => togglePlayer(p)}
@@ -710,14 +706,8 @@ const CoachAnalysis = () => {
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative overflow-hidden"
                           style={{ background: sel ? color : '#374151' }}>
                           {p.profile_picture || p.photo_url ? (
-                            <img 
-                              src={p.profile_picture || p.photo_url} 
-                              alt="" 
-                              className="absolute inset-0 w-full h-full object-cover z-10"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
+                            <img src={p.profile_picture || p.photo_url} alt="" className="absolute inset-0 w-full h-full object-cover z-10"
+                              onError={(e) => { e.target.style.display = 'none'; }}/>
                           ) : null}
                           <span className="relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
                         </div>
@@ -738,24 +728,26 @@ const CoachAnalysis = () => {
 
             {/* KPI Selector */}
             <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl p-5 border border-gray-700/50 mb-5">
-              <div className="flex items-center justify-between mb-4">
+              <div className={`flex items-center justify-between mb-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <div className="text-sm font-medium text-gray-300">
-                  Select KPIs <span className="text-gray-500">(max 8)</span>
+                  {t('selectKpisHint')}
                   <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#4fb0ff] text-white text-xs font-bold">
                     {selectedKpis.length}
                   </span>
                 </div>
                 <button onClick={() => setSelectedKpis([])} className="text-xs text-gray-500 hover:text-white px-3 py-1 rounded-lg hover:bg-gray-800">
-                  Clear all
+                  {t('clearAll')}
                 </button>
               </div>
               <div className="space-y-4">
                 {Object.entries(KPI_GROUPS).map(([grp, kpis]) => (
                   <div key={grp}>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className={`flex items-center gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                       {grp === 'Health'   && <FaHeartbeat style={{ fontSize:12, color: GROUP_COLORS[grp] }}/>}
                       {grp === 'Academic' && <FaGraduationCap style={{ fontSize:12, color: GROUP_COLORS[grp] }}/>}
-                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: GROUP_COLORS[grp] }}>{grp}</span>
+                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: GROUP_COLORS[grp] }}>
+                        {t('kpiGroup_' + grp)}
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {kpis.map(kpi => {
@@ -768,7 +760,7 @@ const CoachAnalysis = () => {
                               sel ? 'text-white' : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:text-white'}`}
                             style={sel ? { background: color+'22', borderColor: color, color } : {}}>
                             <div className="w-2 h-2 rounded-full" style={{ background: sel ? color : '#4b5563' }}/>
-                            {kpi.label}
+                            {kpiLabel(kpi.key)}
                           </button>
                         );
                       })}
@@ -782,14 +774,15 @@ const CoachAnalysis = () => {
             {selectedPlayers.length > 0 && selectedKpis.length > 0 && (() => {
               const pid  = selectedPlayers[0];
               const r    = getLatest(pid);
-              const kl   = Object.values(KPI_GROUPS).flat().find(k => k.key === selectedKpis[0])?.label || selectedKpis[0];
+              const kl   = kpiLabel(selectedKpis[0]);
               const val  = r ? getKpiValue(r, selectedKpis[0]) : 0;
               return (
-                <motion.div variants={iV} className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-xl mb-5">
+                <motion.div variants={iV} className={`flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/20 rounded-xl mb-5 ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <FaStar className="text-amber-400 flex-shrink-0" style={{ fontSize:14 }}/>
                   <span className="text-sm text-green-300">
-                    <span className="font-semibold">{getPlayerName(pid)}</span>'s {kl} is <span className="font-bold">{val.toFixed(1)}/10</span> —{' '}
-                    {val >= 8 ? 'excellent, above group average 🟢' : val >= 6 ? 'good, close to group average 🟡' : 'needs attention, below group average 🔴'}
+                    <span className="font-semibold">{getPlayerName(pid)}</span>{' '}
+                    {t('insightText', { name: getPlayerName(pid), kpi: kl, val: val.toFixed(1) })}{' '}
+                    {val >= 8 ? t('insightExcellent') : val >= 6 ? t('insightGood') : t('insightNeedsAttention')}
                   </span>
                 </motion.div>
               );
@@ -799,7 +792,7 @@ const CoachAnalysis = () => {
             {(selectedPlayers.length === 0 || selectedKpis.length === 0) && (
               <motion.div variants={iV} className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50 mb-5">
                 <FiActivity className="mx-auto text-4xl text-gray-600 mb-3"/>
-                <p className="text-gray-400">Select players and KPIs above to see the charts</p>
+                <p className="text-gray-400">{t('selectPlayersAndKpis')}</p>
               </motion.div>
             )}
 
@@ -808,10 +801,8 @@ const CoachAnalysis = () => {
               selectedPlayers.every(pid => (reportsData[pid] || []).length === 0) && (
               <motion.div variants={iV} className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50 mb-5">
                 <FiEdit3 className="mx-auto text-4xl text-gray-600 mb-3"/>
-                <p className="text-gray-300 font-medium">No reports yet</p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Fill in monthly player reports to unlock KPI analysis and charts.
-                </p>
+                <p className="text-gray-300 font-medium">{t('noReportsYet')}</p>
+                <p className="text-gray-500 text-sm mt-1">{t('fillReportsToUnlock')}</p>
               </motion.div>
             )}
 
@@ -823,10 +814,10 @@ const CoachAnalysis = () => {
                   <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
                       <div>
-                        <div className="text-sm font-medium text-white">KPI Radar</div>
-                        <div className="text-xs text-gray-400">Player profile vs group avg</div>
+                        <div className="text-sm font-medium text-white">{t('kpiRadar')}</div>
+                        <div className="text-xs text-gray-400">{t('playerVsGroupAvg')}</div>
                       </div>
-                      <div className="flex gap-3 flex-wrap">
+                      <div className={`flex gap-3 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
                         {selectedPlayers.map((pid,i) => (
                           <div key={pid} className="flex items-center gap-1">
                             <div className="w-2 h-2 rounded-full" style={{ background: KPI_COLORS[i%KPI_COLORS.length] }}/>
@@ -835,7 +826,7 @@ const CoachAnalysis = () => {
                         ))}
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-gray-500"/>
-                          <span className="text-xs text-gray-400">Group</span>
+                          <span className="text-xs text-gray-400">{t('groupAvg')}</span>
                         </div>
                       </div>
                     </div>
@@ -846,8 +837,8 @@ const CoachAnalysis = () => {
 
                   <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 overflow-hidden">
                     <div className="p-4 border-b border-gray-700/50">
-                      <div className="text-sm font-medium text-white">KPI Comparison</div>
-                      <div className="text-xs text-gray-400">Current month values</div>
+                      <div className="text-sm font-medium text-white">{t('kpiComparison')}</div>
+                      <div className="text-xs text-gray-400">{t('currentMonthValues')}</div>
                     </div>
                     <div className="p-4" style={{ height:280 }}>
                       {barData && <Bar data={barData} options={chartOpts}/>}
@@ -857,25 +848,25 @@ const CoachAnalysis = () => {
 
                 {/* Progression */}
                 <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 overflow-hidden mb-5">
-                  <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
+                  <div className={`flex items-center justify-between p-4 border-b border-gray-700/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div>
-                      <div className="text-sm font-medium text-white">Progression over time</div>
-                      <div className="text-xs text-gray-400">{monthsRange} months — selected KPIs</div>
+                      <div className="text-sm font-medium text-white">{t('progressionOverTime')}</div>
+                      <div className="text-xs text-gray-400">{t('progressionSubtitle', { months: monthsRange })}</div>
                     </div>
                     <div className="flex gap-2">
-                      {['line','bar'].map(t => (
-                        <button key={t} onClick={() => setProgType(t)}
+                      {['line','bar'].map(tp => (
+                        <button key={tp} onClick={() => setProgType(tp)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize border transition-all ${
-                            progType===t ? 'bg-[#E6F1FB] text-[#185FA5] border-[#B5D4F4]'
-                                        : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:text-white'}`}>{t}</button>
+                            progType===tp ? 'bg-[#E6F1FB] text-[#185FA5] border-[#B5D4F4]'
+                                          : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:text-white'}`}>{tp}</button>
                       ))}
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="flex flex-wrap gap-3 mb-3">
+                    <div className={`flex flex-wrap gap-3 mb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                       {selectedPlayers.map((pid,pi) =>
                         selectedKpis.map((kk,ki) => {
-                          const label = Object.values(KPI_GROUPS).flat().find(x => x.key===kk)?.label||kk;
+                          const label = kpiLabel(kk);
                           const color = selectedPlayers.length>1 ? KPI_COLORS[pi%KPI_COLORS.length] : KPI_COLORS[ki%KPI_COLORS.length];
                           return (
                             <div key={`${pid}-${kk}`} className="flex items-center gap-1">
@@ -897,17 +888,17 @@ const CoachAnalysis = () => {
                   </div>
                 </motion.div>
 
-                {/* Pillar breakdown — NOW includes Health & Academic */}
+                {/* Pillar breakdown */}
                 <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 overflow-hidden mb-5">
                   <div className="p-4 border-b border-gray-700/50">
-                    <div className="text-sm font-medium text-white">Full pillar breakdown vs group</div>
-                    <div className="text-xs text-gray-400 flex items-center gap-3 mt-1">
-                      <span className="text-[#4fb0ff]">Technical</span>
-                      <span className="text-amber-400">Tactical</span>
-                      <span className="text-green-400">Physical</span>
-                      <span className="text-purple-400">Mental</span>
-                      <span className="text-red-400 flex items-center gap-1"><FaHeartbeat style={{fontSize:11}}/>Health</span>
-                      <span className="text-pink-400 flex items-center gap-1"><FaGraduationCap style={{fontSize:11}}/>Academic</span>
+                    <div className="text-sm font-medium text-white">{t('fullPillarBreakdown')}</div>
+                    <div className={`text-xs text-gray-400 flex items-center gap-3 mt-1 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-[#4fb0ff]">{t('kpiGroup_Technical')}</span>
+                      <span className="text-amber-400">{t('kpiGroup_Tactical')}</span>
+                      <span className="text-green-400">{t('kpiGroup_Physical')}</span>
+                      <span className="text-purple-400">{t('kpiGroup_Mental')}</span>
+                      <span className="text-red-400 flex items-center gap-1"><FaHeartbeat style={{fontSize:11}}/>{t('kpiGroup_Health')}</span>
+                      <span className="text-pink-400 flex items-center gap-1"><FaGraduationCap style={{fontSize:11}}/>{t('kpiGroup_Academic')}</span>
                     </div>
                   </div>
                   <div className="p-4" style={{ height:260 }}>
@@ -925,12 +916,14 @@ const CoachAnalysis = () => {
 
         {/* ── Private Notes ── */}
         <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl border border-gray-700/50 relative overflow-visible">
-          <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
+          <div className={`flex items-center justify-between p-4 border-b border-gray-700/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <div>
-              <div className="text-sm font-medium text-white">Private notes</div>
-              <div className="text-xs text-gray-400">Never shown in official reports</div>
+              <div className="text-sm font-medium text-white">{t('privateNotes')}</div>
+              <div className="text-xs text-gray-400">{t('neverShownInReports')}</div>
             </div>
-            <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Private</span>
+            <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              {t('private')}
+            </span>
           </div>
           <div className="p-4 space-y-3">
             <AnimatePresence>
@@ -938,7 +931,7 @@ const CoachAnalysis = () => {
                 const c = noteColors[note.type];
                 return (
                   <motion.div key={note.id} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                    className={`flex items-start gap-3 p-3 rounded-xl border ${c.bg} ${c.border}`}>
+                    className={`flex items-start gap-3 p-3 rounded-xl border ${c.bg} ${c.border} ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
                     <div className="flex-1">
                       <div className={`text-sm font-medium ${c.title}`}>{note.title}</div>
                       <div className={`text-xs mt-1 ${c.text}`}>{note.text}</div>
@@ -951,37 +944,30 @@ const CoachAnalysis = () => {
               })}
             </AnimatePresence>
             <div className="border-t border-gray-700/50 pt-3">
-              <div className="flex gap-2 mb-2">
+              <div className={`flex gap-2 mb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
-                  <button 
-                    type="button"
-                    onClick={() => setShowNoteTypeDropdown(!showNoteTypeDropdown)}
-                    className="px-4 py-2 bg-gray-900/40 border border-gray-700/50 rounded-xl text-white text-xs flex items-center gap-3 hover:border-[#00d0cb]/40 transition-all min-w-[120px] shadow-sm"
-                  >
+                  <button type="button" onClick={() => setShowNoteTypeDropdown(!showNoteTypeDropdown)}
+                    className="px-4 py-2 bg-gray-900/40 border border-gray-700/50 rounded-xl text-white text-xs flex items-center gap-3 hover:border-[#00d0cb]/40 transition-all min-w-[120px] shadow-sm">
                     <FiTag className="text-[#00d0cb]" />
-                    <span className="font-medium truncate">{noteType === 'info' ? 'Note' : noteType === 'warning' ? 'Warning' : 'Positive'}</span>
+                    <span className="font-medium truncate">
+                      {noteType === 'info' ? t('noteTypeNote') : noteType === 'warning' ? t('noteTypeWarning') : t('noteTypePositive')}
+                    </span>
                     <FiChevronDown className={`transition-transform duration-200 ${showNoteTypeDropdown ? 'rotate-180' : ''}`} />
                   </button>
-
                   <AnimatePresence>
                     {showNoteTypeDropdown && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full mt-2 left-0 min-w-full w-[180px] z-[9999] bg-[#0c132a] border border-[#00d0cb]/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden p-2 space-y-1"
-                      >
+                      <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
+                        className="absolute top-full mt-2 left-0 min-w-full w-[180px] z-[9999] bg-[#0c132a] border border-[#00d0cb]/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden p-2 space-y-1">
                         {[
-                          { id: 'info', name: 'Note', icon: <FiInfo className="text-blue-400" /> },
-                          { id: 'warning', name: 'Warning', icon: <FiAlertTriangle className="text-red-400" /> },
-                          { id: 'success', name: 'Positive', icon: <FiCheckCircle className="text-green-400" /> },
+                          { id: 'info',    nameKey: 'noteTypeNote',     icon: <FiInfo className="text-blue-400" /> },
+                          { id: 'warning', nameKey: 'noteTypeWarning',  icon: <FiAlertTriangle className="text-red-400" /> },
+                          { id: 'success', nameKey: 'noteTypePositive', icon: <FiCheckCircle className="text-green-400" /> },
                         ].map(opt => (
-                          <div 
-                            key={opt.id} 
-                            onClick={() => { setNoteType(opt.id); setShowNoteTypeDropdown(false); }} 
-                            className={`px-4 py-3 text-xs text-gray-300 hover:text-white hover:bg-[#00d0cb]/10 rounded-xl cursor-pointer transition-all flex items-center justify-between group ${noteType === opt.id ? 'bg-[#00d0cb]/10 text-[#00d0cb]' : ''}`}
-                          >
+                          <div key={opt.id} onClick={() => { setNoteType(opt.id); setShowNoteTypeDropdown(false); }}
+                            className={`px-4 py-3 text-xs text-gray-300 hover:text-white hover:bg-[#00d0cb]/10 rounded-xl cursor-pointer transition-all flex items-center justify-between ${noteType === opt.id ? 'bg-[#00d0cb]/10 text-[#00d0cb]' : ''}`}>
                             <div className="flex items-center gap-3">
                               {opt.icon}
-                              <span className="font-medium">{opt.name}</span>
+                              <span className="font-medium">{t(opt.nameKey)}</span>
                             </div>
                             {noteType === opt.id && <FiCheck className="text-[#00d0cb]" />}
                           </div>
@@ -990,19 +976,19 @@ const CoachAnalysis = () => {
                     )}
                   </AnimatePresence>
                 </div>
-                <input placeholder="Title..." value={noteTitle} onChange={e => setNoteTitle(e.target.value)}
-                  className="flex-1 px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00d0cb]"/>
+                <input placeholder={t('noteTitlePlaceholder')} value={noteTitle} onChange={e => setNoteTitle(e.target.value)}
+                  className={`flex-1 px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00d0cb] ${isRtl ? 'text-right' : ''}`}/>
               </div>
-              <textarea rows="2" placeholder="Write a private observation..."
+              <textarea rows="2" placeholder={t('writeObservation')}
                 value={noteText} onChange={e => setNoteText(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00d0cb] resize-none mb-2"/>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">Visible only to you</span>
+                className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-white text-xs placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#00d0cb] resize-none mb-2 ${isRtl ? 'text-right' : ''}`}/>
+              <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <span className="text-xs text-gray-500">{t('visibleOnlyToYou')}</span>
                 <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
                   onClick={addNote}
                   className="px-4 py-1.5 text-white rounded-lg text-xs font-medium"
                   style={{ background:'linear-gradient(135deg,#4fb0ff,#00d0cb)' }}>
-                  Add note
+                  {t('addNote')}
                 </motion.button>
               </div>
             </div>

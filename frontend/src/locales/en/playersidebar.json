@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "my_profile": "My Profile",
+    "training": "Training",
+    "matches": "Matches",
+    "stats": "Stats",
+    "settings": "Settings",
+    "logout": "Logout",
+    "teamMember": "Team Member",
+    "playerSpace": "Player Space",
+    "verifiedPlayer": "Verified Player"
+  }
+}

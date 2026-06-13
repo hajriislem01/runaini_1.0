@@ -45,6 +45,34 @@ class AcademyView(APIView):
         academy = request.user.academy
         if not academy:
             return Response({"error": "No academy found"}, status=404)
+
+        user = request.user
+        user_changed = False
+
+        # Handle password change
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if new_password:
+            if not current_password:
+                return Response({"error": "Current password is required"}, status=400)
+            if not user.check_password(current_password):
+                return Response({"error": "Current password is incorrect"}, status=400)
+            if len(new_password) < 8:
+                return Response({"error": "New password must be at least 8 characters long"}, status=400)
+            
+            user.set_password(new_password)
+            user_changed = True
+
+        if user_changed:
+            user.save()
+
+        # If it's only a password update (no other academy fields except maybe current/new password)
+        # Avoid running AcademySerializer on empty data or if only password keys are sent
+        if len(request.data) <= 2 and new_password:
+             serializer = AcademySerializer(academy, context={'request': request})
+             return Response(serializer.data)
+
         serializer = AcademySerializer(
             academy, data=request.data,
             partial=True, context={'request': request}

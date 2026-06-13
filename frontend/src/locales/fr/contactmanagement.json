@@ -1,0 +1,50 @@
+{
+  "title": "Annuaire des Académies",
+  "subtitle": "Trouvez et connectez-vous avec les académies de football sur notre plateforme",
+  "stats": {
+    "total": "Total des Académies",
+    "countries": "Pays",
+    "withContact": "Avec Contact"
+  },
+  "filters": {
+    "title": "Recherche & Filtrage",
+    "country": "Pays",
+    "allCountries": "Tous les pays",
+    "city": "Ville",
+    "placeholderCity": "Entrez le nom de la ville...",
+    "search": "Rechercher",
+    "placeholderSearch": "Rechercher par nom...",
+    "noAcademiesFound": "Aucune académie trouvée",
+    "tryAdjusting": "Essayez d'ajuster vos critères de recherche",
+    "clearFilters": "Effacer les filtres"
+  },
+  "meta": {
+    "showing": "Affichage de {{count}} sur {{total}} académies"
+  },
+  "card": {
+    "contactInfo": "Informations de Contact",
+    "location": "Localisation"
+  },
+  "countries": {
+    "TN": "Tunisie",
+    "DZ": "Algérie",
+    "MA": "Maroc",
+    "LY": "Libye",
+    "EG": "Égypte",
+    "MR": "Mauritanie"
+  },
+  "modal": {
+    "facilities": "Installations",
+    "gym": "Salle de sport",
+    "cafétéria": "Cafétéria",
+    "dormitory": "Dortoir",
+    "staff": "Personnel",
+    "technicalDirector": "Directeur Technique",
+    "headCoach": "Entraîneur Principal",
+    "fitnessCoach": "Préparateur Physique",
+    "philosophy": "Philosophie",
+    "achievements": "Réalisations",
+    "homeKit": "Maillot Domicile",
+    "awayKit": "Maillot Extérieur"
+  }
+}

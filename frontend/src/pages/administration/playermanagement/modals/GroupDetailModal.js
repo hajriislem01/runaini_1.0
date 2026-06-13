@@ -1,12 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiUser, FiUserMinus, FiUserPlus } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const GroupDetailModal = ({
   showGroupDetailModal, setShowGroupDetailModal, viewingGroup,
   viewingGroupPlayers, availablePlayersForViewingGroup,
   handleRemovePlayerFromGroup, handleAddPlayerToGroup
 }) => {
+  const { t, i18n } = useTranslation('playermanagement');
+  const isRtl = i18n.language === 'ar';
+
   if (!showGroupDetailModal || !viewingGroup) return null;
 
   return (
@@ -33,7 +37,7 @@ const GroupDetailModal = ({
                 </h2>
                 {viewingGroup.subgroups && viewingGroup.subgroups.filter(Boolean).length > 0 && (
                   <p className="text-gray-400 mt-1">
-                    Subgroups: {viewingGroup.subgroups
+                    {t('form.subgroupsLabel', 'Subgroups')}: {viewingGroup.subgroups
                       .filter(Boolean)
                       .map(sg => typeof sg === 'object' && sg !== null ? sg.name : sg)
                       .filter(Boolean)
@@ -55,7 +59,9 @@ const GroupDetailModal = ({
               {/* Assigned Players */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-white">Assigned Players ({viewingGroupPlayers.length})</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    {t('form.assignedPlayers', 'Assigned Players')} ({viewingGroupPlayers.length})
+                  </h3>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-600/50 rounded-xl p-4 max-h-64 overflow-y-auto">
                   {viewingGroupPlayers.length > 0 ? (
@@ -71,7 +77,7 @@ const GroupDetailModal = ({
                             </div>
                             <div>
                               <div className="text-white font-medium">{player.full_name}</div>
-                              <div className="text-xs text-gray-400">{player.user?.email || 'No email'}</div>
+                              <div className="text-xs text-gray-400">{player.user?.email || t('messages.noEmail', 'No email')}</div>
                             </div>
                           </div>
                           <motion.button
@@ -79,7 +85,7 @@ const GroupDetailModal = ({
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleRemovePlayerFromGroup(player.id)}
                             className="p-2 rounded-lg bg-gradient-to-r from-red-900/20 to-red-800/20 text-red-400 hover:from-red-900/30 hover:to-red-800/30 transition-all"
-                            title="Remove from group"
+                            title={t('actions.removeFromGroup', 'Remove from group')}
                           >
                             <FiUserMinus size={18} />
                           </motion.button>
@@ -87,7 +93,7 @@ const GroupDetailModal = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center py-4">No players assigned to this group</p>
+                    <p className="text-gray-400 text-center py-4">{t('messages.noPlayersAssigned', 'No players assigned to this group')}</p>
                   )}
                 </div>
               </div>
@@ -95,7 +101,9 @@ const GroupDetailModal = ({
               {/* Available Players */}
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-white">Available Players ({availablePlayersForViewingGroup.length})</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    {t('form.availablePlayers', 'Available Players')} ({availablePlayersForViewingGroup.length})
+                  </h3>
                 </div>
                 <div className="bg-gray-800/50 border border-gray-600/50 rounded-xl p-4 max-h-64 overflow-y-auto">
                   {availablePlayersForViewingGroup.length > 0 ? (
@@ -111,7 +119,7 @@ const GroupDetailModal = ({
                             </div>
                             <div>
                               <div className="text-white font-medium">{player.full_name}</div>
-                              <div className="text-xs text-gray-400">{player.user?.email || 'No email'}</div>
+                              <div className="text-xs text-gray-400">{player.user?.email || t('messages.noEmail', 'No email')}</div>
                             </div>
                           </div>
                           <motion.button
@@ -119,7 +127,7 @@ const GroupDetailModal = ({
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleAddPlayerToGroup(player.id)}
                             className="p-2 rounded-lg bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 text-[#80a8ff] hover:from-[#4fb0ff]/30 hover:to-[#00d0cb]/30 transition-all"
-                            title="Add to group"
+                            title={t('actions.addToGroup', 'Add to group')}
                           >
                             <FiUserPlus size={18} />
                           </motion.button>
@@ -127,7 +135,7 @@ const GroupDetailModal = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center py-4">All players are assigned to this group</p>
+                    <p className="text-gray-400 text-center py-4">{t('messages.allPlayersAssigned', 'All players are assigned to this group')}</p>
                   )}
                 </div>
               </div>

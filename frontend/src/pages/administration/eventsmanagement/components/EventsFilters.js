@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiFilter, FiX, FiZap, FiTarget, FiMapPin, FiUsers, FiCalendar } from 'react-icons/fi';
+import CustomDatePicker from '../../paymentmanagement/components/CustomDatePicker';
 
-const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChange, clearFilters, groups, filteredCount, itemVariants }) => (
-  <motion.div variants={itemVariants} className="mb-8">
+const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChange, clearFilters, groups, filteredCount, itemVariants }) => {
+  const [isAnimationDone, setIsAnimationDone] = useState(false);
+
+  return (
+    <motion.div variants={itemVariants} className="mb-8 relative z-50">
     <div className="flex flex-col md:flex-row gap-4 mb-4">
       <div className="flex-1 relative">
         <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -25,7 +29,9 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          className="overflow-hidden">
+          onAnimationStart={() => setIsAnimationDone(false)}
+          onAnimationComplete={() => setIsAnimationDone(true)}
+          className={isAnimationDone ? "" : "overflow-hidden"}>
           <div className="bg-gradient-to-br from-[#4fb0ff]/20 to-[#00d0cb]/20 backdrop-blur-sm p-6 rounded-2xl border border-[#4fb0ff]/30">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
 
@@ -80,9 +86,13 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
                 <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                   <FiCalendar className="text-[#00d0cb]" />Date
                 </label>
-                <input type="date" name="date" value={filters.date}
-                  onChange={handleFilterChange}
-                  className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-white" />
+                <CustomDatePicker
+                  id="event-filter-date"
+                  value={filters.date}
+                  onChange={(iso) => handleFilterChange({ target: { name: 'date', value: iso } })}
+                  placeholder="Select date"
+                  accentColor="#00d0cb"
+                />
               </div>
             </div>
 
@@ -99,7 +109,8 @@ const EventsFilters = ({ showFilters, setShowFilters, filters, handleFilterChang
         </motion.div>
       )}
     </AnimatePresence>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 export default EventsFilters;

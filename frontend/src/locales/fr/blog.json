@@ -1,0 +1,61 @@
+{
+  "categories": {
+    "all": "Tous",
+    "sportsScience": "Sciences du sport",
+    "aiTech": "IA & Technologie",
+    "coaching": "Entraînement",
+    "management": "Gestion / Management"
+  },
+  "hero": {
+    "badge": "Blog d'intelligence sportive",
+    "title": "Le Playbook",
+    "description": "Sciences du sport, ingénierie et philosophie d'entraînement — directement depuis l'équipe qui construit l'avenir de la gestion du football."
+  },
+  "readLabel": "{{time}} de lecture",
+  "readArticle": "Lire l'article",
+  "noArticles": "Aucun article dans cette catégorie pour le moment — revenez bientôt.",
+  "posts": {
+    "post1": {
+      "title": "Comment la prédiction de position par l'IA redéfinit la formation des jeunes footballeurs",
+      "excerpt": "Nous avons conçu un modèle ML à 24 critères qui surpasse l'intuition traditionnelle des entraîneurs dans 78 % des cas tests. Voici son architecture et pourquoi elle compte pour votre académie.",
+      "tag": "À la une",
+      "date": "22 avr. 2026"
+    },
+    "post2": {
+      "title": "Le cadre d'évaluation à 6 piliers : Au-delà des buts et des passes décisives",
+      "excerpt": "Technique, Tactique, Physique, Mental, Santé, Académique. Pourquoi nous avons choisi ces six dimensions et comment l'évaluation mensuelle crée un profil complet indispensable pour les recruteurs.",
+      "tag": "Analyse",
+      "date": "18 avr. 2026"
+    },
+    "post3": {
+      "title": "Développement d'un système de notification en temps réel pour académies multi-groupes",
+      "excerpt": "Gérer la diffusion d'événements pour 12 groupes et 6 sous-groupes est un défi logistique. Nous l'avons résolu grâce à un résolveur hiérarchique qui cible automatiquement les bons membres.",
+      "tag": "Ingénierie",
+      "date": "14 avr. 2026"
+    },
+    "post4": {
+      "title": "Pourquoi votre académie a besoin d'une architecture en sous-groupes (pas seulement des équipes)",
+      "excerpt": "Les 'U-16 A' ne forment pas juste une équipe — c'est un sous-groupe. Comprendre la gestion d'effectif hiérarchique permet des notifications plus intelligentes, un entraînement ciblé et des rapports plus précis.",
+      "tag": "Stratégie",
+      "date": "10 avr. 2026"
+    },
+    "post5": {
+      "title": "Fatigue, sommeil et notes scolaires : Les indicateurs cachés qui font gagner les matchs",
+      "excerpt": "Nos piliers de suivi de santé et d'études révèlent que les joueurs ayant une qualité de sommeil supérieure à 3/5 font 23 % d'erreurs techniques en moins le mois suivant.",
+      "tag": "Recherche",
+      "date": "6 avr. 2026"
+    },
+    "post6": {
+      "title": "Génération de rapports PDF à grande échelle : Exporter plus de 100 évaluations de joueurs",
+      "excerpt": "Créer une exportation PDF en un clic incluant graphiques radar, analyses de piliers et données de présence a nécessité de repenser l'architecture de notre sérialiseur.",
+      "tag": "Ingénierie",
+      "date": "2 avr. 2026"
+    }
+  },
+  "newsletter": {
+    "title": "Restez à la pointe de l'innovation",
+    "subtitle": "Un nouvel article chaque semaine. Sans spam. Désinscription à tout moment.",
+    "placeholder": "votre@email.com",
+    "cta": "S'abonner"
+  }
+}

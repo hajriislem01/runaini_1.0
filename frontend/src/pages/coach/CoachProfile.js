@@ -14,6 +14,7 @@ import {
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const CERT_LEVELS = ['UEFA Pro', 'UEFA A', 'UEFA B', 'UEFA C', 'CAF A', 'CAF B'];
@@ -28,11 +29,18 @@ const certColor = (cert) => {
   return '#4fb0ff';
 };
 
+const toWestern = (num) =>
+  String(num).replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) =>
+    String(d.charCodeAt(0) - (d.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660))
+  );
+
 // ═══════════════════════════════════════════════════════════════════════════════
 const CoachProfile = () => {
   const navigate = useNavigate();
   const fileRef = useRef(null);
   const { academyData } = useAcademyData();
+  const { t, i18n } = useTranslation('coachprofile');
+  const isRtl = i18n.language === 'ar';
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const [isLoading, setIsLoading] = useState(true);
@@ -108,7 +116,7 @@ const CoachProfile = () => {
   return (
     <motion.div className="min-h-screen text-white p-4 sm:p-6 md:p-8"
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
-      initial="hidden" animate="visible" variants={cV}>
+      initial="hidden" animate="visible" variants={cV} dir={isRtl ? 'rtl' : 'ltr'}>
       <Toaster position="top-right" />
 
       <div className="max-w-7xl mx-auto">
@@ -124,8 +132,8 @@ const CoachProfile = () => {
             borderRadius: 'var(--dashboard-radius)'
           }}
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -m-16"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -m-24"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -m-16" style={isRtl ? { right: 'auto', left: 0 } : {}}></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -m-24" style={isRtl ? { left: 'auto', right: 0 } : {}}></div>
 
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8">
             <div className="w-32 h-32 md:w-40 md:h-40 overflow-hidden border-4 border-white/20 shadow-xl flex-shrink-0"
@@ -144,10 +152,10 @@ const CoachProfile = () => {
               )}
             </div>
 
-            <div className="flex-1 text-center md:text-left w-full">
+            <div className="flex-1 text-center md:text-left w-full" style={isRtl ? { textAlign: 'right' } : {}}>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div>
-                  <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
+                  <div className={`flex items-center justify-center md:justify-start gap-3 flex-wrap ${isRtl ? 'md:justify-end' : ''}`}>
                     <h1 className="text-2xl md:text-3xl font-bold" style={{ color: 'var(--header-text-color)' }}>{fullName}</h1>
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
                       style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', color: 'var(--header-text-color)' }}>
@@ -165,21 +173,21 @@ const CoachProfile = () => {
                     onClick={() => navigate(-1)}
                     className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white shadow-lg border border-white/20 bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all"
                     style={{ borderRadius: 'var(--dashboard-radius)' }}>
-                    Go Back
+                    {t('goBack')}
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={() => navigate('/coach/settings')}
                     className="px-4 py-2.5 text-white shadow-lg flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#902bd1] to-[#4fb0ff]"
                     style={{ borderRadius: 'var(--dashboard-radius)' }}>
-                    <FiEdit2 />Edit Profile
+                    <FiEdit2 />{t('editProfile')}
                   </motion.button>
                 </div>
               </div>
 
-              <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
+              <div className={`flex flex-wrap justify-center md:justify-start gap-3 mt-4 ${isRtl ? 'md:justify-end' : ''}`}>
                 {profile?.years_of_experience && (
                   <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white border border-white/20">
-                    <FiAward /><span className="text-sm">{profile.years_of_experience} years experience</span>
+                    <FiAward /><span className="text-sm">{t('yearsExperience', { count: toWestern(profile.years_of_experience) })}</span>
                   </div>
                 )}
                 {profile?.certification && (
@@ -200,10 +208,10 @@ const CoachProfile = () => {
         {/* ── Stats ── */}
         <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Players managed', value: stats.players, color: '#4fb0ff', icon: <FiUsers size={18} /> },
-            { label: 'Groups', value: stats.groups, color: '#00d0cb', icon: <FiUsers size={18} /> },
-            { label: 'Sessions created', value: stats.sessions, color: '#902bd1', icon: <FiCalendar size={18} /> },
-            { label: 'Reports this month', value: stats.reports, color: '#22c55e', icon: <FiActivity size={18} /> },
+            { label: t('playersManaged'), value: stats.players, color: '#4fb0ff', icon: <FiUsers size={18} /> },
+            { label: t('groups'), value: stats.groups, color: '#00d0cb', icon: <FiUsers size={18} /> },
+            { label: t('sessionsCreated'), value: stats.sessions, color: '#902bd1', icon: <FiCalendar size={18} /> },
+            { label: t('reportsThisMonth'), value: stats.reports, color: '#22c55e', icon: <FiActivity size={18} /> },
           ].map((s, i) => (
             <div key={i} className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -211,7 +219,7 @@ const CoachProfile = () => {
                 {s.icon}
               </div>
               <div>
-                <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-2xl font-bold" style={{ color: s.color }}>{toWestern(s.value)}</div>
                 <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
               </div>
             </div>
@@ -228,7 +236,7 @@ const CoachProfile = () => {
               <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#902bd1,#4fb0ff)' }} />
-                  Contact information
+                  {t('contactInformation')}
                 </h2>
 
                 <div className="space-y-3">
@@ -241,7 +249,7 @@ const CoachProfile = () => {
                   {profile?.phone && (
                     <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
                       <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
-                      <span className="text-sm text-gray-300">{profile.phone}</span>
+                      <span className="text-sm text-gray-300" dir="ltr">{profile.phone}</span>
                     </div>
                   )}
                   {profile?.address && (
@@ -259,27 +267,27 @@ const CoachProfile = () => {
               <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#f59e0b,#ef4444)' }} />
-                  Professional info
+                  {t('professionalInfo')}
                 </h2>
 
                 <div className="space-y-3">
                   {profile?.specialization && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                      <span className="text-xs text-gray-500">Specialization</span>
+                      <span className="text-xs text-gray-500">{t('specialization')}</span>
                       <span className="text-sm text-white font-medium">{profile.specialization}</span>
                     </div>
                   )}
                   {profile?.years_of_experience && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-800">
-                      <span className="text-xs text-gray-500">Experience</span>
-                      <span className="text-sm text-white font-medium">{profile.years_of_experience} years</span>
+                      <span className="text-xs text-gray-500">{t('experience')}</span>
+                      <span className="text-sm text-white font-medium">{t('yearsExperience', { count: toWestern(profile.years_of_experience) })}</span>
                     </div>
                   )}
                   {profile?.certification && (
                     <div className="flex justify-between items-center py-2">
-                      <span className="text-xs text-gray-500">Certification</span>
+                      <span className="text-xs text-gray-500">{t('certification')}</span>
                       <span className="text-sm font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: certColor(profile.certification) + '20', color: certColor(profile.certification) }}>
+                        style={{ background: certColor(profile.certification) + '20', color: certColor(profile.certification) }} dir="ltr">
                         {profile.certification}
                       </span>
                     </div>
@@ -292,14 +300,14 @@ const CoachProfile = () => {
             <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
               <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                 <div className="w-1 h-5 rounded-full bg-[#00d0cb]" />
-                Quick access
+                {t('quickAccess')}
               </h2>
               <div className="space-y-2">
                 {[
-                  { label: 'My Players', path: '/coach/players', color: '#4fb0ff' },
-                  { label: 'Agenda', path: '/coach/agenda', color: '#00d0cb' },
-                  { label: 'KPI Analysis', path: '/coach/analysis', color: '#902bd1' },
-                  { label: 'Settings', path: '/coach/settings', color: '#f59e0b' },
+                  { label: t('myPlayers'), path: '/coach/players', color: '#4fb0ff' },
+                  { label: t('agenda'), path: '/coach/agenda', color: '#00d0cb' },
+                  { label: t('kpiAnalysis'), path: '/coach/analysis', color: '#902bd1' },
+                  { label: t('settings'), path: '/coach/settings', color: '#f59e0b' },
                 ].map((l, i) => (
                   <button key={i} onClick={() => navigate(l.path)}
                     className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-700/30 bg-gray-800/30 hover:bg-gray-700/30 transition-all text-sm text-gray-300 hover:text-white">
@@ -307,7 +315,7 @@ const CoachProfile = () => {
                       <div className="w-1.5 h-1.5 rounded-full" style={{ background: l.color }} />
                       {l.label}
                     </span>
-                    <FiChevronRight size={14} className="text-gray-600" />
+                    <FiChevronRight size={14} className="text-gray-600" style={isRtl ? { transform: 'scaleX(-1)' } : {}} />
                   </button>
                 ))}
               </div>
@@ -322,7 +330,7 @@ const CoachProfile = () => {
               <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#4fb0ff,#00d0cb)' }} />
-                  About
+                  {t('about')}
                 </h2>
                 <p className="text-gray-300 leading-relaxed text-sm">{profile.bio}</p>
               </motion.div>
@@ -333,14 +341,14 @@ const CoachProfile = () => {
               <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-5 flex items-center gap-2">
                   <FaBrain className="text-[#00d0cb]" style={{ fontSize: 16 }} />
-                  Coaching philosophy
+                  {t('coachingPhilosophy')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
-                    { key: 'development', title: 'Player Development', color: '#4fb0ff' },
-                    { key: 'tactical', title: 'Tactical Approach', color: '#f59e0b' },
-                    { key: 'mental', title: 'Mental Conditioning', color: '#902bd1' },
-                    { key: 'culture', title: 'Team Culture', color: '#22c55e' },
+                    { key: 'development', title: t('playerDevelopment'), color: '#4fb0ff' },
+                    { key: 'tactical', title: t('tacticalApproach'), color: '#f59e0b' },
+                    { key: 'mental', title: t('mentalConditioning'), color: '#902bd1' },
+                    { key: 'culture', title: t('teamCulture'), color: '#22c55e' },
                   ].filter(item => parsedNotes.philosophy[item.key]).map((item, i) => (
                     <div key={i} className="p-4 rounded-xl border"
                       style={{ background: item.color + '08', borderColor: item.color + '30' }}>
@@ -360,13 +368,13 @@ const CoachProfile = () => {
               <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <FaChartLine className="text-[#22c55e]" style={{ fontSize: 16 }} />
-                  Training methodology
+                  {t('trainingMethodology')}
                 </h2>
                 <div className="space-y-3">
                   {parsedNotes.methodology.filter(m => m).map((method, i) => (
                     <div key={i} className="flex gap-3 p-3 rounded-xl bg-gray-800/40 border border-gray-700/30">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">
-                        {i + 1}
+                        {toWestern(i + 1)}
                       </div>
                       <p className="text-sm text-gray-300 leading-relaxed">{method}</p>
                     </div>
@@ -383,18 +391,18 @@ const CoachProfile = () => {
                   <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                     <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                       <FaTrophy className="text-[#f59e0b]" style={{ fontSize: 16 }} />
-                      Experience
+                      {t('professionalExperience')}
                     </h2>
                     <div className="space-y-3">
                       {parsedNotes.experiences.map((exp, i) => (
-                        <div key={i} className="relative pl-4 pb-4 last:pb-0">
-                          <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full bg-[#00d0cb]" />
+                        <div key={i} className={`relative pb-4 last:pb-0 ${isRtl ? 'pr-4' : 'pl-4'}`}>
+                          <div className={`absolute top-1.5 w-1.5 h-1.5 rounded-full bg-[#00d0cb] ${isRtl ? 'right-0' : 'left-0'}`} />
                           {i < parsedNotes.experiences.length - 1 && (
-                            <div className="absolute left-0.5 top-3 w-px h-full bg-gray-700/50" style={{ transform: 'translateX(-50%)' }} />
+                            <div className={`absolute top-3 w-px h-full bg-gray-700/50 ${isRtl ? 'right-0.5 translate-x-1/2' : 'left-0.5 -translate-x-1/2'}`} />
                           )}
                           <div className="text-sm font-semibold text-white">{exp.role}</div>
                           <div className="text-xs text-[#00d0cb]">{exp.club}</div>
-                          <div className="text-xs text-gray-500">{exp.period}</div>
+                          <div className="text-xs text-gray-500" dir="ltr" style={isRtl ? { textAlign: 'right' } : {}}>{exp.period}</div>
                           {exp.description && (
                             <div className="text-xs text-gray-400 mt-1">{exp.description}</div>
                           )}
@@ -408,7 +416,7 @@ const CoachProfile = () => {
                   <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                     <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                       <FaGraduationCap className="text-[#902bd1]" style={{ fontSize: 16 }} />
-                      Certifications
+                      {t('certifications')}
                     </h2>
                     <div className="space-y-3">
                       {parsedNotes.certifications.map((cert, i) => (
@@ -422,7 +430,7 @@ const CoachProfile = () => {
                             <div className="text-sm font-semibold" style={{ color: certColor(cert.name) }}>
                               {cert.name}
                             </div>
-                            <div className="text-xs text-gray-500">{cert.year}</div>
+                            <div className="text-xs text-gray-500">{toWestern(cert.year)}</div>
                           </div>
                         </div>
                       ))}

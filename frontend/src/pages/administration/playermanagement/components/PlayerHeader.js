@@ -1,19 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiUsers, FiPlus } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const PlayerHeader = ({ activeTab, playersCount, groupsCount, resetForm, setShowModal, resetGroupForm, setShowGroupModal, itemVariants }) => {
+  const { t } = useTranslation('playermanagement');
+
   return (
     <motion.div variants={itemVariants} className="mb-8">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-            Player & Group Management
+            {t('title', 'Player & Group Management')}
           </h1>
           <p className="text-gray-300 mt-2 text-base sm:text-lg">
             {activeTab === 'players' 
-              ? `${playersCount} player${playersCount !== 1 ? 's' : ''} registered`
-              : `${groupsCount} group${groupsCount !== 1 ? 's' : ''} defined`
+              ? `${playersCount} player${playersCount !== 1 ? 's' : ''} ${t('messages.loading', 'registered') === 'registered' ? 'registered' : t('messages.loading', 'registered')}`
+              : `${groupsCount} group${groupsCount !== 1 ? 's' : ''} ${t('messages.loading', 'defined') === 'registered' ? 'defined' : t('messages.loading', 'defined')}`
             }
           </p>
         </div>
@@ -40,7 +43,7 @@ const PlayerHeader = ({ activeTab, playersCount, groupsCount, resetForm, setShow
               className="px-4 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:from-[#00d0cb] hover:to-[#4fb0ff] text-white rounded-xl font-medium transition-all flex items-center gap-2"
             >
               <FiPlus />
-              Add Player
+              {t('actions.add', 'Add Player')}
             </motion.button>
           ) : (
             <motion.button
@@ -53,7 +56,7 @@ const PlayerHeader = ({ activeTab, playersCount, groupsCount, resetForm, setShow
               className="px-4 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:from-[#00d0cb] hover:to-[#4fb0ff] text-white rounded-xl font-medium transition-all flex items-center gap-2"
             >
               <FiPlus />
-              Add Group
+              {t('actions.addGroup', 'Add Group')}
             </motion.button>
           )}
         </div>

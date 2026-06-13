@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiEye, FiEyeOff, FiCheck, FiShield, FiUsers, FiTarget, FiActivity, FiChevronDown } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { strengthColors, strengthLabels } from '../utils/playerHelpers';
 
 const PlayerModal = ({
@@ -9,6 +10,9 @@ const PlayerModal = ({
   errors, showPassword, setShowPassword, passwordStrength,
   groupOptionsForPlayer, subgroupOptionsForPlayer, apiError
 }) => {
+  const { t, i18n } = useTranslation('playermanagement');
+  const isRtl = i18n.language === 'ar';
+
   const [showPosDropdown, setShowPosDropdown] = React.useState(false);
   const [showGrpDropdown, setShowGrpDropdown] = React.useState(false);
   const [showSgDropdown, setShowSgDropdown] = React.useState(false);
@@ -58,7 +62,7 @@ const PlayerModal = ({
           <div className="p-5 md:p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] bg-clip-text text-transparent">
-                {editPlayerId ? 'Edit Player' : 'Add New Player'}
+                {editPlayerId ? t('form.editTitle', 'Edit Player Details') : t('form.addTitle', 'Add New Player')}
               </h2>
               <motion.button
                 whileHover={{ rotate: 90, scale: 1.1 }}
@@ -86,7 +90,9 @@ const PlayerModal = ({
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Username *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.usernameLabel', 'Username *')}
+                  </label>
                   <input
                     type="text"
                     name="username"
@@ -98,7 +104,9 @@ const PlayerModal = ({
                   {errors.username && <p className="mt-2 text-sm text-red-400">{errors.username}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Full Name *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.nameLabel', 'Full Name *')}
+                  </label>
                   <input
                     type="text"
                     name="full_name"
@@ -111,7 +119,9 @@ const PlayerModal = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.emailLabel', 'Email Address *')}
+                  </label>
                   <input
                     type="email"
                     name="email"
@@ -127,7 +137,7 @@ const PlayerModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Password {!editPlayerId && '*'}
+                    {t('form.passwordLabel', 'Password')} {!editPlayerId && '*'}
                   </label>
                   <div className="relative">
                     <input
@@ -137,12 +147,12 @@ const PlayerModal = ({
                       onChange={handlePasswordChange}
                       className={`w-full px-4 py-2.5 bg-gray-800/70 border ${errors.password ? 'border-red-500/50' : 'border-gray-600/50'} rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300`}
                       required={!editPlayerId}
-                      placeholder={editPlayerId ? "Leave blank to keep current" : ""}
+                      placeholder={editPlayerId ? t('form.passwordPlaceholder', 'Leave blank to keep current') : ""}
                     />
                     <button
                       type="button"
                       onClick={() => { setShowPassword(!showPassword); }}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                      className={`absolute ${isRtl ? 'left-3' : 'right-3'} top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white`}
                     >
                       {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                     </button>
@@ -159,30 +169,32 @@ const PlayerModal = ({
                         ))}
                       </div>
                       <p className="text-xs text-gray-400">
-                        {passwordStrength > 0 ? strengthLabels[passwordStrength - 1] : 'Enter password'}
+                        {passwordStrength > 0 ? t(`strength.${strengthLabels[passwordStrength - 1].toLowerCase()}`, strengthLabels[passwordStrength - 1]) : t('messages.loading', 'Enter password')}
                       </p>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.phoneLabel', 'Phone Number')}
+                  </label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
-                    placeholder="+1234567890"
+                    placeholder={t('form.phonePlaceholder', 'Enter phone number')}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 1. Position Selector */}
-                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <div className={`relative ${showPosDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                   <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                    <FiShield className="text-[#902bd1]" size={14} /> Position *
+                    <FiShield className="text-[#902bd1]" size={14} /> {t('form.positionLabel', 'Position')} *
                   </label>
                   <button 
                     type="button"
@@ -195,7 +207,7 @@ const PlayerModal = ({
                     className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900/40 border border-gray-700/50 hover:border-[#902bd1]/40 rounded-xl text-white outline-none transition-all"
                   >
                     <span className="text-sm font-medium truncate">
-                      {formData.position || 'Select position...'}
+                      {formData.position ? t(`positions.${formData.position.toLowerCase()}`, formData.position) : t('form.positionPlaceholder', 'Select position...')}
                     </span>
                     <FiChevronDown className={`transition-transform duration-200 ${showPosDropdown ? 'rotate-180' : ''}`} />
                   </button>
@@ -210,7 +222,7 @@ const PlayerModal = ({
                           {positions.map(pos => (
                             <div key={pos} onClick={() => handleSelect('position', pos, setShowPosDropdown)}
                               className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
-                              {pos}
+                              {t(`positions.${pos.toLowerCase()}`, pos)}
                               {formData.position === pos && <FiCheck className="text-[#902bd1]" />}
                             </div>
                           ))}
@@ -221,9 +233,9 @@ const PlayerModal = ({
                 </div>
 
                 {/* 2. Group Selector */}
-                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <div className={`relative ${showGrpDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                   <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                    <FiUsers className="text-[#4fb0ff]" size={14} /> Group
+                    <FiUsers className="text-[#4fb0ff]" size={14} /> {t('table.group', 'Group')}
                   </label>
                   <button 
                     type="button"
@@ -236,7 +248,7 @@ const PlayerModal = ({
                     className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900/40 border border-gray-700/50 hover:border-[#4fb0ff]/40 rounded-xl text-white outline-none transition-all"
                   >
                     <span className="text-sm font-medium truncate">
-                      {formData.group || 'Choose group...'}
+                      {formData.group || t('form.groupPlaceholder', 'Choose group...')}
                     </span>
                     <FiChevronDown className={`transition-transform duration-200 ${showGrpDropdown ? 'rotate-180' : ''}`} />
                   </button>
@@ -250,7 +262,7 @@ const PlayerModal = ({
                         <div className="p-2 space-y-1">
                           <div onClick={() => handleGroupSelect('')}
                             className="px-4 py-3 text-sm text-gray-500 italic hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                            No group
+                            {t('form.noGroup', 'No group')}
                           </div>
                           {(groupOptionsForPlayer || []).map(name => (
                             <div key={name} onClick={() => handleGroupSelect(name)}
@@ -269,9 +281,9 @@ const PlayerModal = ({
               {/* 3. Sub-group Selector */}
               {formData.group && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <div className={`relative ${showSgDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                     <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                      <FiTarget className="text-[#00d0cb]" size={14} /> Sub-group
+                      <FiTarget className="text-[#00d0cb]" size={14} /> {t('form.subgroupLabel', 'Sub-group')}
                     </label>
                     <button 
                       type="button"
@@ -284,7 +296,7 @@ const PlayerModal = ({
                       className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900/40 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white outline-none transition-all"
                     >
                       <span className="text-sm font-medium truncate">
-                        {formData.subgroup || (subgroupOptionsForPlayer.length > 0 ? 'Select unit...' : 'No units available')}
+                        {formData.subgroup || (subgroupOptionsForPlayer.length > 0 ? t('form.selectSubgroupPlaceholder', 'Select unit...') : t('form.noSubgroupsAvailable', 'No units available'))}
                       </span>
                       <FiChevronDown className={`transition-transform duration-200 ${showSgDropdown ? 'rotate-180' : ''}`} />
                     </button>
@@ -298,7 +310,7 @@ const PlayerModal = ({
                           <div className="p-2 space-y-1">
                             <div onClick={() => handleSelect('subgroup', '', setShowSgDropdown)}
                               className="px-4 py-3 text-sm text-gray-500 italic hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all">
-                              None
+                              {t('form.none', 'None')}
                             </div>
                             {(subgroupOptionsForPlayer || []).map(name => (
                               <div key={name} onClick={() => handleSelect('subgroup', name, setShowSgDropdown)}
@@ -317,7 +329,9 @@ const PlayerModal = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Height (cm)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.heightLabel', 'Height (cm)')}
+                  </label>
                   <input
                     type="number"
                     name="height"
@@ -332,7 +346,9 @@ const PlayerModal = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.weightLabel', 'Weight (kg)')}
+                  </label>
                   <input
                     type="number"
                     name="weight"
@@ -349,9 +365,9 @@ const PlayerModal = ({
 
               <div>
                 {/* 4. Status Selector */}
-                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                <div className={`relative ${showStatusDropdown ? 'z-50' : 'z-10'}`} onClick={(e) => e.stopPropagation()}>
                   <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                    <FiActivity className="text-orange-400" size={14} /> Status
+                    <FiActivity className="text-orange-400" size={14} /> {t('form.statusLabel', 'Status')}
                   </label>
                   <button 
                     type="button"
@@ -364,7 +380,7 @@ const PlayerModal = ({
                     className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900/40 border border-gray-700/50 hover:border-orange-400/40 rounded-xl text-white outline-none transition-all"
                   >
                     <span className="text-sm font-medium truncate">
-                      {formData.status || 'Active'}
+                      {formData.status ? t(`status.${formData.status.toLowerCase()}`, formData.status) : t('status.active', 'Active')}
                     </span>
                     <FiChevronDown className={`transition-transform duration-200 ${showStatusDropdown ? 'rotate-180' : ''}`} />
                   </button>
@@ -379,7 +395,7 @@ const PlayerModal = ({
                           {statuses.map(stat => (
                             <div key={stat} onClick={() => handleSelect('status', stat, setShowStatusDropdown)}
                               className="px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between group">
-                              {stat}
+                              {t(`status.${stat.toLowerCase()}`, stat)}
                               {formData.status === stat && <FiCheck className="text-orange-400" />}
                             </div>
                           ))}
@@ -391,7 +407,9 @@ const PlayerModal = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Address</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('form.addressLabel', 'Address')}
+                </label>
                 <input
                   type="text"
                   name="address"
@@ -402,7 +420,9 @@ const PlayerModal = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  {t('form.notesLabel', 'Notes')}
+                </label>
                 <textarea
                   name="notes"
                   value={formData.notes}
@@ -423,7 +443,7 @@ const PlayerModal = ({
                   }}
                   className="px-5 py-2.5 bg-gray-800/50 text-gray-300 rounded-xl font-medium hover:bg-gray-700/50 transition-all border border-gray-700/50"
                 >
-                  Cancel
+                  {t('actions.cancel', 'Cancel')}
                 </motion.button>
                 <motion.button
                   type="submit"
@@ -432,7 +452,7 @@ const PlayerModal = ({
                   className="px-5 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:from-[#00d0cb] hover:to-[#4fb0ff] text-white rounded-xl font-medium transition-all flex items-center gap-2"
                 >
                   <FiCheck />
-                  {editPlayerId ? 'Save Changes' : 'Add Player'}
+                  {editPlayerId ? t('actions.save', 'Save Changes') : t('actions.add', 'Add Player')}
                 </motion.button>
               </div>
             </form>

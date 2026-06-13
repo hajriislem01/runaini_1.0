@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "لوحة القيادة",
+    "my_profile": "الملف الشخصي",
+    "training": "التدريب",
+    "matches": "المباريات",
+    "stats": "الإحصائيات",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج",
+    "teamMember": "عضو الفريق",
+    "playerSpace": "مساحة اللاعب",
+    "verifiedPlayer": "لاعب معتمد"
+  }
+}

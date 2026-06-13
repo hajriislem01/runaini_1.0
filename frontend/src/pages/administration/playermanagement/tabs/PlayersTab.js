@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiUser, FiGrid, FiPhone, FiEdit, FiTrash2, FiUsers, FiPlus } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const PlayersTab = ({
   searchTerm, setSearchTerm,
@@ -14,17 +15,19 @@ const PlayersTab = ({
   itemVariants
 }) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('playermanagement');
+  const isRtl = i18n.language === 'ar';
 
   return (
     <>
       {/* Search Bar */}
       <motion.div variants={itemVariants} className="mb-8 flex flex-wrap gap-4 items-end">
         <div className="relative max-w-md flex-1 min-w-[200px]">
-          <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FiSearch className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-gray-400`} />
           <input
             type="text"
-            placeholder="Search by name, email, or phone..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-900/65 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
+            placeholder={t('searchPlaceholder', 'Search by name, email, or phone...')}
+            className={`w-full ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-gray-900/65 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -35,7 +38,7 @@ const PlayersTab = ({
             onChange={(e) => { setSelectedGroup(e.target.value); setSelectedSubgroup(''); }}
             className="px-3 py-2.5 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none text-sm"
           >
-            <option value="">All groups</option>
+            <option value="">{t('groupFilter', 'All groups')}</option>
             {groupOptionsForPlayer.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
@@ -46,7 +49,7 @@ const PlayersTab = ({
             disabled={!selectedGroup}
             className="px-3 py-2.5 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white focus:ring-2 focus:ring-[#00d0cb]/50 outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="">All sub-groups</option>
+            <option value="">{t('subgroupFilter', 'All sub-groups')}</option>
             {selectedGroup && (() => {
               const g = groups.find(gr => gr.name === selectedGroup);
               const subs = g && g.subgroups
@@ -81,12 +84,24 @@ const PlayersTab = ({
           <table className="min-w-full divide-y divide-gray-700/50">
             <thead className="bg-gray-900/80">
               <tr>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">Player</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell">Groups</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">Position</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden lg:table-cell">Details</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">Status</th>
-                <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider`}>
+                  {t('table.name', 'Player')}
+                </th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden md:table-cell`}>
+                  {t('table.group', 'Group')}
+                </th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider`}>
+                  {t('form.positionLabel', 'Position')}
+                </th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider hidden lg:table-cell`}>
+                  {t('form.viewTitle', 'Details')}
+                </th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider`}>
+                  {t('table.status', 'Status')}
+                </th>
+                <th className={`px-4 md:px-6 py-4 ${isRtl ? 'text-right' : 'text-left'} text-xs md:text-sm font-semibold text-gray-300 uppercase tracking-wider`}>
+                  {t('table.actions', 'Actions')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50">
@@ -94,11 +109,11 @@ const PlayersTab = ({
                 <motion.tr
                   key={`${player.id}-${player.user?.id || 'nouser'}`}
                   className="hover:bg-gray-800/40 transition-colors duration-200"
-                  whileHover={{ x: 4 }}
+                  whileHover={{ x: isRtl ? -4 : 4 }}
                 >
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap group cursor-pointer" onClick={() => navigate(`/administration/player-profile/${player.id}`)}>
                     <div className="flex items-center group-hover:scale-105 transition-transform duration-300">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center mr-3 shadow-lg group-hover:shadow-[#4fb0ff]/50 overflow-hidden">
+                      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] flex items-center justify-center ${isRtl ? 'ml-3' : 'mr-3'} shadow-lg group-hover:shadow-[#4fb0ff]/50 overflow-hidden`}>
                         {player.profile_picture ? (
                           <img src={player.profile_picture} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -107,35 +122,32 @@ const PlayersTab = ({
                       </div>
                       <div>
                         <div className="text-sm md:text-base font-medium text-white group-hover:text-[#4fb0ff] transition-colors">{player.full_name}</div>
-                        {/* Update: Phone ta7t el esm */}
                         <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
                           <FiPhone size={10} className="text-[#4fb0ff]" />
-                          {player.phone || 'No phone'}
+                          {player.phone || t('messages.noPhone', 'No phone')}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell">
                     <div className="flex flex-col gap-1">
-                      {/* Update: Group houni */}
                       <div className="flex items-center gap-2">
                         <FiUsers className="text-[#902bd1]" size={14} />
                         <span className="font-medium">
-                          {typeof player.group === 'object' ? player.group?.name : player.group || 'No group'}
+                          {typeof player.group === 'object' ? player.group?.name : player.group || t('form.groupPlaceholder', 'No group')}
                         </span>
                       </div>
-                      {/* Update: Subgroup houni */}
                       <div className="flex items-center gap-2 text-xs text-gray-400">
                         <FiGrid className="text-[#4fb0ff]" size={14} />
                         <span>
-                          {typeof player.subgroup === 'object' ? player.subgroup?.name : player.subgroup || 'No subgroup'}
+                          {typeof player.subgroup === 'object' ? player.subgroup?.name : player.subgroup || t('form.subgroupPlaceholder', 'No subgroup')}
                         </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 text-[#80a8ff] border border-[#4fb0ff]/30">
-                      {player.position || '-'}
+                      {player.position ? t(`positions.${player.position.toLowerCase()}`, player.position) : '-'}
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden lg:table-cell">
@@ -146,7 +158,7 @@ const PlayersTab = ({
                         <span className="text-white">{player.weight} kg</span>
                       </div>
                     ) : (
-                      <span className="text-gray-500">No details</span>
+                      <span className="text-gray-500">{t('messages.noDetails', 'No details')}</span>
                     )}
                   </td>
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap">
@@ -156,17 +168,17 @@ const PlayersTab = ({
                         ? 'bg-gradient-to-r from-red-900/40 to-red-800/30 text-red-300 border border-red-700/40'
                         : 'bg-gradient-to-r from-[#F59E0B]/20 to-[#D97706]/20 text-yellow-300 border border-yellow-700/40'
                       }`}>
-                      {player.status}
+                      {t(`status.${player.status.toLowerCase()}`, player.status)}
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 rtl:space-x-reverse">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleEdit(player)}
                         className="p-2 rounded-lg bg-gradient-to-r from-[#4fb0ff]/20 to-[#00d0cb]/20 text-[#80a8ff] hover:from-[#4fb0ff]/30 hover:to-[#00d0cb]/30 transition-all duration-200"
-                        title="Edit player"
+                        title={t('actions.edit', 'Edit')}
                       >
                         <FiEdit size={18} />
                       </motion.button>
@@ -175,7 +187,7 @@ const PlayersTab = ({
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleDelete(player.id)}
                         className="p-2 rounded-lg bg-gradient-to-r from-red-900/20 to-red-800/20 text-red-400 hover:from-red-900/30 hover:to-red-800/30 transition-all duration-200"
-                        title="Delete player"
+                        title={t('actions.delete', 'Delete')}
                       >
                         <FiTrash2 size={18} />
                       </motion.button>
@@ -189,9 +201,9 @@ const PlayersTab = ({
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#4fb0ff]/20 to-[#902bd1]/20 flex items-center justify-center mb-4">
                         <FiUsers className="text-3xl text-gray-400" />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-300 mb-2">No players found</h3>
+                      <h3 className="text-xl font-semibold text-gray-300 mb-2">{t('messages.noPlayersFound', 'No players found')}</h3>
                       <p className="text-gray-400 mb-6 max-w-md">
-                        {searchTerm ? 'Try adjusting your search terms' : 'Start by adding your first player'}
+                        {searchTerm ? t('messages.adjustSearch', 'Try adjusting your search terms') : t('messages.addFirstPlayer', 'Start by adding your first player')}
                       </p>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -203,7 +215,7 @@ const PlayersTab = ({
                         className="px-5 py-2.5 bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white rounded-xl hover:from-[#4fb0ff]/90 hover:to-[#00d0cb]/90 transition-all duration-300 flex items-center gap-2 font-medium"
                       >
                         <FiPlus />
-                        Add Player
+                        {t('actions.add', 'Add Player')}
                       </motion.button>
                     </div>
                   </td>
@@ -212,7 +224,8 @@ const PlayersTab = ({
             </tbody>
           </table>
         </div>
-      </motion.div>    </>
+      </motion.div>
+    </>
   );
 };
 

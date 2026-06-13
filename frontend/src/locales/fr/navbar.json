@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "plans": "Plans",
+    "blog": "Blog",
+    "about": "À propos"
+  },
+  "actions": {
+    "login": "Connexion",
+    "getStarted": "Commencer",
+    "joinNow": "Rejoindre maintenant"
+  },
+  "navbar": {
+    "getStarted": "Commencer"
+  }
+}

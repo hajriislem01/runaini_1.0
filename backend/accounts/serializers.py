@@ -1,7 +1,8 @@
 from rest_framework import serializers
+import os
 from .models import (
     Payment, Group, CustomUser, CoachProfile, PlayerProfile,
-    SubGroup, Academy, Event, EventParticipant,
+    SubGroup, Academy, AcademyLeadRequest, Event, EventParticipant,
     PlayerReport, TrainingSession, ExerciseTemplate, Notification
 )
 from django.db import models
@@ -29,6 +30,7 @@ class AcademySerializer(serializers.ModelSerializer):
             'away_kit', 'away_kit_url',
             'technical_director', 'head_coach_name', 'fitness_coach', 'medical_staff',
             'stadium_name', 'stadium_location', 'has_gym', 'has_cafeteria', 'has_dormitory',
+            'billing_plan', 'subscription_status',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'logo_url', 'home_kit_url', 'away_kit_url']
@@ -717,3 +719,98 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = '__all__'
         read_only_fields = ['id', 'user', 'created_at']
+
+
+# ─── Academy lead (public) & super admin onboarding ───────────────────────────
+class AcademyLeadRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademyLeadRequest
+        fields = ('contact_name', 'academy_name', 'email', 'phone')
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        return value
+
+
+class AcademyLeadRequestReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AcademyLeadRequest
+        fields = (
+            'id', 'contact_name', 'academy_name', 'email', 'phone',
+            'status', 'created_at', 'processed_at',
+        )
+
+
+class SuperAdminApproveLeadSerializer(serializers.Serializer):
+    password = serializers.CharField(min_length=8, write_only=True)
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    username = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    club = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    phone = serializers.CharField(max_length=40, required=False, allow_blank=True)
+    billing_plan = serializers.ChoiceField(choices=Academy.BILLING_PLAN_CHOICES, default='trial')
+
+
+class SuperAdminManualAcademySerializer(serializers.Serializer):
+    """Direct academy + admin creation (no lead)."""
+    academy_name = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=8, write_only=True)
+    username = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    phone = serializers.CharField(max_length=40, required=False, allow_blank=True)
+    club = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    billing_plan = serializers.ChoiceField(choices=Academy.BILLING_PLAN_CHOICES, default='trial')
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+
+class SuperAdminAcademyListSerializer(serializers.ModelSerializer):
+    coach_count = serializers.IntegerField(read_only=True)
+    player_count = serializers.IntegerField(read_only=True)
+    admin_email = serializers.EmailField(read_only=True, allow_null=True)
+    admin_display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Academy
+        fields = (
+            'id', 'name', 'email', 'phone', 'billing_plan', 'subscription_status',
+            'created_at', 'updated_at',
+            'coach_count', 'player_count', 'admin_email', 'admin_display_name',
+        )
+
+    def get_admin_display_name(self, obj):
+        first = getattr(obj, 'admin_first_name', None) or ''
+        last = getattr(obj, 'admin_last_name', None) or ''
+        name = f'{first} {last}'.strip()
+        return name or None
+
+
+class SuperAdminCoachUserSerializer(serializers.ModelSerializer):
+    coach_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'coach_status')
+
+    def get_coach_status(self, obj):
+        try:
+            return obj.coach_profile.status
+        except Exception:
+            return None
+
+
+class SuperAdminPlayerRowSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+
+    class Meta:
+        model = PlayerProfile
+        fields = ('id', 'full_name', 'email', 'status', 'position')
+
+
+class SuperAdminAdminUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'phone', 'date_joined', 'last_login')

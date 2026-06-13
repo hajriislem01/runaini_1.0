@@ -1,0 +1,80 @@
+{
+  "title": "Coach Management",
+  "subtitle": "Manage all coaches, assign groups, and track status.",
+  "searchPlaceholder": "Search by name, email, or club...",
+  "statusFilter": "All Statuses",
+  "specializationFilter": "All Specializations",
+  "table": {
+    "name": "Coach",
+    "group": "Assigned Group",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "actions": {
+    "add": "Add Coach",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "save": "Save Changes",
+    "cancel": "Cancel"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "onLeave": "On Leave"
+  },
+  "form": {
+    "addTitle": "Add New Coach",
+    "editTitle": "Edit Coach Details",
+    "viewTitle": "Coach Details",
+    "firstNameLabel": "First Name",
+    "lastNameLabel": "Last Name",
+    "usernameLabel": "Username *",
+    "emailLabel": "Email *",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Leave blank to keep current",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "Enter phone number",
+    "clubLabel": "Club",
+    "clubPlaceholder": "Enter club name",
+    "specializationLabel": "Specialization",
+    "specializationPlaceholder": "e.g., Youth Development",
+    "experienceLabel": "Years of Experience",
+    "experiencePlaceholder": "5",
+    "certificationLabel": "Certification",
+    "certificationPlaceholder": "UEFA Pro License",
+    "groupLabel": "Groups",
+    "groupsCountLabel": "Groups Assigned",
+    "selectGroupsLabel": "Select Groups",
+    "chooseDomainsPlaceholder": "Choose domains...",
+    "unitsAccessLabel": "Units Access",
+    "openUnitsPlaceholder": "Open unit selector...",
+    "pickGroupPlaceholder": "Pick a Group first",
+    "activeDomainsLabel": "Active Coach Domains",
+    "currentlyFocused": "Currently Focused",
+    "noDomainsAssigned": "No domains assigned. Use the selectors above to start.",
+    "noUnitsSelected": "No units selected",
+    "syncingUnits": "Syncing units...",
+    "noUnitsForGroup": "No units for this group.",
+    "activateGroupFirst": "Activate a group first.",
+    "fullAccess": "Full Access"
+  },
+  "messages": {
+    "addSuccess": "Coach added successfully!",
+    "editSuccess": "Coach updated successfully!",
+    "deleteSuccess": "Coach deleted successfully!",
+    "deleteConfirm": "Are you sure you want to delete this coach?",
+    "loading": "Loading...",
+    "processing": "Processing...",
+    "noCoachesFound": "No coaches found",
+    "adjustSearch": "Try adjusting your search",
+    "addFirstCoach": "Start by adding your first coach"
+  },
+  "strength": {
+    "weak": "Weak",
+    "fair": "Fair",
+    "good": "Good",
+    "strong": "Strong",
+    "excellent": "Excellent"
+  }
+}

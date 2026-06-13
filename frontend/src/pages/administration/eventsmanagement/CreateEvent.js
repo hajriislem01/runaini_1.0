@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 
 import { useCreateEvent } from './hooks/useCreateEvent';
 import { containerVariants, itemVariants } from './utils/eventConstants';
+import CustomDatePicker from '../paymentmanagement/components/CustomDatePicker';
 
 const CreateEvent = () => {
   const {
@@ -158,8 +159,14 @@ const CreateEvent = () => {
                   <label className="text-gray-300 font-medium mb-2 flex items-center gap-2">
                     <FiCalendar className="text-[#00d0cb]" />Date
                   </label>
-                  <input type="date" name="date" value={formData.date} onChange={handleChange}
-                    className={`w-full px-4 py-3 bg-gray-800/50 border ${errors.date ? 'border-red-500' : 'border-gray-700'} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-white`} />
+                  <CustomDatePicker
+                    id="create-event-date"
+                    value={formData.date}
+                    onChange={(iso) => handleChange({ target: { name: 'date', value: iso } })}
+                    accentColor="#00d0cb"
+                    placeholder="Select date"
+                    hasError={!!errors.date}
+                  />
                   {errors.date && <p className="text-red-400 text-sm mt-2">• {errors.date}</p>}
                 </div>
                 <div>

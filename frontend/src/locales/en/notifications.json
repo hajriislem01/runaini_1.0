@@ -1,0 +1,40 @@
+{
+  "title": "Notifications",
+  "newCount": "{{count}} New",
+  "tabs": {
+    "all": "All",
+    "unread": "Unread"
+  },
+  "actions": {
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear All",
+    "viewAll": "View All Notifications"
+  },
+  "types": {
+    "payment": "New payment recorded for player {{player}}",
+    "payment_title": "Payment Alert",
+    "subscription": "New Subscription",
+    "subscription_title": "Subscription Alert",
+    "system": "System Alert",
+    "system_title": "System Alert",
+    "settings": "Academy settings updated successfully",
+    "settings_title": "Settings Update",
+    "coach_assigned": "New coach assigned to group {{group}}",
+    "coach_assigned_title": "Coach Assigned",
+    "training": "New training scheduled for {{group}}",
+    "training_title": "Training Update",
+    "session": "New training session created",
+    "session_title": "New Session",
+    "event": "New event invitation",
+    "event_title": "New Event"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "empty": "No new notifications",
+  "emptyDescription": "You have no new alerts at the moment.",
+  "footerSchedule": "Stay updated with your academy schedule"
+}

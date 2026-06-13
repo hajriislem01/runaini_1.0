@@ -1,0 +1,62 @@
+{
+  "header": {
+    "editProfile": "Modifier le profil",
+    "noAcademyError": "Aucune académie trouvée. Veuillez compléter vos paramètres.",
+    "loading": "Chargement de votre profil...",
+    "needHelp": "Besoin d'aide ? Contactez-nous",
+    "email": "E-mail",
+    "call": "Appeler"
+  },
+  "sections": {
+    "academyInfo": "Informations sur l'académie",
+    "staffInfo": "Informations sur le personnel",
+    "facilities": "Installations",
+    "contact": "Contact",
+    "location": "Localisation",
+    "socialMedia": "Réseaux sociaux"
+  },
+  "fields": {
+    "academyName": "Nom de l'académie",
+    "founded": "Fondée en",
+    "country": "Pays",
+    "city": "Ville",
+    "brandPalette": "Palette de couleurs",
+    "achievements": "Réalisations",
+    "philosophy": "Philosophie de l'académie",
+    "technicalDirector": "Directeur technique",
+    "headCoach": "Entraîneur principal",
+    "fitnessCoach": "Préparateur physique",
+    "medicalStaff": "Personnel médical",
+    "stadiumName": "Nom du stade",
+    "stadiumLocation": "Emplacement du stade",
+    "gym": "Salle de sport",
+    "cafeteria": "Cafétéria",
+    "dormitory": "Dortoir",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "website": "Site web",
+    "facebook": "Facebook",
+    "instagram": "Instagram"
+  },
+  "kits": {
+    "title": "Tenues d'équipe",
+    "homeKit": "Tenue domicile",
+    "awayKit": "Tenue extérieur",
+    "noHomeKit": "Aucune tenue domicile téléchargée",
+    "noAwayKit": "Aucune tenue extérieur téléchargée",
+    "homeKitAlt": "Tenue domicile",
+    "awayKitAlt": "Tenue extérieur"
+  },
+  "colors": {
+    "primary": "Principale",
+    "secondary": "Secondaire"
+  },
+  "availability": {
+    "available": "Disponible",
+    "notAvailable": "Non disponible"
+  },
+  "misc": {
+    "na": "N/D",
+    "verified": "Vérifié"
+  }
+}

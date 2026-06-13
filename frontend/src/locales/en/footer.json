@@ -1,0 +1,23 @@
+{
+  "description": "The complete football management platform — built for admins, coaches, and players who demand more.",
+  "platform": {
+    "title": "Platform",
+    "home": "Home",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "about": "About"
+  },
+  "product": {
+    "title": "Product",
+    "adminDashboard": "Admin Dashboard",
+    "coachSuite": "Coach Suite",
+    "playerPortal": "Player Portal",
+    "requestAccess": "Request Access"
+  },
+  "legal": {
+    "title": "Legal",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy"
+  }
+}

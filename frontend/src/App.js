@@ -10,7 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // ── Pages publiques ────────────────────────────────────────────────────────────
 import Home from './pages/Home';
-import SignupForm from './pages/SignupForm';
+import RequestAcademyPage from './pages/RequestAcademyPage';
+import SuperAdminPortal from './pages/SuperAdminPortal';
 import ForgotPassword from './pages/ForgotPassword';
 import LoginForm from './pages/LoginForm';
 import NotFound from './pages/NotFound';
@@ -61,7 +62,7 @@ function Layout({ children }) {
   const pathname = location.pathname.toLowerCase();
 
   const noLayoutPrefixes = [
-    '/signup', '/login', '/forgot-password',
+    '/request-academy', '/super-admin-portal', '/login', '/forgot-password',
     '/administration', '/coach', '/players',
   ];
   const isFullScreen = noLayoutPrefixes.some(p => pathname.startsWith(p));
@@ -144,13 +145,20 @@ function App() {
                 {/* ── Public ───────────────────────────────────────────── */}
                 <Route path="*" element={<NotFound />} />
                 <Route path="/" element={<Home />} />
-                <Route path="/signup" element={<SignupForm />} />
+                <Route path="/signup" element={<Navigate to="/request-academy" replace />} />
+                <Route path="/request-academy" element={<RequestAcademyPage />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/logout" element={<LogoutRedirect />} />
+
+                <Route path="/super-admin-portal" element={
+                  <ProtectedRoute allowedRoles={['superadmin']} />
+                }>
+                  <Route index element={<SuperAdminPortal />} />
+                </Route>
 
                 {/* ── Administration (protégé admin) ────────────────────── */}
                 <Route path="/administration" element={

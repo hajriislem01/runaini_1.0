@@ -1,0 +1,183 @@
+{
+  "hero": {
+    "badge": "The Future of Football Management — Built Today",
+    "title": "Built for",
+    "typedWords": [
+      "Academies Football.",
+      "Administrations.",
+      "Coaches & Players."
+    ],
+    "description": "RunAiNi unifies your Admin war room, Coach intelligence suite, and Player portal into one seamless ecosystem. From squad notifications to AI-driven evaluations — every feature is production-ready.",
+    "ctaFree": "Start Your Academy Free",
+    "ctaPlans": "View Plans",
+    "proofNoCard": "No credit card required",
+    "proofRoles": "3 user roles included",
+    "proofFullAccess": "Full feature access"
+  },
+  "stats": {
+    "evaluationPillars": "Evaluation Pillars",
+    "kpiCriteria": "KPI Criteria",
+    "userSpaces": "User Spaces",
+    "realTime": "Real-Time"
+  },
+  "pillarsHeader": {
+    "tagline": "Three-Space Architecture",
+    "titleStart": "One Platform. ",
+    "titleEnd": "Three Superpowers.",
+    "description": "Admin command, Coach intelligence, and Player excellence — each role has its own dedicated, feature-rich workspace."
+  },
+  "pillars": {
+    "admin": {
+      "role": "Admin",
+      "space": "Admin Space",
+      "tagline": "Total Command",
+      "desc": "Orchestrate your entire academy from one war room. Manage players, coaches, events, payments and real-time group notifications.",
+      "features": [
+        "Multi-Group & Subgroup Targeting",
+        "Real-Time Notification Engine",
+        "Payment & Subscription Tracking",
+        "Match & Tournament Scheduling",
+        "Role-Based Access Control"
+      ],
+      "pills": {
+        "smartAlerts": "Smart Alerts",
+        "squadManagement": "Squad Management"
+      }
+    },
+    "coach": {
+      "role": "Coach",
+      "space": "Coach Space",
+      "tagline": "Elite Intelligence",
+      "desc": "Build champions with a six-pillar evaluation engine, AI position predictor, KPI radar charts and a structured training architecture.",
+      "features": [
+        "6-Pillar Monthly Evaluation",
+        "AI Position Predictor",
+        "KPI Radar & Progression Charts",
+        "PDF Report Export",
+        "Video Analysis Suite"
+      ],
+      "pills": {
+        "aiPredictor": "AI Predictor",
+        "kpiAnalytics": "KPI Analytics"
+      }
+    },
+    "player": {
+      "role": "Player",
+      "space": "Player Space",
+      "tagline": "Personal Excellence",
+      "desc": "Every player owns their journey. Track performance history, receive personalized training, and stay connected with your squad.",
+      "features": [
+        "Personal Performance Dashboard",
+        "Training Session Access",
+        "Event Notifications & RSVP",
+        "Progress History Timeline",
+        "Coach Feedback Visibility"
+      ],
+      "pills": {
+        "liveStats": "Live Stats",
+        "achievements": "Achievements"
+      }
+    }
+  },
+  "ecosystem": {
+    "title": "Built for the Elite Circuit.",
+    "subtitle": "A unified architecture serving three distinct user worlds in perfect synchronization.",
+    "admin": {
+      "title": "Admin Command",
+      "desc": "The master control room for academy operations. Manage structure, hierarchy, and financials.",
+      "features": [
+        "Multi-Group Hierarchies",
+        "Dynamic Notification Engine",
+        "Staff Permissions",
+        "Payment Management"
+      ]
+    },
+    "coach": {
+      "title": "Coach Intelligence",
+      "desc": "Empowering technical directors with data-driven decision tools and advanced scheduling.",
+      "features": [
+        "6-Pillar Evaluation System",
+        "KPI Radar Analytics",
+        "Training Session Creator",
+        "Video Analysis Suite"
+      ]
+    },
+    "player": {
+      "title": "Player Performance",
+      "desc": "Individualized tracking that transforms potential into professional-grade performance.",
+      "features": [
+        "Live Performance History",
+        "Injury & Health Logs",
+        "Personalized Training Plans",
+        "Report History Archives"
+      ]
+    }
+  },
+  "analytics": {
+    "badge": "Live Intelligence",
+    "title": "Precision Analytics.",
+    "desc": "Our proprietary KPI engine cross-references physical performance with technical growth. Experience the future of talent identification.",
+    "radarTitle": "Technical Radar v4.2",
+    "radarLabels": {
+      "speed": "Speed",
+      "control": "Control",
+      "power": "Power",
+      "vision": "Vision",
+      "health": "Health",
+      "tactics": "Tactics"
+    },
+    "stats": {
+      "dataSync": {
+        "label": "Data Points Sync",
+        "val": "2.4M+",
+        "trend": "+15%"
+      },
+      "evalMetrics": {
+        "label": "Evaluation Metrics",
+        "val": "42",
+        "trend": "Live"
+      },
+      "systemUptime": {
+        "label": "System Uptime",
+        "val": "99.9%",
+        "trend": "Stable"
+      },
+      "aiPrediction": {
+        "label": "AI Prediction",
+        "val": "98.8%",
+        "trend": "High"
+      }
+    },
+    "livePerf": "Live Performance",
+    "sysUptime": "System Uptime",
+    "operational": "Operational"
+  },
+  "featuresDeep": {
+    "tagline": "What Makes RunAiNi Different",
+    "title": "Engineered for Elite Performance",
+    "notification": {
+      "title": "Real-Time Notification Engine",
+      "desc": "Group and subgroup-aware alerts fire the instant an admin creates an event. Coaches and players are notified with context — match name, group, time — without lifting a finger."
+    },
+    "aiPredictor": {
+      "title": "AI Position Predictor",
+      "desc": "Our ML engine scores 24+ physical and tactical criteria to predict each player's optimal position with confidence rankings. One click updates their official profile."
+    },
+    "evaluation": {
+      "title": "6-Pillar Evaluation System",
+      "desc": "Coaches score players across Technical, Tactical, Physical, Mental, Health, and Academic pillars monthly. Auto-calculated averages and trend lines expose every weakness before it becomes a problem."
+    },
+    "hierarchy": {
+      "title": "Hierarchical Squad Architecture",
+      "desc": "Structure your academy into Groups and Subgroups. Events, notifications, and participants are resolved automatically based on this hierarchy. Zero manual filtering."
+    }
+  },
+  "ctaBanner": {
+    "tagline": "Ready to Dominate?",
+    "titleStart": "Your Academy.",
+    "titleEnd": "Fully Digitized.",
+    "description": "Join academies already managing players, tracking performance, and winning more with RunAiNi.",
+    "ctaStartFree": "Start Free — No Card Required",
+    "ctaPricing": "See Pricing →"
+  }
+}

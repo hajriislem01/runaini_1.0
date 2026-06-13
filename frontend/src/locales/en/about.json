@@ -1,0 +1,83 @@
+{
+  "hero": {
+    "badge": "Our Story",
+    "titleLine1": "Built by Coaches.",
+    "titleLine2": "Powered by Engineers.",
+    "description": "RunAiNi was born from a simple frustration: elite football intelligence was locked behind expensive, clunky enterprise software. We decided to change that."
+  },
+  "metrics": {
+    "userSpaces": "User Spaces",
+    "kpiCriteria": "KPI Criteria",
+    "evalPillars": "Eval Pillars",
+    "ambition": "Ambition"
+  },
+  "mission": {
+    "badge": "Our Mission",
+    "title": "Democratize Elite Football Management",
+    "paragraph1": "Every player deserves data-driven development. Every coach deserves tools that match their expertise. Every academy deserves infrastructure that scales with their ambition.",
+    "paragraph2": "We built RunAiNi in public — committing to transparency, shipping features weekly, and listening to coaches on the ground. The result is a platform that feels designed by coaches, not for a market segment.",
+    "bullets": {
+      "builtInPublic": "Built in Public",
+      "weeklyReleases": "Weekly Releases",
+      "coachDriven": "Coach-Driven Design",
+      "openArchitecture": "Open Architecture"
+    },
+    "visual": {
+      "dashboard": "Coach Dashboard",
+      "kpiRadar": "KPI Radar",
+      "pillars": "6-pillar evaluation active",
+      "notificationEngine": "Notification Engine",
+      "newMatch": "🔔 New Match for Group A",
+      "matchDetails": "→ 24 players, 2 coaches notified",
+      "aiPredictor": "AI Predictor",
+      "forward": "Forward 94%",
+      "position": "Midfielder 72%"
+    }
+  },
+  "techStack": {
+    "badge": "Our Stack",
+    "title": "Modern, Scalable, Production-Ready",
+    "categories": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "intelligence": "Intelligence"
+    },
+    "items": {
+      "frontend": ["React 18", "Framer Motion", "TailwindCSS", "Chart.js", "React Router v6"],
+      "backend": ["Django 4", "Django REST Framework", "Django Signals", "JWT Auth", "PostgreSQL"],
+      "intelligence": ["Custom ML Scorer", "Position Predictor", "KPI Engine", "PDF Generator", "Real-Time Alerts"]
+    }
+  },
+  "timeline": {
+    "badge": "Roadmap",
+    "title": "Where We Came From. Where We're Going.",
+    "items": [
+      { "year": "v1",  "event": "Foundation",        "desc": "Admin, Coach, and Player spaces shipped. Core player management, event scheduling, and group notifications live.", "color": "#902bd1" },
+      { "year": "v1.5","event": "Intelligence Layer", "desc": "6-Pillar Evaluation System, AI Position Predictor, and KPI Radar charts added. PDF export goes live.", "color": "#4fb0ff" },
+      { "year": "v2",  "event": "Hierarchy Engine",  "desc": "Subgroup architecture, strict hierarchy filtering, and group-aware notification engine completely rebuilt.", "color": "#00d0cb" },
+      { "year": "v3",  "event": "What's Next",       "desc": "Video analysis at scale, federation API, mobile app for players, and a public scouting network.", "color": "#902bd1" }
+    ]
+  },
+  "cta": {
+    "title": "Join the Movement",
+    "description": "We're building the future of football management in public, one feature at a time. Bring your academy along for the ride.",
+    "startButton": "Start Free Today",
+    "blogButton": "Read Our Blog"
+  },
+  "build": {
+    "title": "The Build in",
+    "publicManifest": "Public Manifest.",
+    "phases": [
+      { "t": "Phase 1: Foundation",        "d": "Architecting the hybrid MERN-Django engine for high-concurrency academy data." },
+      { "t": "Phase 2: Intelligence",       "d": "Developing the 6-Pillar scoring logic and predictive KPI radar mapping." },
+      { "t": "Phase 3: The Unified Grid",   "d": "Connecting Admin, Coach, and Player spaces in a real-time responsive web ecosystem." }
+    ]
+  },
+  "techEvolution": {
+    "badge": "Tech Evolution",
+    "title": "Engineering the",
+    "subtitle": "Future of Sport.",
+    "description": "RunAiNi is built on a high-performance stack designed for infinite horizontal scaling and ultra-low latency data processing. Our architecture leverages the latest in frontend reactivity and backend robustness.",
+    "stack": ["React 19", "Framer Motion", "Tailwind 4", "Django Rest", "PostgreSQL", "Socket.io", "JWT Auth"]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "header": {
+    "editProfile": "تعديل الملف",
+    "noAcademyError": "لم يتم العثور على أكاديمية. يرجى إكمال الإعدادات.",
+    "loading": "جارٍ تحميل ملفك الشخصي...",
+    "needHelp": "هل تحتاج مساعدة؟ تواصل معنا",
+    "email": "البريد الإلكتروني",
+    "call": "اتصال"
+  },
+  "sections": {
+    "academyInfo": "معلومات الأكاديمية",
+    "staffInfo": "معلومات الطاقم",
+    "facilities": "المرافق",
+    "contact": "التواصل",
+    "location": "الموقع",
+    "socialMedia": "وسائل التواصل الاجتماعي"
+  },
+  "fields": {
+    "academyName": "اسم الأكاديمية",
+    "founded": "سنة التأسيس",
+    "country": "الدولة",
+    "city": "المدينة",
+    "brandPalette": "لوحة الألوان",
+    "achievements": "الإنجازات",
+    "philosophy": "فلسفة الأكاديمية",
+    "technicalDirector": "المدير التقني",
+    "headCoach": "المدرب الرئيسي",
+    "fitnessCoach": "مدرب اللياقة البدنية",
+    "medicalStaff": "الطاقم الطبي",
+    "stadiumName": "اسم الملعب",
+    "stadiumLocation": "موقع الملعب",
+    "gym": "صالة الرياضة",
+    "cafeteria": "الكافيتيريا",
+    "dormitory": "السكن الداخلي",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "website": "الموقع الإلكتروني",
+    "facebook": "فيسبوك",
+    "instagram": "إنستغرام"
+  },
+  "kits": {
+    "title": "أطقم الفريق",
+    "homeKit": "الطقم الرسمي",
+    "awayKit": "طقم الخارج",
+    "noHomeKit": "لم يُحمَّل طقم رسمي",
+    "noAwayKit": "لم يُحمَّل طقم خارج",
+    "homeKitAlt": "الطقم الرسمي",
+    "awayKitAlt": "طقم الخارج"
+  },
+  "colors": {
+    "primary": "الرئيسي",
+    "secondary": "الثانوي"
+  },
+  "availability": {
+    "available": "متوفر",
+    "notAvailable": "غير متوفر"
+  },
+  "misc": {
+    "na": "غير متاح",
+    "verified": "موثّق"
+  }
+}

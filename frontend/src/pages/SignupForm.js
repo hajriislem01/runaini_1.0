@@ -291,7 +291,7 @@ const SignupForm = () => {
           <p className="text-xs text-gray-600 mb-2">Your organization details</p>
           <GoldInput label="Academy Name" icon={FiShield} type="text"
             value={formData.academy_name} onChange={set('academy_name')} required />
-          <GoldInput label="Club / Company (optional)" icon={FiHome} type="text"
+          <GoldInput label="Club / Company (Optional)" icon={FiHome} type="text"
             value={formData.club} onChange={set('club')} />
           <PhoneInput value={formData.phone}
             onChange={e => { setFormData(p => ({ ...p, phone: e.target.value })); setError(''); }} />
@@ -350,7 +350,7 @@ const SignupForm = () => {
 
             {/* Logo */}
             <div className="text-center mb-7">
-              <Link to="/" className="inline-flex items-center gap-0.5 text-3xl font-extrabold mb-2">
+              <Link to="/" className="inline-flex items-center gap-0.5 text-3xl font-extrabold mb-2" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                 <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>RUN</span>
                 <span className="text-white">AI</span>
                 <span style={{ color: T }}>NI</span>

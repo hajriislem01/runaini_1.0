@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 import { FiSearch } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 import { useCoachManagement } from './hooks/useCoachManagement';
 import { containerVariants, itemVariants } from './utils/coachHelpers';
@@ -11,6 +12,9 @@ import CoachList from './components/CoachList';
 import CoachFormModal from './modals/CoachFormModal';
 
 const CoachManagement = () => {
+  const { t, i18n } = useTranslation('coachmanagement');
+  const isRtl = i18n.language === 'ar';
+
   const {
     coaches, isLoading, showModal, setShowModal, searchTerm, setSearchTerm,
     showPassword, setShowPassword, passwordStrength, editCoachId,
@@ -35,10 +39,14 @@ const CoachManagement = () => {
 
         <motion.div variants={itemVariants} className="mb-8">
           <div className="relative max-w-md">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Search by name, email, or club..."
-              className="w-full pl-12 pr-4 py-3 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#00d0cb]/50 outline-none"
-              value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <FiSearch className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400`} />
+            <input 
+              type="text" 
+              placeholder={t('searchPlaceholder', 'Search by name, email, or club...')}
+              className={`w-full ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-gray-900/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#00d0cb]/50 outline-none`}
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
           </div>
         </motion.div>
 
@@ -60,7 +68,7 @@ const CoachManagement = () => {
         />
 
       </div>
-      <Toaster position="top-right" containerStyle={{ zIndex: 10000 }} />
+      <Toaster position={isRtl ? "top-left" : "top-right"} containerStyle={{ zIndex: 10000 }} />
     </motion.div>
   );
 };

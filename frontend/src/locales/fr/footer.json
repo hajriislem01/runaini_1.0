@@ -1,0 +1,23 @@
+{
+  "description": "La plateforme complète de gestion du football — conçue pour les administrateurs, les entraîneurs et les joueurs exigeants.",
+  "platform": {
+    "title": "Plateforme",
+    "home": "Accueil",
+    "pricing": "Tarifs",
+    "blog": "Blog",
+    "about": "À propos"
+  },
+  "product": {
+    "title": "Produit",
+    "adminDashboard": "Tableau de bord admin",
+    "coachSuite": "Suite Coach",
+    "playerPortal": "Portail Joueur",
+    "requestAccess": "Demander l'accès"
+  },
+  "legal": {
+    "title": "Légal",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation",
+    "cookiePolicy": "Politique de cookies"
+  }
+}

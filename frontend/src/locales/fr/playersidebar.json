@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "my_profile": "Mon profil",
+    "training": "Entraînement",
+    "matches": "Matchs",
+    "stats": "Statistiques",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "teamMember": "Membre de l'équipe",
+    "playerSpace": "Espace Joueur",
+    "verifiedPlayer": "Joueur vérifié"
+  }
+}

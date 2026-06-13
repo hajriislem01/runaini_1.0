@@ -4,48 +4,52 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
-from django.db import transaction, IntegrityError
-from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup, Academy
+from django.db import transaction
+from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup
 from .serializers import PlayerProfileSerializer
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsSuperAdmin
+from .academy_onboarding import create_academy_with_admin
 
 
 class AdminSignupView(APIView):
-    permission_classes = [AllowAny]
+    """Create academy + primary admin. Restricted to platform super admins."""
+    permission_classes = [IsAuthenticated, IsSuperAdmin]
 
     def post(self, request):
         data = request.data
 
         if data.get("role") != "admin":
-            return Response({"error": "Only admin signup is allowed"}, status=403)
+            return Response({"error": "Only admin academy accounts can be created here"}, status=403)
+
+        required = ("username", "email", "password", "academy_name")
+        if not all(data.get(f) for f in required):
+            return Response({"error": f"Missing required fields: {', '.join(required)}"}, status=400)
+
+        if CustomUser.objects.filter(email=data["email"]).exists():
+            return Response({"error": "A user with this email already exists"}, status=400)
 
         try:
-            # ✅ Crée l'académie automatiquement avec le nom fourni
-            academy = Academy.objects.create(
-                name=data.get("academy_name", f"{data['username']}'s Academy"),
-                email=data.get("email", ""),
-                phone=data.get("phone", "")
-            )
-
-            user = CustomUser.objects.create(
-                username=data["username"],
+            academy, user = create_academy_with_admin(
+                academy_name=data.get("academy_name", f"{data['username']}'s Academy"),
                 email=data["email"],
-                password=make_password(data["password"]),
-                role="admin",
+                password=data["password"],
+                username=data["username"],
                 first_name=data.get("first_name", ""),
                 last_name=data.get("last_name", ""),
                 phone=data.get("phone", ""),
                 club=data.get("club", ""),
-                academy=academy  # ✅ Assigne l'académie à l'admin
+                billing_plan=data.get("billing_plan", "trial"),
             )
-
             token = Token.objects.create(user=user)
-            return Response({
-                "token": token.key,
-                "academy_id": academy.id,
-                "academy_name": academy.name
-            }, status=201)
-
+            return Response(
+                {
+                    "token": token.key,
+                    "academy_id": academy.id,
+                    "academy_name": academy.name,
+                    "billing_plan": academy.billing_plan,
+                },
+                status=201,
+            )
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 

@@ -1,0 +1,82 @@
+{
+  "sidebar": {
+    "title": "Administration Panel",
+    "mainTitle": "Manage your academy information and preferences",
+    "academyInfo": "Academy Information",
+    "academyInfoSub": "Configure academy details and branding",
+    "contactSocial": "Contact & Social",
+    "contactSocialSub": "Manage contact info",
+    "facilitiesStaff": "Facilities & Staff",
+    "facilitiesStaffSub": "Manage facilities",
+    "preferences": "Preferences",
+    "preferencesSub": "Set preferences",
+    "privacySecurity": "Privacy & Security",
+    "privacySecuritySub": "Security settings"
+  },
+  "academyInfo": {
+    "title": "Academy Information",
+    "subtitle": "Configure your academy details and branding",
+    "logoLabel": "CLICK THE CAMERA ICON TO UPDATE ACADEMY BRANDING",
+    "name": "Academy Name *",
+    "founded": "Founded Year",
+    "country": "Country",
+    "achievements": "Achievements",
+    "achievementsPlaceholder": "List your academy's achievements",
+    "philosophy": "Philosophy",
+    "teamKits": "Team Kits",
+    "homeKit": "Home Kit",
+    "awayKit": "Away Kit"
+  },
+  "branding": {
+    "title": "Branding Engine",
+    "subtitle": "Configure platform colors, geometry, and readability",
+    "primaryColor": "PRIMARY COLOR",
+    "secondaryColor": "SECONDARY COLOR",
+    "accentSlot1": "ACCENT SLOT 1",
+    "accentSlot2": "ACCENT SLOT 2",
+    "previewTitle": "LIVE BRANDING PREVIEW"
+  },
+  "contactSocial": {
+    "title": "Contact & Social Media",
+    "subtitle": "Manage your contact information and social links",
+    "email": "Email",
+    "phone": "Phone",
+    "website": "Website",
+    "facebook": "Facebook",
+    "instagram": "Instagram"
+  },
+  "staffFacilities": {
+    "title": "Staff & Facilities",
+    "subtitle": "Manage staff and facility information",
+    "staffHeader": "Staff Information",
+    "facilitiesHeader": "Facilities",
+    "technicalDirector": "Technical Director",
+    "headCoach": "Head Coach",
+    "fitnessCoach": "Fitness Coach",
+    "medicalStaff": "Medical Staff",
+    "stadiumName": "Stadium Name",
+    "stadiumLocation": "Stadium Location",
+    "gym": "Gym Available",
+    "cafeteria": "Cafeteria Available",
+    "dormitory": "Dormitory Available",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Set your language and timezone preferences",
+    "timezone": "Time Zone",
+    "languages": "Languages"
+  },
+  "privacy": {
+    "title": "Privacy & Security",
+    "subtitle": "Manage your password and security settings",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "update": "Update"
+  }
+}

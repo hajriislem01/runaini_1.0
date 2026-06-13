@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import toast, { Toaster } from 'react-hot-toast';
 import EventDetailDrawer from '../../components/common/EventDetailDrawer';
+import { useTranslation } from 'react-i18next';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CATEGORIES = {
@@ -63,6 +64,14 @@ const isPast = (dateStr) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const CoachAgenda = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('coachagenda');
+  const isRTL = i18n.language === 'ar';
+
+  const tMonth = (d) => t(`months.${format(d, 'MMM').toLowerCase()}`);
+  const tMonthLong = (d) => t(`months.${format(d, 'MMMM').toLowerCase()}`);
+  const tDay = (d) => t(`days.${format(d, 'EEE').toLowerCase()}`);
+  const tDayLong = (d) => t(`days.${format(d, 'EEEE').toLowerCase()}`);
+
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [sessions, setSessions] = useState([]);
@@ -130,7 +139,7 @@ const CoachAgenda = () => {
       setPlayers(pRes.data);
     } catch (err) {
       console.error('Error loading agenda:', err);
-      toast.error('Failed to load agenda');
+      toast.error(t('toast.load_error'));
     }
     finally { setIsLoading(false); }
   };
@@ -257,7 +266,7 @@ const CoachAgenda = () => {
 
   const handleEdit = async (e) => {
     e.preventDefault();
-    if (!editForm.date) { toast.error('Date is required'); return; }
+    if (!editForm.date) { toast.error(t('toast.date_required')); return; }
     setIsSubmitting(true);
     try {
       const res = await API.patch(`trainings/${selectedSession.id}/`, {
@@ -267,10 +276,10 @@ const CoachAgenda = () => {
         location: editForm.location,
       });
       setSessions(prev => prev.map(s => s.id === selectedSession.id ? res.data : s));
-      toast.success('Session updated ✅');
+      toast.success(t('toast.update_success'));
       setShowEditModal(false);
       setSelectedSession(null);
-    } catch { toast.error('Failed to update session'); }
+    } catch { toast.error(t('toast.update_error')); }
     finally { setIsSubmitting(false); }
   };
 
@@ -278,7 +287,7 @@ const CoachAgenda = () => {
     setIsSubmitting(true);
     try {
       if (deleteAll && selectedSession.parent_session) {
-        // Delete all recurring siblings
+        // Delete all {t('event.recurring')} siblings
         const parentId = selectedSession.parent_session;
         const toDelete = sessions.filter(s =>
           s.id === parentId ||
@@ -295,10 +304,10 @@ const CoachAgenda = () => {
         await API.delete(`trainings/${selectedSession.id}/`);
         setSessions(prev => prev.filter(s => s.id !== selectedSession.id));
       }
-      toast.success('Session deleted ✅');
+      toast.success(t('toast.delete_success'));
       setShowDeleteModal(false);
       setSelectedSession(null);
-    } catch { toast.error('Failed to delete session'); }
+    } catch { toast.error(t('toast.delete_error')); }
     finally { setIsSubmitting(false); }
   };
 
@@ -324,10 +333,10 @@ const CoachAgenda = () => {
         {/* Header — click opens detail modal */}
         <div className="p-4 cursor-pointer select-none" onClick={() => handleOpenDetail(s)}>
           {/* Header row */}
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="text-sm font-semibold text-white">{s.title}</span>
+                <span className="text-sm font-semibold text-white break-words">{s.title}</span>
                 {s._isEvent && (
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/20 uppercase font-bold">
                     {s.type}
@@ -336,11 +345,11 @@ const CoachAgenda = () => {
                 {recur && (
                   <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded"
                     style={{ background: 'rgba(144,43,209,.2)', color: '#c084fc' }}>
-                    <FiRepeat size={9} />recurring
+                    <FiRepeat size={9} />{t('event.recurring')}
                   </span>
                 )}
                 {past && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-500">Past</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-500">{t('event.past')}</span>
                 )}
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
@@ -353,15 +362,15 @@ const CoachAgenda = () => {
                 </span>
                 {s.participants_count > 0 && (
                   <span className="flex items-center gap-1">
-                    <FiUsers size={11} />{s.participants_count} players
+                    <FiUsers size={11} />{s.participants_count} {t('event.players')}
                   </span>
                 )}
               </div>
             </div>
 
             {/* Badges */}
-            <div className="flex flex-col items-end gap-1.5">
-              <div className="flex flex-wrap justify-end gap-1">
+            <div className="flex flex-wrap sm:flex-col sm:items-end gap-1.5">
+              <div className="flex flex-wrap gap-1 sm:justify-end">
                 {s._isEvent ? (
                   (() => {
                     let badgeConfig = { color: '#4fb0ff', bg: 'rgba(79,176,255,0.15)', border: 'rgba(79,176,255,0.3)', label: 'Internal Meeting' };
@@ -372,28 +381,28 @@ const CoachAgenda = () => {
                     return (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
                         style={{ background: badgeConfig.bg, color: badgeConfig.color, border: `1px solid ${badgeConfig.border}` }}>
-                        {badgeConfig.label}
+                        {t(`categories.${s.type === 'Meeting' ? 'meeting' : s.type === 'Match Friendly' ? 'friendly' : 'tournament'}`)}
                       </span>
                     );
                   })()
                 ) : (
                   <>
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Team Training
+                      {t('event.team_training')}
                     </span>
                     {categories.map(cKey => {
                       const c = getCat(cKey);
                       return (
                         <span key={cKey} className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
                           style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
-                          {c.label}
+                          {t(`categories.${cKey}`) || c.label}
                         </span>
                       );
                     })}
                   </>
                 )}
               </div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s._isEvent ? 'Agenda Item' : `Level ${s.level}`}</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s._isEvent ? t('event.agenda_item') : `${t('event.level')} ${s.level}`}</span>
             </div>
           </div>
 
@@ -413,7 +422,7 @@ const CoachAgenda = () => {
           {!compact && (s.exercises || []).length > 0 && (
             <div className="mb-3">
               <div className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
-                <FaDumbbell style={{ fontSize: 10 }} />{(s.exercises || []).length} exercises · {s.total_exercise_duration || 0} min
+                <FaDumbbell style={{ fontSize: 10 }} />{(s.exercises || []).length} {t('event.exercises')} · {s.total_exercise_duration || 0} min
               </div>
               <div className="space-y-1">
                 {(s.exercises || []).slice(0, 3).map((ex, i) => {
@@ -430,14 +439,14 @@ const CoachAgenda = () => {
                       <span className="text-gray-600">{ex.duration}min</span>
                       {isInd && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/20 flex-shrink-0">
-                          {ex.assigned_players.length} Players
+                          {ex.assigned_players.length} {t('event.players')}
                         </span>
                       )}
                     </div>
                   );
                 })}
                 {(s.exercises || []).length > 3 && (
-                  <div className="text-xs text-gray-600 pl-2">+{(s.exercises || []).length - 3} more exercises</div>
+                  <div className="text-xs text-gray-600 pl-2">+{(s.exercises || []).length - 3} more {t('event.exercises')}</div>
                 )}
               </div>
             </div>
@@ -482,6 +491,7 @@ const CoachAgenda = () => {
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
+      dir={isRTL ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
       <Toaster position="top-right" />
@@ -492,22 +502,22 @@ const CoachAgenda = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-                Coach Agenda
+                {t('header.agenda')}
               </h1>
               <p className="text-gray-400 mt-2">
-                {format(currentDate, 'MMMM yyyy')} · {stats.month} sessions scheduled
+                {tMonthLong(currentDate)} {format(currentDate, 'yyyy')} · {stats.month} {t('stats.sessions_scheduled')}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 w-full lg:w-auto">
               {/* View toggle */}
-              <div className="flex bg-gray-900/80 border border-gray-700/50 rounded-xl overflow-hidden">
+              <div className="flex w-full sm:w-auto bg-gray-900/80 border border-gray-700/50 rounded-xl overflow-hidden">
                 {[
-                  { key: 'month', icon: <FiCalendar size={14} />, label: 'Month' },
-                  { key: 'week', icon: <FiGrid size={14} />, label: 'Week' },
-                  { key: 'list', icon: <FiList size={14} />, label: 'List' },
+                  { key: 'month', icon: <FiCalendar size={14} />, label: t('controls.month') },
+                  { key: 'week', icon: <FiGrid size={14} />, label: t('controls.week') },
+                  { key: 'list', icon: <FiList size={14} />, label: t('controls.day') },
                 ].map(v => (
                   <button key={v.key} onClick={() => setView(v.key)}
-                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm transition-all"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm transition-all"
                     style={view === v.key
                       ? { background: 'rgba(79,176,255,.2)', color: '#4fb0ff', borderBottom: '2px solid #4fb0ff' }
                       : { color: '#64748b' }}>
@@ -517,21 +527,21 @@ const CoachAgenda = () => {
               </div>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/coach/training')}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium text-sm"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium text-sm"
                 style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                <FiPlus size={16} />Create session
+                <FiPlus size={16} />{t('event.add_new')}
               </motion.button>
             </div>
           </div>
         </motion.div>
 
         {/* ── Stats ── */}
-        <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full mb-8">
           {[
-            { label: 'This month', value: stats.month, color: '#4fb0ff' },
-            { label: 'This week', value: stats.week, color: '#00d0cb' },
-            { label: 'Today', value: stats.today, color: '#22c55e' },
-            { label: 'Recurring', value: stats.recurring, color: '#902bd1' },
+            { label: t('stats.this_month'), value: stats.month, color: '#4fb0ff' },
+            { label: t('stats.this_week'), value: stats.week, color: '#00d0cb' },
+            { label: t('stats.today'), value: stats.today, color: '#22c55e' },
+            { label: t('stats.recurring'), value: stats.recurring, color: '#902bd1' },
           ].map((s, i) => (
             <div key={i} className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 text-center">
               {isLoading
@@ -546,7 +556,7 @@ const CoachAgenda = () => {
         {upcoming.length > 0 && (
           <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50 mb-8">
             <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-              <FiActivity className="text-[#00d0cb]" />Next {upcoming.length} sessions
+              <FiActivity className="text-[#00d0cb]" />{t('header.upcoming_sessions')} ({upcoming.length})
             </h2>
             <div className="space-y-3">
               {upcoming.map(s => {
@@ -557,27 +567,29 @@ const CoachAgenda = () => {
                 return (
                   <div key={s.id}
                     onClick={() => handleOpenDetail(s)}
-                    className="flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:border-[#00d0cb]/40 hover:bg-[#00d0cb]/5 group"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 rounded-xl border transition-all cursor-pointer hover:border-[#00d0cb]/40 hover:bg-[#00d0cb]/5 group"
                     style={{ background: 'rgba(15,23,42,.6)', borderColor: 'rgba(51,65,85,.4)' }}>
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: mainCat.color }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-sm font-medium text-white truncate">{s.title}</span>
-                        {recur && <FiRepeat size={11} className="text-purple-400 flex-shrink-0" />}
-                      </div>
-                      <div className="text-xs text-gray-500 flex gap-3 flex-wrap">
-                        <span>{isT ? 'Today' : format(parseISO(s.date), 'EEE MMM d')} · {formatTimeRange(s.start_time, s.end_time)}</span>
-                        {s.groups_detail?.length > 0 && <span>{s.groups_detail.map(g => g.name).join(', ')}</span>}
-                        {s.location && <span>{s.location}</span>}
+                    <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: mainCat.color }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm font-medium text-white truncate">{s.title}</span>
+                          {recur && <FiRepeat size={11} className="text-purple-400 flex-shrink-0" />}
+                        </div>
+                        <div className="text-xs text-gray-500 flex gap-3 flex-wrap">
+                          <span>{isT ? t('stats.today') : format(parseISO(s.date), 'EEE MMM d')} · {formatTimeRange(s.start_time, s.end_time)}</span>
+                          {s.groups_detail?.length > 0 && <span>{s.groups_detail.map(g => g.name).join(', ')}</span>}
+                          {s.location && <span>{s.location}</span>}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex flex-wrap gap-1 flex-shrink-0 sm:justify-end w-full sm:w-auto pl-5 sm:pl-0">
                       {sCats.map(cKey => {
                         const c = getCat(cKey);
                         return (
-                          <span key={cKey} className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase"
+                          <span key={cKey} className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase whitespace-nowrap"
                             style={{ background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
-                            {c.label}
+                            {t(`categories.${cKey}`) || c.label}
                           </span>
                         );
                       })}
@@ -593,7 +605,7 @@ const CoachAgenda = () => {
         <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <FiFilter className="text-[#4fb0ff]" size={15} />
-            <span className="text-sm font-semibold text-white">Filters</span>
+            <span className="text-sm font-semibold text-white">{t('filters.title')}</span>
             {(filterGroups.length > 0 || filterCats.length > 0 || filterRecur) && (
               <button onClick={() => { setFilterGroups([]); setFilterCats([]); setFilterRecur(false); }}
                 className="ml-auto text-xs text-gray-500 hover:text-white px-2 py-1 rounded-lg bg-gray-800/50 border border-gray-700/50">
@@ -601,7 +613,7 @@ const CoachAgenda = () => {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             {/* Groups */}
             {groups.map(g => (
               <button key={g.id} onClick={() => toggleFilterGroup(g.id)}
@@ -612,7 +624,7 @@ const CoachAgenda = () => {
                 {g.name}
               </button>
             ))}
-            <div className="w-px bg-gray-700/50 mx-1" />
+            <div className="hidden sm:block w-px h-5 bg-gray-700/50 mx-1 self-center" />
             {/* Categories */}
             {Object.entries(CATEGORIES).map(([key, cat]) => (
               <button key={key} onClick={() => toggleFilterCat(key)}
@@ -620,10 +632,10 @@ const CoachAgenda = () => {
                 style={filterCats.includes(key)
                   ? { background: cat.bg, borderColor: cat.color, color: cat.color }
                   : { background: 'rgba(30,41,59,.5)', borderColor: 'rgba(51,65,85,.5)', color: '#64748b' }}>
-                {cat.label}
+                {t(`categories.${key}`) || cat.label}
               </button>
             ))}
-            <div className="w-px bg-gray-700/50 mx-1" />
+            <div className="hidden sm:block w-px h-5 bg-gray-700/50 mx-1 self-center" />
             {/* Recurring */}
             <button onClick={() => setFilterRecur(v => !v)}
               className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border transition-all"
@@ -642,20 +654,22 @@ const CoachAgenda = () => {
           <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
             {/* Calendar nav */}
             <div className="flex items-center justify-between mb-6">
-              <button onClick={() => setCurrentDate(addMonths(currentDate, -1))}
+              <button onClick={() => setCurrentDate(addMonths(currentDate, isRTL ? 1 : -1))}
+                title={t('controls.previous')}
                 className="p-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white transition-all">
-                <FiChevronLeft size={20} />
+                <FiChevronLeft size={20} style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }} />
               </button>
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-white">{format(currentDate, 'MMMM yyyy')}</h2>
+                <h2 className="text-xl font-bold text-white">{tMonthLong(currentDate)} {format(currentDate, 'yyyy')}</h2>
                 <button onClick={() => setCurrentDate(new Date())}
                   className="text-xs px-3 py-1 rounded-full border border-[#00d0cb]/30 text-[#00d0cb] bg-[#00d0cb]/10">
-                  Today
+                  {t('controls.today')}
                 </button>
               </div>
-              <button onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+              <button onClick={() => setCurrentDate(addMonths(currentDate, isRTL ? -1 : 1))}
+                title={t('controls.next')}
                 className="p-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white transition-all">
-                <FiChevronRight size={20} />
+                <FiChevronRight size={20} style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }} />
               </button>
             </div>
 
@@ -667,24 +681,40 @@ const CoachAgenda = () => {
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {calDays.map((day, i) => {
                 const todayDay = isToday(day.date);
                 const hasSessions = day.sessions.length > 0;
                 return (
                   <motion.div key={i} whileHover={{ scale: 1.02 }}
                     onClick={() => openDayModal(day.date, day.sessions)}
-                    className="min-h-24 rounded-xl p-2 border cursor-pointer transition-all"
+                    className="aspect-square sm:aspect-auto sm:min-h-24 rounded-xl p-1 sm:p-2 border cursor-pointer transition-all flex flex-col items-center justify-center sm:items-stretch sm:justify-start text-xs sm:text-sm"
                     style={{
                       background: todayDay ? 'rgba(0,208,203,.06)' : 'rgba(15,23,42,.5)',
                       borderColor: todayDay ? '#00d0cb' : hasSessions ? 'rgba(79,176,255,.25)' : 'rgba(30,41,59,.8)',
                       opacity: day.isCurrentMonth ? 1 : 0.4,
                     }}>
-                    <div className="text-right text-xs font-semibold mb-1"
+                    <div className="text-center sm:text-right text-xs font-semibold sm:mb-1 w-full"
                       style={{ color: todayDay ? '#00d0cb' : '#94a3b8' }}>
                       {format(day.date, 'd')}
                     </div>
-                    <div className="space-y-0.5">
+
+                    {/* Mobile Dots Indicator */}
+                    <div className="flex gap-0.5 mt-1 sm:hidden">
+                      {day.sessions.slice(0, 3).map(s => {
+                        const sCats = Array.isArray(s.category) ? s.category : [s.category];
+                        const cat = getCat(sCats[0]);
+                        return (
+                          <div key={s.id} className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: cat.color }} />
+                        );
+                      })}
+                      {day.sessions.length > 3 && (
+                        <div className="w-1 h-1 rounded-full bg-gray-500 flex-shrink-0 self-center" />
+                      )}
+                    </div>
+
+                    {/* Desktop Sessions List */}
+                    <div className="hidden sm:block space-y-0.5 w-full">
                       {day.sessions.slice(0, 2).map(s => {
                         const sCats = Array.isArray(s.category) ? s.category : [s.category];
                         const cat = getCat(sCats[0]);
@@ -698,7 +728,7 @@ const CoachAgenda = () => {
                         );
                       })}
                       {day.sessions.length > 2 && (
-                        <div className="text-xs text-gray-500 text-center">
+                        <div className="text-[10px] text-gray-500 text-center font-medium mt-1">
                           +{day.sessions.length - 2} more
                         </div>
                       )}
@@ -713,7 +743,7 @@ const CoachAgenda = () => {
               {Object.entries(CATEGORIES).map(([key, cat]) => (
                 <span key={key} className="flex items-center gap-1.5 text-xs text-gray-500">
                   <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                  {cat.label}
+                  {t(`categories.${key}`) || cat.label}
                 </span>
               ))}
             </div>
@@ -727,22 +757,24 @@ const CoachAgenda = () => {
           <motion.div variants={iV} className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
             {/* Week nav */}
             <div className="flex items-center justify-between mb-5">
-              <button onClick={() => setCurrentDate(addDays(currentDate, -7))}
+              <button onClick={() => setCurrentDate(addDays(currentDate, isRTL ? 7 : -7))}
+                title={t('controls.previous')}
                 className="p-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white">
-                <FiChevronLeft size={20} />
+                <FiChevronLeft size={20} style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }} />
               </button>
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold text-white">
-                  {format(weekDays[0], 'MMM d')} – {format(weekDays[6], 'MMM d, yyyy')}
+                  {tMonth(weekDays[0])} {format(weekDays[0], 'd')} – {tMonth(weekDays[6])} {format(weekDays[6], 'd, yyyy')}
                 </h2>
                 <button onClick={() => setCurrentDate(new Date())}
                   className="text-xs px-3 py-1 rounded-full border border-[#00d0cb]/30 text-[#00d0cb] bg-[#00d0cb]/10">
-                  This week
+                  {t('controls.today')}
                 </button>
               </div>
-              <button onClick={() => setCurrentDate(addDays(currentDate, 7))}
+              <button onClick={() => setCurrentDate(addDays(currentDate, isRTL ? -7 : 7))}
+                title={t('controls.next')}
                 className="p-2 rounded-xl bg-gray-800/50 border border-gray-700/50 text-gray-400 hover:text-white">
-                <FiChevronRight size={20} />
+                <FiChevronRight size={20} style={{ transform: isRTL ? 'scaleX(-1)' : 'none' }} />
               </button>
             </div>
 
@@ -758,7 +790,7 @@ const CoachAgenda = () => {
                         style={todayDay
                           ? { background: 'rgba(0,208,203,.12)', color: '#00d0cb', border: '1px solid rgba(0,208,203,.3)' }
                           : { color: '#64748b' }}>
-                        <div>{WEEK_DAYS[i]}</div>
+                        <div>{t(`days.${WEEK_DAYS[i].toLowerCase()}`)}</div>
                         <div className="text-base font-bold mt-0.5" style={{ color: todayDay ? '#00d0cb' : '#94a3b8' }}>
                           {format(d, 'd')}
                         </div>
@@ -819,12 +851,12 @@ const CoachAgenda = () => {
             ) : listGroups.length === 0 ? (
               <div className="bg-gray-900/70 rounded-2xl p-16 border border-gray-700/50 text-center">
                 <FiCalendar className="mx-auto text-5xl text-gray-600 mb-4" />
-                <p className="text-white text-lg">No upcoming sessions</p>
-                <p className="text-gray-500 text-sm mt-2">Create a session to get started</p>
+                <p className="text-white text-lg">{t('empty.no_upcoming')}</p>
+                <p className="text-gray-500 text-sm mt-2">{t('empty.click_to_add')}</p>
                 <button onClick={() => navigate('/coach/training/create')}
                   className="mt-6 px-5 py-2.5 rounded-xl text-white text-sm"
                   style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                  Create session
+                  {t('event.create_session')}
                 </button>
               </div>
             ) : (
@@ -838,10 +870,10 @@ const CoachAgenda = () => {
                         style={todayDay
                           ? { background: 'rgba(0,208,203,.12)', color: '#00d0cb', border: '1px solid rgba(0,208,203,.3)' }
                           : { background: 'rgba(30,41,59,.5)', color: '#94a3b8' }}>
-                        {todayDay ? 'Today — ' : ''}{format(d, 'EEEE, MMMM d, yyyy')}
+                        {todayDay ? `${t('controls.today')} — ` : ''}{tDayLong(d)}, {tMonthLong(d)} {format(d, 'd, yyyy')}
                       </div>
                       <div className="flex-1 h-px bg-gray-800" />
-                      <div className="text-xs text-gray-600">{daySessions.length} session{daySessions.length > 1 ? 's' : ''}</div>
+                      <div className="text-xs text-gray-600">{daySessions.length} {t('stats.session_s')}</div>
                     </div>
                     <div className="space-y-3">
                       {daySessions.map(s => <SessionCard key={s.id} s={s} />)}
@@ -868,7 +900,7 @@ const CoachAgenda = () => {
               <form onSubmit={handleEdit}>
                 <div className="flex items-center justify-between p-6 border-b border-gray-700">
                   <div>
-                    <div className="text-lg font-bold text-white">Edit Session</div>
+                    <div className="text-lg font-bold text-white">{t('event.edit')}</div>
                     <div className="text-sm text-gray-400 mt-0.5">{selectedSession.title}</div>
                   </div>
                   <button type="button" onClick={() => setShowEditModal(false)}
@@ -878,7 +910,7 @@ const CoachAgenda = () => {
                 </div>
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Date <span className="text-red-400 text-xs">*</span></label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('event.start_date')} <span className="text-red-400 text-xs">*</span></label>
                     <input type="date" value={editForm.date}
                       min={new Date().toISOString().split('T')[0]}
                       onChange={e => setEditForm(p => ({ ...p, date: e.target.value }))}
@@ -887,20 +919,20 @@ const CoachAgenda = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Start time</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('event.start_date')} (Time)</label>
                       <input type="time" value={editForm.start_time}
                         onChange={e => setEditForm(p => ({ ...p, start_time: e.target.value }))}
                         className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00d0cb]" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">End time</label>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">{t('event.end_date')} (Time)</label>
                       <input type="time" value={editForm.end_time}
                         onChange={e => setEditForm(p => ({ ...p, end_time: e.target.value }))}
                         className="w-full px-4 py-3 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#00d0cb]" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{t('event.location')}</label>
                     <input type="text" value={editForm.location}
                       onChange={e => setEditForm(p => ({ ...p, location: e.target.value }))}
                       placeholder="Main Field..."
@@ -908,14 +940,14 @@ const CoachAgenda = () => {
                   </div>
                   {selectedSession.recurrence && selectedSession.recurrence !== 'none' && (
                     <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 text-xs text-amber-400">
-                      This is a recurring session. Editing will only update this specific occurrence.
+                      This is a {t('event.recurring')} session. Editing will only update this specific occurrence.
                     </div>
                   )}
                 </div>
                 <div className="flex gap-3 px-6 pb-6">
                   <button type="button" onClick={() => setShowEditModal(false)}
                     className="px-5 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50">
-                    Cancel
+                    {t('event.cancel')}
                   </button>
                   <motion.button type="submit" disabled={isSubmitting}
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -923,7 +955,7 @@ const CoachAgenda = () => {
                     style={{ background: 'linear-gradient(135deg,#4fb0ff,#00d0cb)' }}>
                     {isSubmitting
                       ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving...</>
-                      : <><FiCheck size={16} />Save changes</>}
+                      : <><FiCheck size={16} />{t('event.save')}</>}
                   </motion.button>
                 </div>
               </form>
@@ -958,10 +990,10 @@ const CoachAgenda = () => {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white">
-                      {isToday(viewingDay) ? 'Today — ' : ''}{format(viewingDay, 'EEEE, MMMM d, yyyy')}
+                      {isToday(viewingDay) ? `${t('controls.today')} — ` : ''}{tDayLong(viewingDay)}, {tMonthLong(viewingDay)} {format(viewingDay, 'd, yyyy')}
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {viewingSessions.length} session{viewingSessions.length !== 1 ? 's' : ''} scheduled
+                      {viewingSessions.length} {t('stats.session_s')} {t('stats.sessions_scheduled')}
                     </p>
                   </div>
                 </div>
@@ -976,7 +1008,7 @@ const CoachAgenda = () => {
                 {viewingSessions.length === 0 ? (
                   <div className="text-center py-10 border-2 border-dashed rounded-xl" style={{ borderColor: 'rgba(51,65,85,.4)' }}>
                     <FiCalendar className="mx-auto text-3xl text-gray-600 mb-3" />
-                    <p className="text-gray-500 text-sm">No sessions scheduled for this day</p>
+                    <p className="text-gray-500 text-sm">No {t('stats.sessions_scheduled')} for this day</p>
                   </div>
                 ) : viewingSessions.map(s => {
                   const cat = getCat(s.category);
@@ -998,14 +1030,14 @@ const CoachAgenda = () => {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-base font-bold text-white">{s.title}</span>
                               <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                style={{ background: cat.bg, color: cat.color }}>{cat.label}</span>
+                                style={{ background: cat.bg, color: cat.color }}>{t(`categories.${s.category?.[0] || 'technical'}`) || cat.label}</span>
                               {recur && (
                                 <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded"
                                   style={{ background: 'rgba(144,43,209,.2)', color: '#c084fc' }}>
-                                  <FiRepeat size={9} />recurring
+                                  <FiRepeat size={9} />{t('event.recurring')}
                                 </span>
                               )}
-                              {past && <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-500">Past</span>}
+                              {past && <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-500">{t('event.past')}</span>}
                             </div>
                           </div>
                           <span className="text-xs text-gray-600 flex-shrink-0">Level {s.level}</span>
@@ -1051,7 +1083,7 @@ const CoachAgenda = () => {
                             {s.participants_count > 0 && (
                               <span className="text-xs px-2 py-0.5 rounded border flex items-center gap-1"
                                 style={{ background: 'rgba(30,41,59,.6)', borderColor: 'rgba(51,65,85,.5)', color: '#94a3b8' }}>
-                                <FiUsers size={9} /> {s.participants_count} players
+                                <FiUsers size={9} /> {s.participants_count} {t('event.players')}
                               </span>
                             )}
                           </div>
@@ -1103,7 +1135,7 @@ const CoachAgenda = () => {
                   onClick={() => { setViewingDay(null); navigate('/coach/training'); }}
                   className="w-full py-3 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2"
                   style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
-                  <FiPlus size={15} />Add Session for This Day
+                  <FiPlus size={15} />{t('empty.add_for_day')}
                 </motion.button>
               </div>
             </motion.div>
@@ -1126,14 +1158,14 @@ const CoachAgenda = () => {
                   <FiTrash2 className="text-red-400" />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-white">Delete Session</div>
+                  <div className="text-base font-bold text-white">{t('event.delete')}</div>
                   <div className="text-xs text-gray-400">{selectedSession.title}</div>
                 </div>
               </div>
               <p className="text-sm text-gray-400 mb-5">
                 {deleteAll
-                  ? 'This will delete ALL occurrences of this recurring session. This action cannot be undone.'
-                  : 'This will delete only this session. This action cannot be undone.'
+                  ? t('modal.delete_all_warning')
+                  : t('modal.delete_single_warning')
                 }
               </p>
               <div className="flex gap-3">

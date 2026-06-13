@@ -1,12 +1,26 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Payment ,CoachProfile, PlayerProfile, Group, SubGroup, Academy , Event, EventParticipant
+from .models import CustomUser, Payment ,CoachProfile, PlayerProfile, Group, SubGroup, Academy , Event, EventParticipant, AcademyLeadRequest
 
+
+
+@admin.register(AcademyLeadRequest)
+class AcademyLeadRequestAdmin(admin.ModelAdmin):
+    list_display = ('academy_name', 'email', 'contact_name', 'phone', 'status', 'created_at')
+    list_filter = ('status',)
+    search_fields = ('email', 'academy_name', 'contact_name')
+    readonly_fields = ('created_at', 'processed_at', 'processed_by', 'created_academy')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.none()
 
 
 @admin.register(Academy)
 class AcademyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'city', 'country', 'email', 'phone')
+    list_display = ('name', 'billing_plan', 'subscription_status', 'city', 'country', 'email', 'phone')
     search_fields = ('name', 'city', 'country')
 
     def get_queryset(self, request):

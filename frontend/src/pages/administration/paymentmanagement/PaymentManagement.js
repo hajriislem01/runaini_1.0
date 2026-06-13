@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import { usePaymentManagement } from './hooks/usePaymentManagement';
 import { containerVariants, itemVariants } from './utils/paymentHelpers';
@@ -17,6 +18,9 @@ import HistoryTab from './tabs/HistoryTab';
 import PaymentDetailModal from './modals/PaymentDetailModal';
 
 const PaymentManagement = () => {
+  const { i18n } = useTranslation('paymentmanagement');
+  const isRtl = i18n.language === 'ar';
+
   const {
     players, groups, payments, stats, isLoading, isSubmitting,
     currentMonth, setCurrentMonth, selectedGroup, setSelectedGroup,
@@ -29,11 +33,12 @@ const PaymentManagement = () => {
 
   return (
     <motion.div
+      dir={isRtl ? 'rtl' : 'ltr'}
       className="min-h-screen text-white p-4 md:p-6 lg:p-8"
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position="top-right" />
+      <Toaster position={isRtl ? 'top-left' : 'top-right'} />
       <div className="max-w-7xl mx-auto">
         
         <motion.div variants={itemVariants} className="mb-8">

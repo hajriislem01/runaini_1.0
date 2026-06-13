@@ -1,0 +1,82 @@
+{
+  "sidebar": {
+    "title": "لوحة الإدارة",
+    "mainTitle": "إدارة معلومات الأكاديمية وتفضيلاتها",
+    "academyInfo": "معلومات الأكاديمية",
+    "academyInfoSub": "تكوين تفاصيل الأكاديمية والهوية البصرية",
+    "contactSocial": "الاتصال والتواصل الاجتماعي",
+    "contactSocialSub": "إدارة معلومات الاتصال",
+    "facilitiesStaff": "المرافق والموظفون",
+    "facilitiesStaffSub": "إدارة المرافق",
+    "preferences": "التفضيلات",
+    "preferencesSub": "ضبط التفضيلات",
+    "privacySecurity": "الخصوصية والأمان",
+    "privacySecuritySub": "إعدادات الأمان"
+  },
+  "academyInfo": {
+    "title": "معلومات الأكاديمية",
+    "subtitle": "تكوين تفاصيل الأكاديمية والهوية البصرية",
+    "logoLabel": "انقر فوق رمز الكاميرا لتحديث الهوية البصرية للأكاديمية",
+    "name": "اسم الأكاديمية *",
+    "founded": "سنة التأسيس",
+    "country": "الدولة",
+    "achievements": "الإنجازات",
+    "achievementsPlaceholder": "اذكر إنجازات أكاديميتك",
+    "philosophy": "الفلسفة",
+    "teamKits": "أطقم الفريق",
+    "homeKit": "الطقم الرسمي",
+    "awayKit": "طقم الخارج"
+  },
+  "branding": {
+    "title": "محرك الهوية البصرية",
+    "subtitle": "تكوين ألوان المنصة، التصميم ومستوى الوضوح",
+    "primaryColor": "اللون الأساسي",
+    "secondaryColor": "اللون الثانوي",
+    "accentSlot1": "خانة التأثير 1",
+    "accentSlot2": "خانة التأثير 2",
+    "previewTitle": "معاينة مباشرة للهوية البصرية"
+  },
+  "contactSocial": {
+    "title": "الاتصال والتواصل الاجتماعي",
+    "subtitle": "إدارة معلومات الاتصال وروابط شبكات التواصل",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "website": "الموقع الإلكتروني",
+    "facebook": "فيسبوك",
+    "instagram": "إنستغرام"
+  },
+  "staffFacilities": {
+    "title": "الموظفون والمرافق",
+    "subtitle": "إدارة معلومات الموظفين والمرافق",
+    "staffHeader": "معلومات الموظفين",
+    "facilitiesHeader": "المرافق",
+    "technicalDirector": "المدير الفني",
+    "headCoach": "المدرب الرئيسي",
+    "fitnessCoach": "مدرب اللياقة البدنية",
+    "medicalStaff": "الطاقم الطبي",
+    "stadiumName": "اسم الملعب",
+    "stadiumLocation": "موقع الملعب",
+    "gym": "صالة ألعاب رياضية متاحة",
+    "cafeteria": "كافيتيريا متاحة",
+    "dormitory": "مبيت متاح",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "preferences": {
+    "title": "التفضيلات",
+    "subtitle": "ضبط تفضيلات اللغة والمنطقة الزمنية",
+    "timezone": "المنطقة الزمنية",
+    "languages": "اللغات"
+  },
+  "privacy": {
+    "title": "الخصوصية والأمان",
+    "subtitle": "إدارة كلمة المرور وإعدادات الأمان",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور الجديدة"
+  },
+  "actions": {
+    "save": "حفظ التغييرات",
+    "update": "تحديث"
+  }
+}

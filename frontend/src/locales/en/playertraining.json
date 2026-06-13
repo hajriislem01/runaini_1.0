@@ -1,0 +1,72 @@
+{
+  "header": {
+    "myTraining": "My Training",
+    "subtitle": "Your training sessions and personal exercises",
+    "subtitleGroup": "{{group}} group sessions + your personal exercises",
+    "nextSession": "Next session:",
+    "inProgress": "In progress",
+    "in": "In",
+    "min": "min",
+    "h": "h"
+  },
+  "stats": {
+    "upcoming": "Upcoming",
+    "pastSessions": "Past sessions",
+    "personalExos": "Personal exos",
+    "minThisMonth": "Min this month"
+  },
+  "load": {
+    "thisWeek": "This week",
+    "minPlanned": "min planned",
+    "lightWeek": "Light week",
+    "mediumWeek": "Medium week",
+    "heavyWeek": "Heavy week",
+    "highLoad": "High Load",
+    "mediumLoad": "Medium Load",
+    "lowLoad": "Low Load"
+  },
+  "view": {
+    "list": "List",
+    "week": "Week",
+    "month": "Month"
+  },
+  "weekView": {
+    "thisWeek": "This week",
+    "thisWeeksSessions": "This week's sessions",
+    "noSessionsOn": "No sessions on",
+    "days": ["M", "T", "W", "T", "F", "S", "S"]
+  },
+  "monthView": {
+    "today": "Today",
+    "more": "more",
+    "sessionsFor": "Sessions for"
+  },
+  "listView": {
+    "upcoming": "Upcoming",
+    "personal": "Personal",
+    "past": "Past",
+    "assignedToYou": "exercise assigned personally to you",
+    "assignedToYouPlural": "exercises assigned personally to you"
+  },
+  "card": {
+    "teamTraining": "Team Training",
+    "meeting": "Meeting",
+    "friendlyMatch": "Friendly Match",
+    "tournament": "Tournament",
+    "today": "Today",
+    "level": "Level",
+    "noUpcoming": "No upcoming sessions",
+    "noPersonal": "No personal exercises assigned yet",
+    "noPersonalDesc": "Your coach will assign individual exercises to you",
+    "noPast": "No past sessions"
+  },
+  "categories": {
+    "technical": "Technical",
+    "tactical": "Tactical",
+    "physical": "Physical",
+    "mental": "Mental",
+    "matchPrep": "Match Prep",
+    "recovery": "Recovery",
+    "session": "Session"
+  }
+}

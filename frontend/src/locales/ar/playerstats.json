@@ -1,0 +1,66 @@
+{
+  "header": {
+    "title": "تقرير الأداء",
+    "subtitle": "تقييم شهري · عرض اللاعب وولي الأمر",
+    "exportPdf": "تصدير PDF",
+    "generating": "جاري التصدير..."
+  },
+  "tabs": {
+    "report": "التقرير",
+    "progress": "التقدم",
+    "history": "السجل"
+  },
+  "empty": {
+    "noReport": "لا يوجد تقرير لهذا الشهر بعد",
+    "noReportDesc": "سيقوم مدربك بتقييمك قريباً",
+    "notEnoughData": "لا توجد بيانات كافية",
+    "notEnoughDataDesc": "مطلوب تقريرين شهريين على الأقل",
+    "noReportsYet": "لا توجد تقارير بعد",
+    "noData": "لا توجد بيانات"
+  },
+  "stats": {
+    "vsGroupAvg": "مقابل متوسط المجموعة",
+    "vsLastMonth": "مقابل الشهر الماضي",
+    "topPct": "أفضل {{pct}}% في المجموعة",
+    "playerProfile": "ملف اللاعب",
+    "player": "اللاعب",
+    "groupAvg": "متوسط المجموعة",
+    "fourPillars": "4 ركائز",
+    "tapToExpand": "اضغط لعرض المعايير",
+    "topStrengths": "أبرز نقاط القوة",
+    "toImprove": "نقاط للتحسين",
+    "health": "الصحة",
+    "fatigue": "الإرهاق",
+    "sleep": "النوم",
+    "injury": "الإصابة",
+    "medCert": "الشهادة الطبية",
+    "none": "لا يوجد",
+    "injured": "مصاب",
+    "valid": "صالح",
+    "invalid": "غير صالح",
+    "school": "المدرسة",
+    "grade": "المعدل",
+    "attendance": "الحضور",
+    "behaviour": "السلوك",
+    "sessions": "جلسات",
+    "monthsProgression": "التقدم خلال {{count}} أشهر",
+    "pts": "نقطة",
+    "coachMessage": "مدربك",
+    "monthlyEval": "تقييم شهري",
+    "monthlyGoal": "الهدف الشهري",
+    "pillarProgression": "تقدم الركائز — {{count}} أشهر",
+    "monthTrends": "اتجاهات {{count}} أشهر",
+    "profileComparison": "مقارنة الملف",
+    "reportsCount": "{{count}} تقرير شهري",
+    "reportsCountPlural": "{{count}} تقارير شهرية",
+    "tapToSeeDetails": "اضغط على الشهر لرؤية التفاصيل"
+  },
+  "categories": {
+    "technical": "فني",
+    "tactical": "تكتيكي",
+    "physical": "بدني",
+    "mental": "ذهني",
+    "health": "صحة",
+    "school": "مدرسة"
+  }
+}

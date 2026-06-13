@@ -1,22 +1,24 @@
 import { useState, useEffect } from 'react';
 import { FaUsers, FaUserTie, FaCalendarCheck } from 'react-icons/fa';
 import { FiBell } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import API from '../../api';
 
-export const timeAgo = (dateStr) => {
-  if (!dateStr) return 'Recently';
+export const timeAgo = (dateStr, t) => {
+  if (!dateStr) return t('time.recently');
   const now = new Date();
   const date = new Date(dateStr);
   const diff = Math.floor((now - date) / 1000);
 
-  if (diff < 60) return `${diff} seconds ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+  if (diff < 60) return t('time.secondsAgo', { count: diff });
+  if (diff < 3600) return t('time.minutesAgo', { count: Math.floor(diff / 60) });
+  if (diff < 86400) return t('time.hoursAgo', { count: Math.floor(diff / 3600) });
+  if (diff < 604800) return t('time.daysAgo', { count: Math.floor(diff / 86400) });
   return date.toLocaleDateString();
 };
 
 export const useDashboardStats = (players = [], coaches = [], events = []) => {
+  const { t } = useTranslation('administrationdashboard');
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [organizationName, setOrganizationName] = useState('Runaini Academy');
   const [recentActivities, setRecentActivities] = useState([]);
@@ -67,8 +69,8 @@ export const useDashboardStats = (players = [], coaches = [], events = []) => {
           .slice(0, 2)
           .forEach(player => {
             activities.push({
-              message: `New player registered: ${player.full_name}`,
-              time: timeAgo(player.user?.date_joined),
+              message: t('activity.newPlayer', { name: player.full_name }),
+              time: timeAgo(player.user?.date_joined, t),
               icon: <FaUsers className="text-[#4fb0ff]" />,
               date: new Date(player.user?.date_joined || 0)
             });
@@ -79,8 +81,8 @@ export const useDashboardStats = (players = [], coaches = [], events = []) => {
           .slice(0, 2)
           .forEach(coach => {
             activities.push({
-              message: `Coach added: ${coach.username}`,
-              time: timeAgo(coach.date_joined),
+              message: t('activity.coachAdded', { name: coach.username }),
+              time: timeAgo(coach.date_joined, t),
               icon: <FaUserTie className="text-[#902bd1]" />,
               date: new Date(coach.date_joined || 0)
             });
@@ -91,8 +93,8 @@ export const useDashboardStats = (players = [], coaches = [], events = []) => {
           .slice(0, 2)
           .forEach(group => {
             activities.push({
-              message: `New group created: ${group.name}`,
-              time: timeAgo(group.created_at),
+              message: t('activity.newGroup', { name: group.name }),
+              time: timeAgo(group.created_at, t),
               icon: <FaCalendarCheck className="text-[#00d0cb]" />,
               date: new Date(group.created_at || 0)
             });
@@ -110,14 +112,14 @@ export const useDashboardStats = (players = [], coaches = [], events = []) => {
           activeGroups: 0
         });
         setRecentActivities([
-          { message: 'Could not load recent activities', time: 'N/A', icon: <FiBell className="text-gray-400" /> }
+          { message: t('activity.loadError'), time: 'N/A', icon: <FiBell className="text-gray-400" /> }
         ]);
       } finally {
         setIsLoadingStats(false);
       }
     };
     fetchStats();
-  }, [coaches.length, events.length, players.length]);
+  }, [coaches.length, events.length, players.length, t]);
 
   return { stats, recentActivities, isLoadingStats, organizationName };
 };

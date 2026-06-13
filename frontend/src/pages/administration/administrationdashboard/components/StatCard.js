@@ -7,11 +7,11 @@ const StatCard = ({ stat, isLoadingStats, itemVariants }) => (
     className="bg-gray-900/65 backdrop-blur-sm rounded-2xl p-4 md:p-5 border border-gray-700/50 hover:border-gray-600 transition-all">
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-gray-400 text-sm font-medium">{stat.label}</p>
+        <p className="text-gray-400 text-sm font-medium break-words">{stat.label}</p>
         {isLoadingStats ? (
           <div className="mt-2 h-8 w-12 bg-gray-700/50 rounded animate-pulse" />
         ) : (
-          <p className="text-2xl md:text-3xl font-bold text-white mt-2">{stat.value}</p>
+          <p className="text-2xl md:text-3xl font-bold text-white mt-2 break-all">{stat.value}</p>
         )}
       </div>
       <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color}`}>

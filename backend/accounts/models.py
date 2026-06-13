@@ -4,7 +4,33 @@ from django.core.exceptions import ValidationError
 
 
 class Academy(models.Model):
+    BILLING_PLAN_CHOICES = (
+        ('trial', 'Trial'),
+        ('starter', 'Starter'),
+        ('pro', 'Pro'),
+        ('enterprise', 'Enterprise'),
+    )
+
     name = models.CharField(max_length=100)
+    billing_plan = models.CharField(
+        max_length=20,
+        choices=BILLING_PLAN_CHOICES,
+        default='trial',
+        help_text='Commercial plan assigned at onboarding.',
+    )
+    SUBSCRIPTION_STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('trial', 'Trial period'),
+        ('past_due', 'Past due'),
+        ('suspended', 'Suspended'),
+        ('cancelled', 'Cancelled'),
+    )
+    subscription_status = models.CharField(
+        max_length=20,
+        choices=SUBSCRIPTION_STATUS_CHOICES,
+        default='active',
+        help_text='Billing / access state for the academy.',
+    )
     founded = models.CharField(max_length=4, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
@@ -54,8 +80,51 @@ class Academy(models.Model):
         return self.name
 
 
+class AcademyLeadRequest(models.Model):
+    """Inbound lead from the public request form; visible to super admins only via API."""
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_ARCHIVED = 'archived'
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+        (STATUS_ARCHIVED, 'Archived'),
+    )
+
+    contact_name = models.CharField(max_length=200)
+    academy_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    processed_by = models.ForeignKey(
+        'CustomUser',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='processed_academy_leads',
+    )
+    created_academy = models.ForeignKey(
+        Academy,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='source_lead',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.academy_name} ({self.email}) — {self.status}"
+
+
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
+        ('superadmin', 'Super Admin'),
         ('admin', 'Admin'),
         ('coach', 'Coach'),
         ('player', 'Player'),
@@ -66,7 +135,7 @@ class CustomUser(AbstractUser):
         unique=False,
         help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
     )
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='admin')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='admin')
     phone = models.CharField(max_length=20, blank=True, null=True)
     club = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(unique=True)

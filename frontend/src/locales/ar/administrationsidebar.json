@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "لوحة التحكم",
+    "profile": "الملف الشخصي",
+    "groupsAndPlayers": "المجموعات واللاعبون",
+    "coaches": "المدربون",
+    "events": "الفعاليات",
+    "payments": "المدفوعات",
+    "agenda": "الأجندة",
+    "contact": "التواصل",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "title": "Notifications",
+  "newCount": "{{count}} Nouvelles",
+  "tabs": {
+    "all": "Toutes",
+    "unread": "Non lues"
+  },
+  "actions": {
+    "markAllRead": "Tout marquer comme lu",
+    "clearAll": "Tout effacer",
+    "viewAll": "Voir toutes les notifications"
+  },
+  "types": {
+    "payment": "Nouveau paiement enregistré pour le joueur {{player}}",
+    "payment_title": "Alerte de paiement",
+    "subscription": "Nouvel abonnement",
+    "subscription_title": "Alerte d'abonnement",
+    "system": "Alerte système",
+    "system_title": "Alerte système",
+    "settings": "Paramètres de l'académie mis à jour avec succès",
+    "settings_title": "Mise à jour des paramètres",
+    "coach_assigned": "Nouvel entraîneur affecté au groupe {{group}}",
+    "coach_assigned_title": "Entraîneur affecté",
+    "training": "Nouvel entraînement planifié pour {{group}}",
+    "training_title": "Mise à jour de l'entraînement",
+    "session": "Nouvelle session d'entraînement créée",
+    "session_title": "Nouvelle session",
+    "event": "Nouvelle invitation d'événement",
+    "event_title": "Nouvel événement"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {{count}}m",
+    "hoursAgo": "Il y a {{count}}h",
+    "daysAgo": "Il y a {{count}}j"
+  },
+  "empty": "Aucune nouvelle notification",
+  "emptyDescription": "Vous n'avez pas de nouvelles alertes pour le moment.",
+  "footerSchedule": "Restez informé de l'emploi du temps de votre académie"
+}

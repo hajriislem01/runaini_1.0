@@ -150,6 +150,23 @@ export const useSettingsData = () => {
       return;
     }
 
+    // Password validation if user is trying to update it via "Save Changes"
+    const isUpdatingPassword = passwords.currentPassword || passwords.newPassword;
+    if (isUpdatingPassword) {
+      if (!passwords.currentPassword || !passwords.newPassword) {
+        toast.error('Both current and new password are required', toastStyles.error);
+        return;
+      }
+      if (passwords.newPassword !== passwords.confirmPassword) {
+        toast.error('Passwords do not match', toastStyles.error);
+        return;
+      }
+      if (passwords.newPassword.length < 8) {
+        toast.error('Password must be at least 8 characters', toastStyles.error);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -160,13 +177,24 @@ export const useSettingsData = () => {
         formData.append(key, value);
       });
 
+      if (isUpdatingPassword) {
+        formData.append('current_password', passwords.currentPassword);
+        formData.append('new_password', passwords.newPassword);
+      }
+
       const method = adminData ? 'put' : 'post';
       const response = await API[method]('academy/', formData);
 
       const updatedData = response.data;
       setAcademyData(updatedData);
       updateAdminData(updatedData);
-      toast.success(adminData ? 'Settings updated successfully!' : 'Academy created successfully!', toastStyles.success);
+      
+      if (isUpdatingPassword) {
+        setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        toast.success('Settings and password updated successfully!', toastStyles.success);
+      } else {
+        toast.success(adminData ? 'Settings updated successfully!' : 'Academy created successfully!', toastStyles.success);
+      }
     } catch (error) {
       const data = error.response?.data;
       const errorData = data?.errors || data;
@@ -175,7 +203,7 @@ export const useSettingsData = () => {
         const errorMessage = Array.isArray(errorData[firstErrorKey]) ? errorData[firstErrorKey][0] : JSON.stringify(errorData);
         toast.error(`${firstErrorKey}: ${errorMessage}`, toastStyles.error);
       } else {
-        toast.error('Failed to update settings', toastStyles.error);
+        toast.error(data?.error || 'Failed to update settings', toastStyles.error);
       }
     } finally {
       setIsSubmitting(false);
@@ -210,8 +238,43 @@ export const useSettingsData = () => {
     toast.success('Phone verified!', toastStyles.success);
   };
 
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+
+  const handleSavePassword = async () => {
+    if (!passwords.currentPassword || !passwords.newPassword) {
+      toast.error('Current and new password are required', toastStyles.error);
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      toast.error('Passwords do not match', toastStyles.error);
+      return;
+    }
+    if (passwords.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters', toastStyles.error);
+      return;
+    }
+
+    setIsSubmittingPassword(true);
+    try {
+      const formData = new FormData();
+      formData.append('current_password', passwords.currentPassword);
+      formData.append('new_password', passwords.newPassword);
+
+      const method = adminData ? 'put' : 'post';
+      await API[method]('academy/', formData);
+
+      setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      toast.success('Password updated successfully', toastStyles.success);
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Failed to update password';
+      toast.error(errorMsg, toastStyles.error);
+    } finally {
+      setIsSubmittingPassword(false);
+    }
+  };
+
   return {
-    isLoading, isSubmitting,
+    isLoading, isSubmitting, isSubmittingPassword,
     imageStates,
     showPassword, setShowPassword,
     showVerificationModal, setShowVerificationModal,
@@ -220,7 +283,7 @@ export const useSettingsData = () => {
     passwords, setPasswords,
     academyData, setAcademyData,
     preferences, setPreferences,
-    handleSubmit,
+    handleSubmit, handleSavePassword,
     handleImageSelect, confirmImageUpload, cancelImageSelection,
     handlePhoneVerification, handleVerifyCode
   };

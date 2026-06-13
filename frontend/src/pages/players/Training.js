@@ -10,6 +10,7 @@ import {
 import { FaDumbbell, FaBolt } from 'react-icons/fa';
 import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
+import { useTranslation } from 'react-i18next';
 import toast, { Toaster } from 'react-hot-toast';
 import EventDetailDrawer from '../../components/common/EventDetailDrawer';
 import DayEventsModal from '../administration/agendamanagement/modals/DayEventsModal';
@@ -29,7 +30,23 @@ const CATEGORIES = {
   match_prep: { label: 'Match Prep', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
   recovery: { label: 'Recovery', color: '#14b8a6', bg: 'rgba(20,184,166,0.12)' },
 };
-const getCat = (k) => CATEGORIES[k] || { label: k || 'Session', color: '#4fb0ff', bg: 'rgba(79,176,255,0.12)' };
+const getCat = (k) => {
+  if (!k) return { label: 'Session', color: '#4fb0ff', bg: 'rgba(79,176,255,0.12)' };
+  const lower = k.toLowerCase().replace(' ', '_');
+  return CATEGORIES[lower] || { label: k, color: '#4fb0ff', bg: 'rgba(79,176,255,0.12)' };
+};
+
+const getDayLabel = (dateStr) => {
+  const d = parseISO(dateStr);
+  if (isToday(d)) return 'Today';
+  return format(d, 'EEE'); // 'Sat', 'Mon', etc.
+};
+
+const getDateLabel = (dateStr) => {
+  const d = parseISO(dateStr);
+  if (isToday(d)) return 'Today';
+  return format(d, 'MMM d'); // 'May 30', 'May 22', etc.
+};
 
 const fmtTime = (t) => {
   if (!t) return '';
@@ -96,6 +113,8 @@ const useCountdown = (session) => {
 const PlayerTraining = () => {
   const navigate = useNavigate();
   const { player, isLoading: playerLoading } = usePlayer();
+  const { t, i18n } = useTranslation('playertraining');
+  const isRtl = i18n.language === 'ar';
 
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +125,7 @@ const PlayerTraining = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [monthDate, setMonthDate] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
   const [detailSession, setDetailSession] = useState(null); // Coach-identical detail modal
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
@@ -174,8 +193,8 @@ const PlayerTraining = () => {
   const filtered = useMemo(() => {
     if (!filterCat) return myGroupSessions;
     return myGroupSessions.filter(s => {
-      const sCats = Array.isArray(s.category) ? s.category : [s.category];
-      return sCats.includes(filterCat);
+      const sCats = Array.isArray(s.category) ? s.category : (s.category ? [s.category] : []);
+      return sCats.some(c => c && c.toLowerCase().replace(' ', '_') === filterCat.toLowerCase().replace(' ', '_'));
     });
   }, [myGroupSessions, filterCat]);
 
@@ -195,6 +214,14 @@ const PlayerTraining = () => {
     });
     return result;
   }, [sessions, player]);
+
+  const filteredMyExercises = useMemo(() => {
+    if (!filterCat) return myExercises;
+    return myExercises.map(({ session, exercises }) => ({
+      session,
+      exercises: exercises.filter(ex => ex.category && ex.category.toLowerCase().replace(' ', '_') === filterCat.toLowerCase().replace(' ', '_'))
+    })).filter(g => g.exercises.length > 0);
+  }, [myExercises, filterCat]);
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -217,6 +244,14 @@ const PlayerTraining = () => {
       totalMin,
     };
   }, [myGroupSessions, myExercises, today]);
+
+  const filteredStats = useMemo(() => {
+    return {
+      upcoming: filtered.filter(s => !isBefore(parseISO(s.date), today)).length,
+      past: filtered.filter(s => isBefore(parseISO(s.date), today)).length,
+      personal: filteredMyExercises.reduce((a, g) => a + g.exercises.length, 0),
+    };
+  }, [filtered, filteredMyExercises, today]);
 
   // ── Week sessions ─────────────────────────────────────────────────────────
   const weekDays = useMemo(() =>
@@ -268,21 +303,9 @@ const PlayerTraining = () => {
 
   // ─── SessionCard ──────────────────────────────────────────────────────────
   const SessionCard = ({ s, showPastBadge = false }) => {
-    const categories = Array.isArray(s.category) ? s.category : [s.category];
+    const categories = Array.isArray(s.category) ? s.category : (s.category ? [s.category] : []);
     const past = isBefore(parseISO(s.date), today);
     const todayS = isToday(parseISO(s.date));
-    const recur = s.recurrence && s.recurrence !== 'none';
-    const expanded = expandedId === s.id;
-    const myExs = (s.exercises || []).filter(ex =>
-      ex.assigned_players && (
-        ex.assigned_players.includes(player?.id) ||
-        ex.assigned_players.includes(String(player?.id)) ||
-        ex.assigned_players.includes(Number(player?.id))
-      )
-    );
-    const grpExs = (s.exercises || []).filter(ex =>
-      !ex.assigned_players || ex.assigned_players.length === 0
-    );
 
     // Load dots
     const [sh, sm] = (s.start_time || '00:00').split(':').map(Number);
@@ -293,208 +316,130 @@ const PlayerTraining = () => {
 
     return (
       <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border overflow-hidden transition-all"
+        whileHover={{ y: -2, scale: 1.01, borderColor: past ? 'rgba(30,41,59,.8)' : 'rgba(79,176,255,.4)', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(79, 176, 255, 0.1)' }}
+        className="w-full rounded-2xl border overflow-hidden transition-all duration-300"
         style={{
-          background: past ? 'rgba(15,23,42,0.4)' : 'rgba(15,23,42,0.8)',
-          borderColor: expanded ? getCat(categories[0]).color : past ? 'rgba(30,41,59,.6)' : 'rgba(51,65,85,.4)',
+          background: past ? 'rgba(15,23,42,0.4)' : 'rgba(15,23,42,0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderColor: past ? 'rgba(30,41,59,.6)' : 'rgba(51,65,85,.4)',
           borderLeft: s._isEvent
             ? (s.type === 'Meeting' ? '4px solid #4fb0ff' : s.type === 'Match Friendly' ? '4px solid #f59e0b' : '4px solid #a855f7')
             : '4px solid #22c55e',
           opacity: past ? 0.72 : 1,
         }}>
         {/* Card header — click opens detail modal */}
-        <div className="p-4 cursor-pointer select-none"
+        <div className="p-5 cursor-pointer select-none"
           onClick={() => handleOpenModal(s)}>
-          <div className="flex items-start gap-3 justify-between">
-            <div className="flex-1 min-w-0">
-              {/* Title + badges */}
-              <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                <span className="text-sm font-bold text-white truncate">{s.title}</span>
-                {s._isEvent && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/20 uppercase font-bold">
-                    {s.type}
-                  </span>
-                )}
-                {todayS && (
-                  <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
-                    style={{ background: 'rgba(0,208,203,.15)', color: '#00d0cb' }}>Today</span>
-                )}
-                {recur && <FiRepeat size={11} className="text-purple-400 flex-shrink-0" />}
-                {myExs.length > 0 && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: 'rgba(192,132,252,.15)', color: '#c084fc', border: '1px solid rgba(192,132,252,.3)' }}>
-                    {myExs.length} personal
-                  </span>
-                )}
-                {showPastBadge && (
-                  <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: 'rgba(34,197,94,.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,.2)' }}>
-                    ✓ Attended
-                  </span>
-                )}
-              </div>
-              {/* Meta */}
-              <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
-                <span className="flex items-center gap-1">
-                  <FiCalendar size={10} />
-                  {todayS ? 'Today' : format(parseISO(s.date), 'EEE MMM d')}
-                </span>
-                {s.start_time && s.end_time && (
-                  <span className="flex items-center gap-1">
-                    <FiClock size={10} />{formatTimeRange(s.start_time, s.end_time)}
-                    <span className="text-gray-600">({calcDur(s.start_time, s.end_time)})</span>
-                  </span>
-                )}
-                {s.location && (
-                  <span className="flex items-center gap-1">
-                    <FiMapPin size={10} />{s.location}
-                  </span>
-                )}
-                <span style={{ color: getCat(categories[0]).color }}>Level {s.level}</span>
-              </div>
-            </div>
+          {/* Top Row: Tags & Load */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex flex-wrap gap-1">
+              {s._isEvent ? (
+                (() => {
+                  let badgeConfig = { color: '#4fb0ff', bg: 'rgba(79,176,255,0.12)', label: t('card.meeting') };
+                  if (s.type === 'Meeting') badgeConfig = { color: '#4fb0ff', bg: 'rgba(79,176,255,0.12)', label: t('card.meeting') };
+                  else if (s.type === 'Match Friendly') badgeConfig = { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: t('card.friendlyMatch') };
+                  else if (s.type === 'Tournament') badgeConfig = { color: '#a855f7', bg: 'rgba(168,85,247,0.12)', label: t('card.tournament') };
 
-            {/* Right side */}
-            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-              <div className="flex gap-1">
-                {s._isEvent ? (
-                  (() => {
-                    let badgeConfig = { color: '#4fb0ff', bg: 'rgba(79,176,255,0.15)', border: 'rgba(79,176,255,0.3)', label: 'Internal Meeting' };
-                    if (s.type === 'Meeting') badgeConfig = { color: '#4fb0ff', bg: 'rgba(79,176,255,0.15)', border: 'rgba(79,176,255,0.3)', label: 'Internal Meeting' };
-                    else if (s.type === 'Match Friendly') badgeConfig = { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', label: 'Friendly Match' };
-                    else if (s.type === 'Tournament') badgeConfig = { color: '#a855f7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)', label: 'Tournament' };
-
+                  return (
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border"
+                      style={{ background: badgeConfig.bg, color: badgeConfig.color, borderColor: `${badgeConfig.color}25` }}>
+                      {badgeConfig.label}
+                    </span>
+                  );
+                })()
+              ) : (
+                <>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/10 text-[#22c55e] border border-[#22c55e]/20">
+                    {t('card.teamTraining')}
+                  </span>
+                  {categories.map(cKey => {
+                    const c = getCat(cKey);
                     return (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-                        style={{ background: badgeConfig.bg, color: badgeConfig.color, border: `1px solid ${badgeConfig.border}` }}>
-                        {badgeConfig.label}
+                      <span key={cKey} className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border"
+                        style={{ background: c.bg, color: c.color, borderColor: `${c.color}25` }}>
+                        {t(`categories.${cKey}`, c.label)}
                       </span>
                     );
-                  })()
-                ) : (
-                  <>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Team Training
-                    </span>
-                    {categories.map(cKey => {
-                      const c = getCat(cKey);
-                      return (
-                        <span key={cKey} className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-                          style={{ background: c.bg, color: c.color, border: `1px solid ${c.bg}` }}>{c.label}</span>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-              {/* Load dots */}
-              <div className="flex items-center gap-1">
+                  })}
+                </>
+              )}
+            </div>
+
+            {/* Load dots */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex gap-0.5">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: i <= (loadLevel === 'high' ? 3 : loadLevel === 'medium' ? 2 : 1) ? loadColor : '#1e293b' }} />
+                  <span key={i} className="text-xs leading-none" style={{ color: i <= (loadLevel === 'high' ? 3 : loadLevel === 'medium' ? 2 : 1) ? loadColor : 'rgba(51, 65, 85, 0.4)' }}>
+                    ●
+                  </span>
                 ))}
-                <span className="text-xs ml-1 capitalize" style={{ color: loadColor }}>{loadLevel} load</span>
               </div>
-              {expanded
-                ? <FiChevronUp size={13} className="text-gray-500" />
-                : <FiChevronDown size={13} className="text-gray-500" />}
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: loadColor }}>
+                {loadLevel === 'high' ? t('load.highLoad') : loadLevel === 'medium' ? t('load.mediumLoad') : t('load.lowLoad')}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Section: Stacking info */}
+          <div className="flex flex-col space-y-1.5 md:space-y-2">
+            {todayS && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold uppercase w-fit"
+                style={{ background: 'rgba(0,208,203,.15)', color: '#00d0cb' }}>
+                {t('card.today')}
+              </span>
+            )}
+
+            <div className="text-sm font-semibold text-gray-400">
+              {getDayLabel(s.date)}
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <FiCalendar className="text-gray-500" size={14} />
+              <span className="font-medium">{getDateLabel(s.date)}</span>
+            </div>
+
+            {s.start_time && s.end_time && (
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <FiClock className="text-gray-500" size={14} />
+                <span className="font-medium">{formatTimeRange(s.start_time, s.end_time)}</span>
+                <span className="text-gray-500 text-xs">({calcDur(s.start_time, s.end_time)})</span>
+              </div>
+            )}
+
+            {s.location && (
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <FiMapPin className="text-gray-500" size={14} />
+                <span className="font-medium">{s.location}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-0.5 mt-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">{t('card.level')}</span>
+              <span className="text-xl font-extrabold text-cyan-300">{s.level || 'B'}</span>
             </div>
           </div>
         </div>
-
-        {/* Expanded exercises */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="border-t border-gray-800/80 px-4 pb-4 pt-3 space-y-4">
-
-                {/* Personal exercises */}
-                {myExs.length > 0 && (
-                  <div>
-                    <div className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <FaDumbbell style={{ fontSize: 10 }} />Your personal exercises
-                    </div>
-                    <div className="space-y-2">
-                      {myExs.map((ex, i) => {
-                        const exCat = getCat(ex.category);
-                        return (
-                          <div key={i} className="rounded-xl p-3"
-                            style={{ background: 'rgba(144,43,209,.06)', border: '1px solid rgba(144,43,209,.2)' }}>
-                            <div className="flex items-start gap-2 mb-2">
-                              <div className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                style={{ background: exCat.bg, color: exCat.color }}>{i + 1}</div>
-                              <div className="flex-1">
-                                <div className="text-sm font-semibold text-white">{ex.name}</div>
-                                <div className="text-xs text-gray-500 flex gap-2 mt-0.5 flex-wrap">
-                                  <span>{ex.duration}min</span>
-                                  {ex.sets && <span>{ex.sets} sets × {ex.reps} reps</span>}
-                                  {ex.intensity && <span className="capitalize">{ex.intensity} intensity</span>}
-                                  <span style={{ color: exCat.color }}>{exCat.label}</span>
-                                </div>
-                              </div>
-                              {ex.intensity && (
-                                <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 capitalize"
-                                  style={
-                                    ex.intensity === 'high' ? { background: 'rgba(239,68,68,.12)', color: '#f87171' } :
-                                      ex.intensity === 'medium' ? { background: 'rgba(245,158,11,.12)', color: '#fbbf24' } :
-                                        { background: 'rgba(34,197,94,.12)', color: '#4ade80' }
-                                  }>{ex.intensity}</span>
-                              )}
-                            </div>
-                            {ex.instructions && (
-                              <p className="text-xs text-gray-400 italic leading-relaxed pl-8">
-                                {ex.instructions}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Group exercises */}
-                {grpExs.length > 0 && (
-                  <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <FaDumbbell style={{ fontSize: 10 }} />{grpExs.length} group exercise{grpExs.length > 1 ? 's' : ''}
-                    </div>
-                    <div className="space-y-1.5">
-                      {grpExs.map((ex, i) => {
-                        const exCat = getCat(ex.category);
-                        return (
-                          <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-lg"
-                            style={{ background: 'rgba(30,41,59,.5)' }}>
-                            <div className="w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0"
-                              style={{ background: exCat.bg, color: exCat.color }}>{i + 1}</div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium text-gray-300 truncate">{ex.name}</div>
-                              <div className="text-xs text-gray-600">{ex.duration}min · {exCat.label}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {(s.exercises || []).length === 0 && (
-                  <p className="text-xs text-gray-600">No exercises defined for this session.</p>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     );
   };
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
+    <motion.div className="min-h-screen text-white px-3 md:px-6 py-4"
+      dir={isRtl ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
       <Toaster position="top-right" />
+      <style>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       <div className="max-w-5xl mx-auto">
 
         {/* ── Header ── */}
@@ -502,12 +447,12 @@ const PlayerTraining = () => {
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
-                My Training
+                {t('header.myTraining')}
               </h1>
               <p className="text-gray-400 mt-1 text-sm">
                 {player?.group?.name
-                  ? `${player.group.name} group sessions + your personal exercises`
-                  : 'Your training sessions and personal exercises'}
+                  ? t('header.subtitleGroup', { group: player.group.name })
+                  : t('header.subtitle')}
               </p>
             </div>
             {/* Countdown */}
@@ -515,7 +460,7 @@ const PlayerTraining = () => {
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl border"
                 style={{ background: 'rgba(79,176,255,.08)', borderColor: 'rgba(79,176,255,.25)' }}>
                 <FaBolt style={{ fontSize: 12, color: '#4fb0ff' }} />
-                <span className="text-xs text-gray-400">Next session:</span>
+                <span className="text-xs text-gray-400">{t('header.nextSession')}</span>
                 <span className="text-xs font-bold text-[#4fb0ff]">{countdown}</span>
               </div>
             )}
@@ -525,10 +470,10 @@ const PlayerTraining = () => {
         {/* ── Stats ── */}
         <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
           {[
-            { label: 'Upcoming', value: stats.upcoming, color: '#4fb0ff' },
-            { label: 'Past sessions', value: stats.past, color: '#64748b' },
-            { label: 'Personal exos', value: stats.personal, color: '#c084fc' },
-            { label: `Min this month`, value: stats.totalMin, color: '#22c55e' },
+            { label: t('stats.upcoming'), value: stats.upcoming, color: '#4fb0ff' },
+            { label: t('stats.pastSessions'), value: stats.past, color: '#64748b' },
+            { label: t('stats.personalExos'), value: stats.personal, color: '#c084fc' },
+            { label: t('stats.minThisMonth'), value: stats.totalMin, color: '#22c55e' },
           ].map((s, i) => (
             <div key={i} className="bg-gray-900/70 rounded-2xl p-4 border border-gray-700/50 text-center">
               {loading
@@ -574,9 +519,9 @@ const PlayerTraining = () => {
           {/* View toggle */}
           <div className="flex bg-gray-900/70 border border-gray-700/50 rounded-xl overflow-hidden">
             {[
-              { key: 'list', icon: <FiList size={13} />, label: 'List' },
-              { key: 'week', icon: <FiCalendar size={13} />, label: 'Week' },
-              { key: 'month', icon: <FiGrid size={13} />, label: 'Month' },
+              { key: 'list', icon: <FiList size={13} />, label: t('view.list') },
+              { key: 'week', icon: <FiCalendar size={13} />, label: t('view.week') },
+              { key: 'month', icon: <FiGrid size={13} />, label: t('view.month') },
             ].map(v => (
               <button key={v.key} onClick={() => setView(v.key)}
                 className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition-all"
@@ -597,7 +542,7 @@ const PlayerTraining = () => {
                 style={filterCat === key
                   ? { background: cat.bg, borderColor: cat.color, color: cat.color }
                   : { background: 'rgba(30,41,59,.5)', borderColor: 'rgba(51,65,85,.5)', color: '#64748b' }}>
-                {cat.label}
+                {t(`categories.${key}`, cat.label)}
               </button>
             ))}
             {filterCat && (
@@ -627,9 +572,12 @@ const PlayerTraining = () => {
                     <span className="text-sm font-semibold text-white">
                       {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')}
                     </span>
-                    <button onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+                    <button onClick={() => {
+                      setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+                      setSelectedDay(startOfDay(new Date()));
+                    }}
                       className="text-xs px-2.5 py-1 rounded-full border text-[#00d0cb] border-[#00d0cb]/30">
-                      This week
+                      {t('weekView.thisWeek')}
                     </button>
                   </div>
                   <button onClick={() => setWeekStart(addWeeks(weekStart, 1))}
@@ -639,85 +587,107 @@ const PlayerTraining = () => {
                 </div>
 
                 {/* Day columns */}
-                <div className="grid grid-cols-7 gap-2 mb-6">
+                <div className="flex overflow-x-auto scrollbar-none gap-3 py-2 px-1 md:grid md:grid-cols-7 md:gap-2 mb-6">
                   {weekDays.map((day, i) => {
                     const daySessions = getSessionsForDay(day);
                     const todayDay = isToday(day);
                     const isPastDay = isBefore(day, today);
+                    const isSelected = selectedDay && isSameDay(day, selectedDay);
                     return (
-                      <div key={i} className="rounded-xl border overflow-hidden"
+                      <motion.div key={i} whileHover={{ y: -2, scale: 1.02 }}
+                        className="flex-shrink-0 min-w-[55px] md:min-w-0 rounded-xl border overflow-hidden cursor-pointer transition-all hover:border-[#4fb0ff]/60 p-2 md:p-3 min-h-[72px] md:min-h-[90px]"
+                        onClick={() => setSelectedDay(day)}
                         style={{
-                          borderColor: todayDay ? 'rgba(0,208,203,.4)' : 'rgba(30,41,59,.8)',
-                          background: todayDay ? 'rgba(0,208,203,.04)' : 'rgba(15,23,42,.4)',
-                          opacity: isPastDay && !todayDay ? 0.6 : 1,
-                          minHeight: 90,
+                          borderColor: isSelected 
+                            ? '#4fb0ff' 
+                            : todayDay 
+                              ? 'rgba(0,208,203,.4)' 
+                              : 'rgba(30,41,59,.8)',
+                          background: isSelected 
+                            ? 'rgba(79,176,255,.15)' 
+                            : todayDay 
+                              ? 'rgba(0,208,203,.04)' 
+                              : 'rgba(15,23,42,.4)',
+                          opacity: isPastDay && !todayDay && !isSelected ? 0.6 : 1,
+                          boxShadow: isSelected ? '0 0 15px rgba(79, 176, 255, 0.25)' : 'none',
                         }}>
                         {/* Day header */}
-                        <div className="px-2 pt-2 pb-1 text-center border-b border-gray-800/60">
-                          <div className="text-xs text-gray-500">
-                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                        <div className="text-center flex flex-col items-center justify-center">
+                          <div className="text-[10px] md:text-xs text-gray-500 font-semibold leading-tight mb-1">
+                            {t('weekView.days', { returnObjects: true })[i]}
                           </div>
-                          <div className="text-sm font-bold"
-                            style={{ color: todayDay ? '#00d0cb' : '#94a3b8' }}>
+                          <div className="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full text-xs md:text-sm font-bold transition-all"
+                            style={{
+                              color: isSelected ? '#ffffff' : todayDay ? '#00d0cb' : '#94a3b8',
+                              background: isSelected 
+                                ? '#4fb0ff' 
+                                : todayDay 
+                                  ? 'rgba(0,208,203,.12)' 
+                                  : 'transparent',
+                              boxShadow: isSelected ? '0 0 12px rgba(79,176,255,0.5)' : 'none'
+                            }}>
                             {format(day, 'd')}
                           </div>
                         </div>
-                        {/* Sessions */}
-                        <div className="p-1.5 space-y-1">
+                        {/* Mobile Sessions indicator dot */}
+                        {daySessions.length > 0 && (
+                          <div className="flex md:hidden justify-center mt-2">
+                            <span className="w-1.5 h-1.5 rounded-full" 
+                              style={{ 
+                                backgroundColor: getCat(Array.isArray(daySessions[0].category) ? daySessions[0].category[0] : daySessions[0].category).color 
+                              }} 
+                            />
+                          </div>
+                        )}
+                        {/* Desktop Sessions List */}
+                        <div className="hidden md:block space-y-1 mt-1.5">
                           {daySessions.map(s => {
-                            const myExsCount = (s.exercises || []).filter(ex =>
-                              ex.assigned_players && (
-                                ex.assigned_players.includes(player?.id) ||
-                                ex.assigned_players.includes(String(player?.id)) ||
-                                ex.assigned_players.includes(Number(player?.id))
-                              )
-                            ).length;
+                            const cat = getCat(Array.isArray(s.category) ? s.category[0] : s.category);
                             return (
                               <div key={s.id}
-                                className="rounded-md px-1.5 py-1 cursor-pointer hover:opacity-80 transition-opacity"
-                                style={{ background: getCat(Array.isArray(s.category) ? s.category[0] : s.category).bg, borderLeft: `2px solid ${getCat(Array.isArray(s.category) ? s.category[0] : s.category).color}` }}
-                                onClick={() => {
+                                className="rounded-md px-1.5 py-1 hover:opacity-80 transition-opacity"
+                                style={{ background: cat.bg, borderLeft: `2px solid ${cat.color}` }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedDay(day);
-                                  setShowDayEventsModal(true);
+                                  handleOpenModal(s);
                                 }}>
-                                <div className="text-xs font-semibold truncate" style={{ color: getCat(Array.isArray(s.category) ? s.category[0] : s.category).color, fontSize: 10 }}>
+                                <div className="text-xs font-semibold truncate" style={{ color: cat.color, fontSize: 10 }}>
                                   {s.title}
                                 </div>
                                 {s.start_time && (
                                   <div className="text-xs text-gray-500" style={{ fontSize: 9 }}>
-                                    {formatTimeRange(s.start_time, s.end_time)}
-                                  </div>
-                                )}
-                                {myExsCount > 0 && (
-                                  <div className="text-xs text-purple-400" style={{ fontSize: 9 }}>
-                                    ★ personal
+                                    {fmtTime(s.start_time)}
                                   </div>
                                 )}
                               </div>
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
 
-                {/* Sessions of the week as cards */}
-                {weekDays.some(d => getSessionsForDay(d).length > 0) && (
+                {/* Sessions of the selected day as cards */}
+                {selectedDay && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-3">This week's sessions</h3>
-                    <div className="space-y-3">
-                      {weekDays.flatMap(day => getSessionsForDay(day)).map(s => (
-                        <SessionCard key={s.id} s={s} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {weekDays.every(d => getSessionsForDay(d).length === 0) && (
-                  <div className="text-center py-12 bg-gray-900/40 rounded-2xl border border-gray-700/50">
-                    <FiCalendar className="mx-auto text-4xl text-gray-600 mb-3" />
-                    <p className="text-gray-400 text-sm">No sessions this week</p>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3">{t('weekView.thisWeeksSessions')}</h3>
+                    {(() => {
+                      const daySessions = getSessionsForDay(selectedDay);
+                      return daySessions.length > 0 ? (
+                        <div className="space-y-3">
+                          {daySessions.map(s => (
+                            <SessionCard key={s.id} s={s} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 bg-gray-900/40 rounded-2xl border border-gray-700/50">
+                          <FiCalendar className="mx-auto text-4xl text-gray-600 mb-3" />
+                          <p className="text-gray-400 text-sm">{t('weekView.noSessionsOn')} {format(selectedDay, 'eeee, MMM d')}</p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </motion.div>
@@ -734,9 +704,12 @@ const PlayerTraining = () => {
                   </button>
                   <div className="flex items-center gap-3">
                     <span className="text-base font-bold text-white">{format(monthDate, 'MMMM yyyy')}</span>
-                    <button onClick={() => setMonthDate(new Date())}
+                    <button onClick={() => {
+                      setMonthDate(new Date());
+                      setSelectedDay(startOfDay(new Date()));
+                    }}
                       className="text-xs px-2.5 py-1 rounded-full border text-[#00d0cb] border-[#00d0cb]/30">
-                      Today
+                      {t('monthView.today')}
                     </button>
                   </div>
                   <button onClick={() => setMonthDate(addMonths(monthDate, 1))}
@@ -747,7 +720,7 @@ const PlayerTraining = () => {
 
                 {/* Day headers */}
                 <div className="grid grid-cols-7 gap-1.5 mb-1.5">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
+                  {t('weekView.days', { returnObjects: true }).map(d => (
                     <div key={d} className="text-center text-xs font-semibold text-gray-600 py-1">{d}</div>
                   ))}
                 </div>
@@ -756,18 +729,18 @@ const PlayerTraining = () => {
                 <div className="grid grid-cols-7 gap-1.5 mb-5">
                   {calDays.map((day, i) => {
                     const todayDay = isToday(day.date);
-                    const selected = selectedDay && isSameDay(day.date, selectedDay);
+                    const isSelected = selectedDay && isSameDay(day.date, selectedDay);
                     return (
-                      <motion.div key={i} whileHover={{ scale: 1.04 }}
+                      <motion.div key={i} whileHover={{ scale: 1.02 }}
                         className="rounded-xl border p-1.5 cursor-pointer transition-all"
                         style={{
                           minHeight: 64,
-                          background: selected
+                          background: isSelected
                             ? 'rgba(79,176,255,.1)'
                             : todayDay
                               ? 'rgba(0,208,203,.05)'
                               : 'rgba(15,23,42,.5)',
-                          borderColor: selected
+                          borderColor: isSelected
                             ? '#4fb0ff'
                             : todayDay
                               ? 'rgba(0,208,203,.4)'
@@ -776,26 +749,31 @@ const PlayerTraining = () => {
                         }}
                         onClick={() => {
                           setSelectedDay(day.date);
-                          setShowDayEventsModal(true);
                         }}>
                         <div className="text-right text-xs font-semibold mb-1"
-                          style={{ color: todayDay ? '#00d0cb' : '#64748b' }}>
+                          style={{ color: isSelected ? '#4fb0ff' : todayDay ? '#00d0cb' : '#64748b' }}>
                           {format(day.date, 'd')}
                         </div>
                         <div className="space-y-0.5">
                           {(day.events || []).slice(0, 2).map(s => {
+                            const cat = getCat(Array.isArray(s.category) ? s.category[0] : s.category);
                             return (
                               <div key={s.id}
-                                className="flex items-center gap-0.5 text-xs rounded px-1 py-0.5"
-                                style={{ background: getCat(Array.isArray(s.category) ? s.category[0] : s.category).bg }}>
-                                <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: getCat(Array.isArray(s.category) ? s.category[0] : s.category).color }} />
-                                <span className="truncate" style={{ color: getCat(Array.isArray(s.category) ? s.category[0] : s.category).color, fontSize: 9 }}>{s.title}</span>
+                                className="flex items-center gap-0.5 text-xs rounded px-1 py-0.5 hover:opacity-85 transition-opacity"
+                                style={{ background: cat.bg }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedDay(day.date);
+                                  handleOpenModal(s);
+                                }}>
+                                <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: cat.color }} />
+                                <span className="truncate" style={{ color: cat.color, fontSize: 9 }}>{s.title}</span>
                               </div>
                             );
                           })}
                           {(day.events || []).length > 2 && (
-                            <div className="text-center text-gray-600" style={{ fontSize: 9 }}>
-                              +{(day.events || []).length - 2}
+                            <div className="text-center text-gray-600 font-semibold" style={{ fontSize: 9 }}>
+                              +{(day.events || []).length - 2} {t('monthView.more')}
                             </div>
                           )}
                         </div>
@@ -804,17 +782,39 @@ const PlayerTraining = () => {
                   })}
                 </div>
 
-
-
                 {/* Legend */}
-                <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-800">
+                <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-800 mb-6">
                   {Object.entries(CATEGORIES).map(([key, cat]) => (
                     <span key={key} className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                      {cat.label}
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: cat.color }} />
+                      {t(`categories.${key}`, cat.label)}
                     </span>
                   ))}
                 </div>
+
+                {/* Selected Day Sessions */}
+                {selectedDay && (
+                  <div className="mt-6 border-t border-gray-800/80 pt-6">
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3">
+                      {t('monthView.sessionsFor')} {format(selectedDay, 'eeee, MMMM d, yyyy')}
+                    </h3>
+                    {(() => {
+                      const daySessions = filtered.filter(s => isSameDay(parseISO(s.date), selectedDay));
+                      return daySessions.length > 0 ? (
+                        <div className="space-y-3">
+                          {daySessions.map(s => (
+                            <SessionCard key={s.id} s={s} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 bg-gray-900/40 rounded-2xl border border-gray-700/50">
+                          <FiCalendar className="mx-auto text-4xl text-gray-600 mb-3" />
+                          <p className="text-gray-400 text-sm">{t('weekView.noSessionsOn')} {format(selectedDay, 'eeee, MMM d')}</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -824,9 +824,9 @@ const PlayerTraining = () => {
                 {/* List tabs */}
                 <div className="flex bg-gray-900/70 border border-gray-700/50 rounded-xl overflow-hidden mb-5">
                   {[
-                    { key: 'upcoming', label: `Upcoming (${stats.upcoming})` },
-                    { key: 'personal', label: `Personal (${stats.personal})` },
-                    { key: 'past', label: `Past (${stats.past})` },
+                    { key: 'upcoming', label: `${t('listView.upcoming')} (${filteredStats.upcoming})` },
+                    { key: 'personal', label: `${t('listView.personal')} (${filteredStats.personal})` },
+                    { key: 'past', label: `${t('listView.past')} (${filteredStats.past})` },
                   ].map(t => (
                     <button key={t.key} onClick={() => setListTab(t.key)}
                       className="flex-1 px-3 py-2.5 text-xs font-semibold transition-all"
@@ -850,19 +850,19 @@ const PlayerTraining = () => {
                   ) : (
                     <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50">
                       <FiCalendar className="mx-auto text-4xl text-gray-600 mb-3" />
-                      <p className="text-gray-400 text-sm">No upcoming sessions</p>
+                      <p className="text-gray-400 text-sm">{t('card.noUpcoming')}</p>
                     </div>
                   );
                 })()}
 
                 {/* Personal tab */}
                 {listTab === 'personal' && (
-                  myExercises.length > 0 ? (
+                  filteredMyExercises.length > 0 ? (
                     <div className="space-y-4">
                       <p className="text-xs text-gray-500">
-                        {stats.personal} exercise{stats.personal > 1 ? 's' : ''} assigned personally to you
+                        {filteredStats.personal} {filteredStats.personal > 1 ? t('listView.assignedToYouPlural') : t('listView.assignedToYou')}
                       </p>
-                      {myExercises.map(({ session: s, exercises: exs }, gi) => {
+                      {filteredMyExercises.map(({ session: s, exercises: exs }, gi) => {
                         const past = isBefore(parseISO(s.date), today);
                         return (
                           <div key={gi} className="rounded-2xl border overflow-hidden"
@@ -920,8 +920,8 @@ const PlayerTraining = () => {
                   ) : (
                     <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50">
                       <FaDumbbell style={{ fontSize: 36, color: '#374151' }} className="mx-auto mb-3" />
-                      <p className="text-gray-400 text-sm">No personal exercises assigned yet</p>
-                      <p className="text-gray-600 text-xs mt-1">Your coach will assign individual exercises to you</p>
+                      <p className="text-gray-400 text-sm">{t('card.noPersonal')}</p>
+                      <p className="text-gray-600 text-xs mt-1">{t('card.noPersonalDesc')}</p>
                     </div>
                   )
                 )}
@@ -937,7 +937,7 @@ const PlayerTraining = () => {
                     </div>
                   ) : (
                     <div className="text-center py-16 bg-gray-900/40 rounded-2xl border border-gray-700/50">
-                      <p className="text-gray-400 text-sm">No past sessions</p>
+                      <p className="text-gray-400 text-sm">{t('card.noPast')}</p>
                     </div>
                   );
                 })()}

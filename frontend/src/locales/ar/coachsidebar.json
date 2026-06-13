@@ -1,0 +1,14 @@
+{
+  "sidebar": {
+    "dashboard": "لوحة القيادة",
+    "profile": "الملف الشخصي",
+    "players": "اللاعبين",
+    "training": "التدريب",
+    "agenda": "الأجندة",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج",
+    "coachPanel": "لوحة المدرب",
+    "verifiedCoach": "مدرب معتمد",
+    "coachSpace": "مساحة المدرب"
+  }
+}

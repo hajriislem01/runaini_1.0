@@ -1,0 +1,53 @@
+{
+  "welcome": "Welcome to {{name}}",
+  "goTo": "Go to",
+  "view": "View",
+  "stats": {
+    "totalPlayers": "Total Players",
+    "totalCoaches": "Total Coaches",
+    "upcomingEvents": "Upcoming Events",
+    "activeGroups": "Active Groups",
+    "active": "Active",
+    "scheduled": "Scheduled",
+    "groups": "Groups"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "managePlayers": "Manage Players",
+    "managePlayersDesc": "View and manage all players",
+    "manageCoaches": "Manage Coaches",
+    "manageCoachesDesc": "View and manage coaches",
+    "createEvent": "Create Event",
+    "createEventDesc": "Schedule a new event",
+    "viewAgenda": "View Agenda",
+    "viewAgendaDesc": "Check upcoming events"
+  },
+  "overview": {
+    "title": "System Overview",
+    "players": "Players Management",
+    "coaches": "Coaches Management",
+    "payments": "Payments & Billing",
+    "contact": "Contact & Support"
+  },
+  "activity": {
+    "title": "Recent Activity",
+    "empty": "No recent activity yet",
+    "newPlayer": "New player registered: {{name}}",
+    "coachAdded": "Coach added: {{name}}",
+    "newGroup": "New group created: {{name}}",
+    "loadError": "Could not load recent activities"
+  },
+  "footer": {
+    "uptime": "System Uptime",
+    "support": "Support Available",
+    "security": "Data Security",
+    "sessions": "Active Sessions"
+  },
+  "time": {
+    "recently": "Recently",
+    "secondsAgo": "{{count}} seconds ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hours ago",
+    "daysAgo": "{{count}} days ago"
+  }
+}

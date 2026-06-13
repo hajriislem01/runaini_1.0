@@ -1,0 +1,183 @@
+{
+  "hero": {
+    "badge": "L'avenir de la gestion du football — Disponible dès aujourd'hui",
+    "title": "Conçu pour",
+    "typedWords": [
+      "les académies de foot.",
+      "les administrations.",
+      "les coachs & joueurs."
+    ],
+    "description": "RunAiNi unifie votre tableau de bord administrateur, votre suite d'intelligence entraîneur et votre portail joueur dans un écosystème unique. Des notifications d'effectif aux évaluations par IA — chaque fonctionnalité est prête pour le terrain.",
+    "ctaFree": "Lancez votre académie gratuitement",
+    "ctaPlans": "Voir les plans",
+    "proofNoCard": "Sans carte de crédit",
+    "proofRoles": "3 rôles d'utilisateurs inclus",
+    "proofFullAccess": "Accès complet aux fonctionnalités"
+  },
+  "stats": {
+    "evaluationPillars": "Piliers d'évaluation",
+    "kpiCriteria": "Critères KPI",
+    "userSpaces": "Espaces utilisateurs",
+    "realTime": "Temps réel"
+  },
+  "pillarsHeader": {
+    "tagline": "Architecture à trois espaces",
+    "titleStart": "Une plateforme. ",
+    "titleEnd": "Trois super-pouvoirs.",
+    "description": "Commande admin, intelligence de coach et excellence de joueur — chaque rôle dispose de son propre espace de travail dédié et riche en fonctionnalités."
+  },
+  "pillars": {
+    "admin": {
+      "role": "Administrateur",
+      "space": "Espace Admin",
+      "tagline": "Contrôle total",
+      "desc": "Orchestrez l'ensemble de votre académie depuis un centre de contrôle unique. Gérez les joueurs, les coachs, les événements, les paiements et les notifications de groupe en temps réel.",
+      "features": [
+        "Ciblage multi-groupes et sous-groupes",
+        "Moteur de notifications en temps réel",
+        "Suivi des paiements et abonnements",
+        "Planification des matchs et tournois",
+        "Contrôle d'accès basé sur les rôles"
+      ],
+      "pills": {
+        "smartAlerts": "Alertes intelligentes",
+        "squadManagement": "Gestion d'effectif"
+      }
+    },
+    "coach": {
+      "role": "Entraîneur",
+      "space": "Espace Coach",
+      "tagline": "Intelligence d'élite",
+      "desc": "Formez des champions avec un moteur d'évaluation à six piliers, un prédicteur de position par IA, des graphiques radar KPI et une architecture d'entraînement structurée.",
+      "features": [
+        "Évaluation mensuelle à 6 piliers",
+        "Prédicteur de position par IA",
+        "Graphiques radar KPI & progression",
+        "Exportation de rapports PDF",
+        "Suite d'analyse vidéo"
+      ],
+      "pills": {
+        "aiPredictor": "Prédicteur IA",
+        "kpiAnalytics": "Analyses KPI"
+      }
+    },
+    "player": {
+      "role": "Joueur",
+      "space": "Espace Joueur",
+      "tagline": "Excellence personnelle",
+      "desc": "Chaque joueur est maître de son parcours. Suivez l'historique des performances, accédez à des entraînements personnalisés et restez connecté avec votre équipe.",
+      "features": [
+        "Tableau de bord de performance personnel",
+        "Accès aux séances d'entraînement",
+        "Notifications d'événements & RSVP",
+        "Chronologie de progression",
+        "Visibilité des retours du coach"
+      ],
+      "pills": {
+        "liveStats": "Stats en direct",
+        "achievements": "Succès"
+      }
+    }
+  },
+  "ecosystem": {
+    "title": "Conçu pour le circuit élite.",
+    "subtitle": "Une architecture unifiée au service de trois mondes d'utilisateurs distincts en parfaite synchronisation.",
+    "admin": {
+      "title": "Contrôle Administrateur",
+      "desc": "La salle de contrôle principale pour les opérations de l'académie. Gérez la structure, la hiérarchie et les aspects financiers.",
+      "features": [
+        "Hiérarchies multi-groupes",
+        "Moteur de notifications dynamique",
+        "Permissions du staff",
+        "Gestion des paiements"
+      ]
+    },
+    "coach": {
+      "title": "Intelligence Entraîneur",
+      "desc": "Donner aux directeurs techniques des outils de décision basés sur les données et une planification avancée.",
+      "features": [
+        "Système d'évaluation à 6 piliers",
+        "Analyses radar KPI",
+        "Créateur de séances d'entraînement",
+        "Suite d'analyse vidéo"
+      ]
+    },
+    "player": {
+      "title": "Performance Joueur",
+      "desc": "Un suivi individualisé qui transforme le potentiel en performance de niveau professionnel.",
+      "features": [
+        "Historique des performances en direct",
+        "Suivi des blessures & santé",
+        "Plans d'entraînement personnalisés",
+        "Archives de l'historique des rapports"
+      ]
+    }
+  },
+  "analytics": {
+    "badge": "Intelligence en direct",
+    "title": "Analyses de précision.",
+    "desc": "Notre moteur KPI exclusif croise les performances physiques avec le développement technique. Découvrez l'avenir de la détection de talents.",
+    "radarTitle": "Radar technique v4.2",
+    "radarLabels": {
+      "speed": "Vitesse",
+      "control": "Contrôle",
+      "power": "Puissance",
+      "vision": "Vision",
+      "health": "Santé",
+      "tactics": "Tactique"
+    },
+    "stats": {
+      "dataSync": {
+        "label": "Data Points Sync",
+        "val": "2.4M+",
+        "trend": "+15%"
+      },
+      "evalMetrics": {
+        "label": "Evaluation Metrics",
+        "val": "42",
+        "trend": "En direct"
+      },
+      "systemUptime": {
+        "label": "System Uptime",
+        "val": "99.9%",
+        "trend": "Stable"
+      },
+      "aiPrediction": {
+        "label": "AI Prediction",
+        "val": "98.8%",
+        "trend": "Élevé"
+      }
+    },
+    "livePerf": "Performance en direct",
+    "sysUptime": "Disponibilité système",
+    "operational": "Opérationnel"
+  },
+  "featuresDeep": {
+    "tagline": "Ce qui rend RunAiNi unique",
+    "title": "Conçu pour la haute performance",
+    "notification": {
+      "title": "Moteur de notifications en temps réel",
+      "desc": "Les alertes adaptées aux groupes et sous-groupes se déclenchent dès qu'un administrateur crée un événement. Les entraîneurs et les joueurs sont notifiés avec le contexte — nom du match, groupe, heure — sans effort."
+    },
+    "aiPredictor": {
+      "title": "Prédicteur de position par IA",
+      "desc": "Notre moteur de Machine Learning évalue plus de 24 critères physiques et tactiques pour prédire la position optimale de chaque joueur avec un indice de confiance. Un seul clic met à jour son profil officiel."
+    },
+    "evaluation": {
+      "title": "Système d'évaluation à 6 piliers",
+      "desc": "Les entraîneurs évaluent mensuellement les joueurs sur les piliers technique, tactique, physique, mental, santé et académique. Des moyennes calculées automatiquement et des courbes de tendance révèlent les points faibles avant qu'ils ne posent problème."
+    },
+    "hierarchy": {
+      "title": "Architecture d'équipe hiérarchique",
+      "desc": "Structurez votre académie en groupes et sous-groupes. Les événements, les notifications et les participants sont résolus automatiquement selon cette hiérarchie. Aucun filtrage manuel."
+    }
+  },
+  "ctaBanner": {
+    "tagline": "Prêt à dominer ?",
+    "titleStart": "Votre académie.",
+    "titleEnd": "Entièrement numérisée.",
+    "description": "Rejoignez les académies qui gèrent déjà leurs joueurs, suivent leurs performances et gagnent plus avec RunAiNi.",
+    "ctaStartFree": "Commencer gratuitement — Sans carte requise",
+    "ctaPricing": "Voir les tarifs →"
+  }
+}

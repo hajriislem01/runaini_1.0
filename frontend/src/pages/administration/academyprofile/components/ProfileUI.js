@@ -1,8 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export const InfoItem = ({ icon, label, value, verified = false, isLink = false, children }) => {
+  const { t } = useTranslation('administrationprofile');
+
   if (!value && !children) return null;
+
   return (
     <div className="flex gap-3 md:gap-4 py-3 border-b border-gray-700/50 last:border-0">
       <div className="text-[#4fb0ff] mt-1">{icon}</div>
@@ -11,8 +15,12 @@ export const InfoItem = ({ icon, label, value, verified = false, isLink = false,
         {value && (
           <div className="flex items-center gap-2 mt-1">
             {isLink ? (
-              <a href={value} target="_blank" rel="noopener noreferrer"
-                className="text-[#80a8ff] hover:text-white font-medium truncate transition-colors">
+              <a
+                href={value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#80a8ff] hover:text-white font-medium truncate transition-colors"
+              >
                 {value}
               </a>
             ) : (
@@ -20,7 +28,7 @@ export const InfoItem = ({ icon, label, value, verified = false, isLink = false,
             )}
             {verified && (
               <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded-full flex-shrink-0">
-                Verified
+                {t('misc.verified')}
               </span>
             )}
           </div>
@@ -52,10 +60,11 @@ export const TabButton = ({ name, icon, isActive, setActiveTab }) => (
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     onClick={() => setActiveTab(name.toLowerCase())}
-    className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${isActive
+    className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
+      isActive
         ? 'bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] text-white shadow-lg'
         : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-      }`}
+    }`}
   >
     {icon}{name}
   </motion.button>
