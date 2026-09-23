@@ -6,6 +6,7 @@ une analyse experte au format JSON. La clé API reste côté serveur (jamais
 exposée au frontend).
 """
 import json
+import time
 
 from django.conf import settings
 
@@ -52,6 +53,12 @@ def _as_text(value) -> str:
     return (value or '').strip()
 
 
+def _is_transient(exc: Exception) -> bool:
+    """Gemini overload errors (503 UNAVAILABLE) are temporary — worth a retry."""
+    text = str(exc)
+    return '503' in text or 'UNAVAILABLE' in text or 'overloaded' in text.lower()
+
+
 def generate_report_texts(player_data: dict) -> dict:
     """Appelle Gemini et renvoie {strength, to_improve, objective}."""
     if not settings.GEMINI_API_KEY:
@@ -60,18 +67,25 @@ def generate_report_texts(player_data: dict) -> dict:
     from google import genai
 
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
-    try:
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=_build_user_prompt(player_data),
-            config={
-                'system_instruction': SYSTEM_PROMPT,
-                'response_mime_type': 'application/json',
-            },
-        )
-        result = json.loads(response.text)
-    except Exception as exc:
-        raise AIReportError(str(exc)) from exc
+
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=_build_user_prompt(player_data),
+                config={
+                    'system_instruction': SYSTEM_PROMPT,
+                    'response_mime_type': 'application/json',
+                },
+            )
+            result = json.loads(response.text)
+            break
+        except Exception as exc:
+            if attempt < max_attempts and _is_transient(exc):
+                time.sleep(1.5 * attempt)
+                continue
+            raise AIReportError(str(exc)) from exc
 
     return {
         'strength':   _as_text(result.get('points_forts')),
