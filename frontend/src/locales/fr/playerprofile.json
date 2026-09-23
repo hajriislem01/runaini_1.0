@@ -16,7 +16,9 @@
     "jerseyNumber": "Numéro de maillot",
     "team": "Équipe",
     "group": "Groupe",
-    "subgroup": "Sous-groupe"
+    "subgroup": "Sous-groupe",
+    "age": "Âge",
+    "years": "ans"
   },
   "actions": {
     "editProfile": "Modifier le profil",

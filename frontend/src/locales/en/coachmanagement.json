@@ -57,7 +57,14 @@
     "syncingUnits": "Syncing units...",
     "noUnitsForGroup": "No units for this group.",
     "activateGroupFirst": "Activate a group first.",
-    "fullAccess": "Full Access"
+    "fullAccess": "Full Access",
+    "dobLabel": "Date of Birth",
+    "addPhone": "Add Phone",
+    "phoneLabels": {
+      "work": "Work",
+      "personal": "Personal",
+      "other": "Other"
+    }
   },
   "messages": {
     "addSuccess": "Coach added successfully!",

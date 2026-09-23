@@ -26,10 +26,10 @@
   "trainingMethodology": "Méthodologie d'entraînement",
   "professionalExperience": "Expérience Professionnelle",
   "certifications": "Certifications",
-  
   "coachSettings": "Paramètres du Coach",
   "manageProfile": "Gérez votre profil professionnel",
   "savePhoto": "Enregistrer la photo",
+  "removePhoto": "Supprimer la photo",
   "uploadPhoto": "Télécharger la photo",
   "personalInformation": "Informations Personnelles",
   "personalDetails": "Détails Personnels",
@@ -53,5 +53,8 @@
   "year": "Année",
   "saveChangesWarning": "* Toutes les modifications seront enregistrées",
   "saveAllChanges": "Enregistrer les modifications",
-  "saving": "Enregistrement..."
+  "saving": "Enregistrement...",
+  "age": "Âge",
+  "yearsOld": "ans",
+  "dateOfBirth": "Date de Naissance"
 }

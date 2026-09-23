@@ -170,12 +170,23 @@ const PlayerProfileView = ({ player, onBack }) => {
                       <span className={`text-sm text-gray-300 break-all ${isRtl ? 'text-right' : ''}`}>{email}</span>
                     </div>
                   )}
-                  {player.phone && (
-                    <div className={`flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                      <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
-                      <span className="text-sm text-gray-300">{toWestern(player.phone)}</span>
-                    </div>
-                  )}
+                  {(player.phones && Array.isArray(player.phones) && player.phones.length > 0)
+                    ? player.phones.map((p, idx) => (
+                        <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
+                          <span className="text-sm text-gray-300">{toWestern(p.number)}</span>
+                          {p.label && (
+                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#00d0cb]/10 text-[#00d0cb] border border-[#00d0cb]/20">{p.label}</span>
+                          )}
+                        </div>
+                      ))
+                    : player.phone && (
+                        <div className={`flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
+                          <span className="text-sm text-gray-300">{toWestern(player.phone)}</span>
+                        </div>
+                      )
+                  }
                   {player.address && (
                     <div className={`flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30 ${isRtl ? 'flex-row-reverse' : ''}`}>
                       <FiMapPin className="text-[#902bd1] flex-shrink-0" size={15} />

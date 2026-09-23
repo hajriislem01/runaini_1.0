@@ -177,6 +177,8 @@ class CoachProfile(models.Model):
     notes = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to='coach_photos/', null=True, blank=True)
     bio   = models.TextField(blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    phones = models.JSONField(default=list, blank=True)
 
     # ✅ New M2M Permissions (Centralized)
     assigned_groups = models.ManyToManyField(
@@ -200,6 +202,43 @@ class CoachProfile(models.Model):
 
     def __str__(self):
         return f"Coach Profile: {self.user.username}"
+
+
+class CoachNote(models.Model):
+    """Private note a coach writes for themself in the KPI Advanced workspace — never shared."""
+
+    NOTE_TYPES = [
+        ('info', 'Info'),
+        ('warning', 'Warning'),
+        ('success', 'Success'),
+    ]
+
+    coach = models.ForeignKey(
+        CoachProfile,
+        on_delete=models.CASCADE,
+        related_name='private_notes'
+    )
+    player = models.ForeignKey(
+        'PlayerProfile',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='coach_notes'
+    )
+    academy = models.ForeignKey(
+        Academy,
+        on_delete=models.CASCADE,
+        related_name='coach_notes'
+    )
+    type = models.CharField(max_length=10, choices=NOTE_TYPES, default='info')
+    title = models.CharField(max_length=255)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.coach.user.username})"
 
 
 class Group(models.Model):
@@ -270,6 +309,7 @@ class PlayerProfile(models.Model):
         ('Defender', 'Défenseur'),
         ('Forward', 'Attaquant'),
         ('Goalkeeper', 'Gardien'),
+        ('Indisponible', 'Indisponible'),
     ]
 
     STATUS_CHOICES = [
@@ -286,8 +326,17 @@ class PlayerProfile(models.Model):
     full_name = models.CharField(max_length=100)
     height = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    bmi = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    last_biometric_update = models.DateTimeField(null=True, blank=True)
+    biometric_history = models.JSONField(default=list, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_weight = self.weight
+        self._original_height = self.height
 
     group = models.ForeignKey(
         Group,
@@ -313,6 +362,7 @@ class PlayerProfile(models.Model):
     )
 
     phone = models.CharField(max_length=20, blank=True, null=True)
+    phones = models.JSONField(default=list, blank=True)
     address = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to='player_photos/', null=True, blank=True)
@@ -321,6 +371,38 @@ class PlayerProfile(models.Model):
         if self.subgroup and self.group:
             if self.subgroup.group != self.group:
                 raise ValidationError("SubGroup must belong to selected Group")
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        
+        # Determine if biometrics changed
+        changed = False
+        if self.weight != self._original_weight or self.height != self._original_height:
+            changed = True
+            
+        if self.weight and self.height and float(self.height) > 0:
+            height_m = float(self.height) / 100.0
+            self.bmi = round(float(self.weight) / (height_m ** 2), 2)
+        else:
+            self.bmi = None
+            
+        if changed:
+            self.last_biometric_update = timezone.now()
+            # Ensure history is a list
+            if not isinstance(self.biometric_history, list):
+                self.biometric_history = []
+                
+            self.biometric_history.append({
+                'date': self.last_biometric_update.isoformat(),
+                'weight': float(self.weight) if self.weight else None,
+                'height': float(self.height) if self.height else None,
+                'bmi': float(self.bmi) if self.bmi else None
+            })
+            
+        super().save(*args, **kwargs)
+        # Update original values
+        self._original_weight = self.weight
+        self._original_height = self.height
 
     def __str__(self):
         return self.full_name
@@ -515,20 +597,44 @@ class PlayerReport(models.Model):
     # ── Score global (calculé automatiquement) ────────────────────────────────
     overall_score = models.FloatField(default=0)
  
-    # ── Textes obligatoires ───────────────────────────────────────────────────
-    strength   = models.TextField()
-    to_improve = models.TextField()
-    objective  = models.TextField()
+    # ── Textes libres (legacy — remplacés par coach_comment/objectives ci-dessous
+    #    pour les nouveaux rapports, gardés optionnels pour compat. historique) ──
+    strength   = models.TextField(blank=True)
+    to_improve = models.TextField(blank=True)
+    objective  = models.TextField(blank=True)
     comment    = models.TextField(blank=True)
- 
+
+    # ── Rapport parent (version "Rapport de progression") ────────────────────
+    GENERAL_CONDITION_CHOICES = [
+        ('good',    'Bonne'),
+        ('average', 'Moyenne'),
+        ('watch',   'À surveiller'),
+    ]
+    REVIEW_STATUS_CHOICES = [
+        ('pending_review', 'En attente de validation'),
+        ('approved',       'Validé'),
+    ]
+
+    # Unified 2-paragraph narrative shown to parents — manually written for now,
+    # eventually drafted by an LLM pipeline (see spec) and edited/approved by the coach.
+    coach_comment = models.TextField(blank=True)
+    # List of up to 3 {title, description} dicts — next-cycle objectives for parents.
+    objectives = models.JSONField(default=list, blank=True)
+    # Coach's plain-language summary judgment; falls back to a heuristic from
+    # fatigue_level/sleep_quality/is_injured when left blank.
+    general_condition = models.CharField(max_length=10, choices=GENERAL_CONDITION_CHOICES, blank=True)
+    # Gate before a report reaches a parent — always 'approved' while content is
+    # typed directly by the coach; becomes meaningful once LLM drafts are introduced.
+    review_status = models.CharField(max_length=20, choices=REVIEW_STATUS_CHOICES, default='approved')
+
     # ── Présence ──────────────────────────────────────────────────────────────
     attendance_present = models.IntegerField(default=0)
     attendance_total   = models.IntegerField(default=0)
- 
+
     # ── Timestamps ────────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
- 
+
     class Meta:
         ordering       = ['-month', '-created_at']
         unique_together = [['player', 'month']]
@@ -718,3 +824,32 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.email}: {self.title}"
+
+
+class PlayerAttendance(models.Model):
+    STATUS_CHOICES = [
+        ('Present', 'Present'),
+        ('Absent', 'Absent'),
+        ('Excused', 'Excused'),
+        ('Late', 'Late'),
+    ]
+
+    player = models.ForeignKey('PlayerProfile', on_delete=models.CASCADE, related_name='attendances')
+    coach = models.ForeignKey('CoachProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='recorded_attendances')
+    group = models.ForeignKey('Group', on_delete=models.CASCADE, related_name='attendances')
+    subgroup = models.ForeignKey('SubGroup', on_delete=models.SET_NULL, null=True, blank=True, related_name='attendances')
+    academy = models.ForeignKey('Academy', on_delete=models.CASCADE, related_name='attendances')
+    
+    date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Present')
+    notes = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date', 'player__full_name']
+        unique_together = [['player', 'date']]
+
+    def __str__(self):
+        return f"{self.player.full_name} - {self.date} - {self.status}"

@@ -12,9 +12,11 @@ import {
   FaMedal, FaStar,
 } from 'react-icons/fa';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { calculateAge } from '../../utils/dateHelpers';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const CERT_LEVELS = ['UEFA Pro', 'UEFA A', 'UEFA B', 'UEFA C', 'CAF A', 'CAF B'];
@@ -112,12 +114,14 @@ const CoachProfile = () => {
     </div>
   );
 
+  const computedAge = calculateAge(profile?.date_of_birth) ?? profile?.age;
+
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
     <motion.div className="min-h-screen text-white p-4 sm:p-6 md:p-8"
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV} dir={isRtl ? 'rtl' : 'ltr'}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       <div className="max-w-7xl mx-auto">
         {/* ══════════════════════════════════════════════
@@ -185,6 +189,11 @@ const CoachProfile = () => {
               </div>
 
               <div className={`flex flex-wrap justify-center md:justify-start gap-3 mt-4 ${isRtl ? 'md:justify-end' : ''}`}>
+                {(computedAge !== null && computedAge !== undefined) && (
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white border border-white/20">
+                    <span className="text-sm">🎂 {computedAge} {t('yearsOld', 'years old')}</span>
+                  </div>
+                )}
                 {profile?.years_of_experience && (
                   <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white border border-white/20">
                     <FiAward /><span className="text-sm">{t('yearsExperience', { count: toWestern(profile.years_of_experience) })}</span>
@@ -246,12 +255,23 @@ const CoachProfile = () => {
                       <span className="text-sm text-gray-300 truncate">{profile.email}</span>
                     </div>
                   )}
-                  {profile?.phone && (
-                    <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
-                      <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
-                      <span className="text-sm text-gray-300" dir="ltr">{profile.phone}</span>
-                    </div>
-                  )}
+                  {(profile?.phones && Array.isArray(profile.phones) && profile.phones.length > 0)
+                    ? profile.phones.map((p, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
+                          <span className="text-sm text-gray-300" dir="ltr">{p.number}</span>
+                          {p.label && (
+                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#00d0cb]/10 text-[#00d0cb] border border-[#00d0cb]/20">{p.label}</span>
+                          )}
+                        </div>
+                      ))
+                    : profile?.phone && (
+                        <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={15} />
+                          <span className="text-sm text-gray-300" dir="ltr">{profile.phone}</span>
+                        </div>
+                      )
+                  }
                   {profile?.address && (
                     <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-700/30 bg-gray-800/30">
                       <FiMapPin className="text-[#902bd1] flex-shrink-0" size={15} />
@@ -263,7 +283,7 @@ const CoachProfile = () => {
             )}
 
             {/* Professional info */}
-            {(profile?.specialization || profile?.years_of_experience || profile?.certification) && (
+            {(profile?.specialization || profile?.years_of_experience || profile?.certification || computedAge) && (
               <div className="bg-gray-900/70 rounded-2xl p-6 border border-gray-700/50">
                 <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(#f59e0b,#ef4444)' }} />
@@ -271,6 +291,12 @@ const CoachProfile = () => {
                 </h2>
 
                 <div className="space-y-3">
+                  {(computedAge !== null && computedAge !== undefined) && (
+                    <div className="flex justify-between items-center py-2 border-b border-gray-800">
+                      <span className="text-xs text-gray-500">{t('age', 'Age')}</span>
+                      <span className="text-sm text-white font-medium">{computedAge} {t('yearsOld', 'years old')}</span>
+                    </div>
+                  )}
                   {profile?.specialization && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-800">
                       <span className="text-xs text-gray-500">{t('specialization')}</span>

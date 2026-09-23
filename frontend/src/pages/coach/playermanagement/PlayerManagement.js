@@ -13,7 +13,8 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import API from '../../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../../administration/shared/AdminToaster';
 import { format, addMonths, subMonths } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import PlayerReportHistoryModal from './modals/PlayerReportHistoryModal';
@@ -190,14 +191,17 @@ const PlayerManagement = () => {
   const [evalMonth,      setEvalMonth]      = useState(format(new Date(),'yyyy-MM'));
   const [activePillar,   setActivePillar]   = useState('technical');
   const [isSubmitting,   setIsSubmitting]   = useState(false);
+  const [apiError,       setApiError]       = useState(null);
   const [evalForm,       setEvalForm]       = useState({
     technical_scores:{}, tactical_scores:{}, physical_scores:{}, mental_scores:{},
     fatigue_level:0, sleep_quality:0, pain_location:'',
     is_injured:false, injury_details:'', medical_cert_valid:true,
     school_grade_avg:'', school_attendance:'', school_behaviour:0,
     strength:'', to_improve:'', objective:'', comment:'',
-    attendance_present:'', attendance_total:'',
   });
+  const [attendanceStats, setAttendanceStats] = useState({ attendance_present:0, attendance_total:0 });
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // History modal
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -211,6 +215,7 @@ const PlayerManagement = () => {
   const [isPredicting,        setIsPredicting]        = useState(false);
   const [isUpdatingPosition,  setIsUpdatingPosition]  = useState(false);
   const [positionDecision,    setPositionDecision]    = useState(null);
+  const [positionApiError,    setPositionApiError]    = useState(null);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -241,16 +246,28 @@ const PlayerManagement = () => {
   // ── Evaluation ────────────────────────────────────────────────────────────
   const openEvalModal = (player) => {
     setEvalPlayer(player); setActivePillar('technical');
+    setApiError(null);
     setEvalForm({
       technical_scores:{}, tactical_scores:{}, physical_scores:{}, mental_scores:{},
       fatigue_level:0, sleep_quality:0, pain_location:'',
       is_injured:false, injury_details:'', medical_cert_valid:true,
       school_grade_avg:'', school_attendance:'', school_behaviour:0,
       strength:'', to_improve:'', objective:'', comment:'',
-      attendance_present:'', attendance_total:'',
     });
     setShowEvalModal(true);
   };
+
+  // Attendance is computed automatically from the real attendance records — never entered by hand.
+  useEffect(() => {
+    if (!showEvalModal || !evalPlayer) return;
+    let cancelled = false;
+    setLoadingAttendance(true);
+    API.get('reports/attendance-stats/', { params: { player: evalPlayer.id, month: evalMonth } })
+      .then(res => { if (!cancelled) setAttendanceStats(res.data); })
+      .catch(() => { if (!cancelled) setAttendanceStats({ attendance_present:0, attendance_total:0 }); })
+      .finally(() => { if (!cancelled) setLoadingAttendance(false); });
+    return () => { cancelled = true; };
+  }, [showEvalModal, evalPlayer, evalMonth]);
 
   const setScore = (pillar, criterion, val) =>
     setEvalForm(prev => ({ ...prev, [`${pillar}_scores`]:{ ...prev[`${pillar}_scores`], [criterion]:val } }));
@@ -289,19 +306,58 @@ const PlayerManagement = () => {
         school_behaviour:evalForm.school_behaviour||null,
         strength:evalForm.strength, to_improve:evalForm.to_improve,
         objective:evalForm.objective, comment:evalForm.comment,
-        attendance_present:parseInt(evalForm.attendance_present)||0,
-        attendance_total:parseInt(evalForm.attendance_total)||0,
       });
       toast.success(t('evalSaved', { name: evalPlayer.full_name }));
+      setApiError(null);
       setShowEvalModal(false);
     } catch (err) {
-      toast.error(err.response?.data?.non_field_errors?.[0]||'Failed to save evaluation');
+      const errorData = err.response?.data;
+      let msg = t('Failed to save evaluation');
+      if (typeof errorData === 'object' && errorData !== null) {
+        msg = Object.entries(errorData)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join(' | ');
+      } else if (typeof errorData === 'string' && !errorData.includes('<!DOCTYPE')) {
+        msg = errorData;
+      }
+      setApiError(msg);
+      toast.error(msg, { duration: 5000 });
     } finally { setIsSubmitting(false); }
+  };
+
+  // ── AI-assisted texts (strength / to_improve / objective) ──────────────────
+  const handleGenerateAI = async () => {
+    const hasScores = ['technical','tactical','physical','mental']
+      .some(p => Object.values(evalForm[`${p}_scores`]).some(v => v > 0));
+    if (!hasScores) { toast.error(t('aiNeedsScores')); return; }
+
+    setIsGeneratingAI(true);
+    try {
+      const { data } = await API.post('reports/generate-report-texts/', {
+        player:evalPlayer.id, month:evalMonth,
+        technical_scores:evalForm.technical_scores, tactical_scores:evalForm.tactical_scores,
+        physical_scores:evalForm.physical_scores,   mental_scores:evalForm.mental_scores,
+        technical_avg:getPillarAvg('technical'), tactical_avg:getPillarAvg('tactical'),
+        physical_avg:getPillarAvg('physical'),   mental_avg:getPillarAvg('mental'),
+        fatigue_level:evalForm.fatigue_level||null, sleep_quality:evalForm.sleep_quality||null,
+        is_injured:evalForm.is_injured,
+        school_grade_avg:evalForm.school_grade_avg||null,
+        school_attendance:evalForm.school_attendance||null,
+        school_behaviour:evalForm.school_behaviour||null,
+        attendance_present:attendanceStats.attendance_present,
+        attendance_total:attendanceStats.attendance_total,
+      });
+      setEvalForm(p => ({ ...p, strength:data.strength, to_improve:data.to_improve, objective:data.objective }));
+      toast.success(t('aiGenerated'));
+    } catch (err) {
+      toast.error(err.response?.data?.error || t('aiGenerateFailed'));
+    } finally { setIsGeneratingAI(false); }
   };
 
   // ── Position Predictor ────────────────────────────────────────────────────
   const openPredictModal = (player) => {
     setPredictPlayer(player); setTestScores({}); setPredictions(null); setPositionDecision(null);
+    setPositionApiError(null);
     setShowPredictModal(true);
   };
   const filledCount = Object.values(testScores).filter(v=>v>0).length;
@@ -321,12 +377,19 @@ const PlayerManagement = () => {
         toast.success(t('posUpdatedSucc', { pos: newPos }));
       } else { toast.success(t('posKeptSucc', { pos: predictPlayer.position })); }
       setPositionDecision(decision);
-    } catch {
-      if (decision==='change') {
-        setPlayers(prev => prev.map(p => p.id===predictPlayer.id ? {...p,position:newPos} : p));
-        toast.success(t('posUpdatedSucc', { pos: newPos }));
-      } else { toast.success(t('posKeptSucc', { pos: predictPlayer.position })); }
-      setPositionDecision(decision);
+      setPositionApiError(null);
+    } catch (err) {
+      const errorData = err.response?.data;
+      let msg = t('Failed to update position');
+      if (typeof errorData === 'object' && errorData !== null) {
+        msg = Object.entries(errorData)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join(' | ');
+      } else if (typeof errorData === 'string' && !errorData.includes('<!DOCTYPE')) {
+        msg = errorData;
+      }
+      setPositionApiError(msg);
+      toast.error(msg, { duration: 5000 });
     } finally { setIsUpdatingPosition(false); }
   };
 
@@ -350,7 +413,7 @@ const PlayerManagement = () => {
       style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}
       dir={isRtl ? 'rtl' : 'ltr'}>
-      <Toaster position="top-right"/>
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -834,34 +897,40 @@ const PlayerManagement = () => {
                     )}
                   </div>
 
-                  {/* Attendance */}
+                  {/* Attendance — auto-computed from real attendance records, not editable */}
                   <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/30">
-                    <div className="text-sm font-medium text-gray-300 mb-3">{t('trainingAttendance')}</div>
-                    <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
-                      <div className="flex-1 min-w-[120px]">
-                        <label className="block text-xs text-gray-400 mb-1">{t('sessionsAttended')}</label>
-                        <input type="number" min="0" placeholder={t('ex14')}
-                          value={evalForm.attendance_present}
-                          onChange={e=>setEvalForm(p=>({...p,attendance_present:e.target.value}))}
-                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"/>
+                    <div className="text-sm font-medium text-gray-300 mb-1">{t('trainingAttendance')}</div>
+                    <div className="text-xs text-gray-500 mb-3">{t('attendanceAutoNote', 'Automatically calculated from marked attendance for this month')}</div>
+                    {loadingAttendance ? (
+                      <div className="h-8 w-40 bg-gray-700/40 rounded-lg animate-pulse"/>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <span className="text-white font-bold text-xl">
+                          {toWestern(attendanceStats.attendance_present)}<span className="text-gray-500 font-normal"> / {toWestern(attendanceStats.attendance_total)}</span>
+                        </span>
+                        <span className="text-sm text-gray-400">{t('sessions', 'sessions')}</span>
+                        {attendanceStats.attendance_total > 0 && (
+                          <span className="ml-auto text-[#00d0cb] font-bold text-xl">
+                            {toWestern(Math.round((attendanceStats.attendance_present/attendanceStats.attendance_total)*100))}%
+                          </span>
+                        )}
                       </div>
-                      <div className="text-gray-400 text-lg mt-4 shrink-0">/</div>
-                      <div className="flex-1 min-w-[120px]">
-                        <label className="block text-xs text-gray-400 mb-1">{t('totalSessions')}</label>
-                        <input type="number" min="0" placeholder={t('ex16')}
-                          value={evalForm.attendance_total}
-                          onChange={e=>setEvalForm(p=>({...p,attendance_total:e.target.value}))}
-                          className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"/>
-                      </div>
-                      {evalForm.attendance_present && evalForm.attendance_total && (
-                        <div className="mt-4 text-[#00d0cb] font-bold text-xl min-w-[60px] text-center sm:text-right shrink-0">
-                          {toWestern(Math.round((evalForm.attendance_present/evalForm.attendance_total)*100))}%
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   {/* Text fields */}
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <span className="text-sm font-medium text-gray-300">{t('coachAssessment')}</span>
+                    <motion.button type="button" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                      onClick={handleGenerateAI} disabled={isGeneratingAI}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-white rounded-xl text-xs font-bold shadow-md transition-all border-none disabled:opacity-60"
+                      style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
+                      {isGeneratingAI
+                        ? <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        : <FaMagic size={12} />}
+                      {isGeneratingAI ? t('aiGenerating') : t('generateWithAI')}
+                    </motion.button>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                     {[
                       { key:'strength',   label: t('strength'),   req:true, placeholder: t('whatDoesPlayerWell') },
@@ -894,6 +963,15 @@ const PlayerManagement = () => {
                         className={`w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] resize-none ${isRtl ? 'text-right' : ''}`}/>
                     </div>
                   </div>
+
+                  {/* API Error Banner for Eval Modal */}
+                  {apiError && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400 mt-4">
+                      <FiX className="text-xl flex-shrink-0" />
+                      <p className="text-sm font-medium">{apiError}</p>
+                    </motion.div>
+                  )}
 
                   {/* Footer */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -1062,6 +1140,15 @@ const PlayerManagement = () => {
                         </button>
                       </div>
                     )}
+                  </motion.div>
+                )}
+
+                {/* API Error Banner for Position Predictor */}
+                {positionApiError && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400 mb-4">
+                    <FiX className="text-xl flex-shrink-0" />
+                    <p className="text-sm font-medium">{positionApiError}</p>
                   </motion.div>
                 )}
 

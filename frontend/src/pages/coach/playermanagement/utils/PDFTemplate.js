@@ -1,12 +1,29 @@
 // ═══════════════════════════════════════════════════════════════
-// PDFTemplate.js — White-paper Institutional A4 Report
+// PDFTemplate.js — Parent-friendly A4 Monthly Report
 // Returns INNER HTML only (no html/head/body wrappers).
 // Styles are embedded inside the content via a <style> block,
 // and base styles apply to the outer wrapper div.
+//
+// Design goals (vs the old dense "scout report" version):
+//  - Readable font sizes (11-13px body, not 7-9px)
+//  - Fully localized via the `t` function passed in (fr/en/ar)
+//  - Trend arrows vs the previous month's report, when available
+//  - Player photo instead of just an initial
+//  - A plain-language rating badge + a one-line scale legend
+//  - Dropped the dense per-criterion "micro-criteria" grid — the
+//    4 pillar averages carry the signal a parent actually needs
+//  - Softer footer tone (no "Strictly Confidential" legalese)
 // ═══════════════════════════════════════════════════════════════
 
 const ACCENT = '#0f2a6e'; // institutional navy
 const RED    = '#c9222a'; // header accent
+
+// Arabic locale formatting renders Eastern Arabic-Indic digits (٠١٢) by default —
+// the rest of the app forces Western digits everywhere, so PDF dates must match.
+const toWestern = (str) =>
+  String(str).replace(/[٠-٩۰-۹]/g, (d) =>
+    String(d.charCodeAt(0) - (d.charCodeAt(0) >= 0x06F0 ? 0x06F0 : 0x0660))
+  );
 
 const f = (v, d = 1) =>
   v !== null && v !== undefined && v !== '' ? parseFloat(v).toFixed(d) : '—';
@@ -14,68 +31,100 @@ const f = (v, d = 1) =>
 const pct = (value, max = 10) =>
   Math.min(100, Math.max(0, (parseFloat(value || 0) / max) * 100));
 
-const bar = (value, max = 10) => {
+const barOnly = (value, max = 10) => {
   const p = pct(value, max);
-  return `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="flex:1;height:3px;background:#e5e7eb;border-radius:99px;overflow:hidden;">
-        <div style="width:${p}%;height:100%;background:${ACCENT};border-radius:99px;"></div>
-      </div>
-      <span style="font-size:9px;font-weight:700;color:#111827;min-width:30px;text-align:right;">${f(value)}/10</span>
-    </div>`;
+  return `<div style="height:6px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:9px;">
+    <div style="width:${p}%;height:100%;background:${ACCENT};border-radius:99px;"></div>
+  </div>`;
 };
 
-const pillarCard = (label, avg, scores) => {
-  const entries = Object.entries(scores || {}).slice(0, 7);
-  const rows = entries.map(([k, v]) => `
-    <div style="margin-bottom:5px;">
-      <div style="font-size:7.5px;color:#6b7280;text-transform:capitalize;margin-bottom:2px;">${k.replace(/_/g,' ')}</div>
-      ${bar(v)}
-    </div>`).join('');
-
-  return `
-    <div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;background:#fafafa;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;
-          margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid #f3f4f6;">
-        <span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:${ACCENT};">${label}</span>
-        <span style="font-size:21px;font-weight:900;color:${ACCENT};letter-spacing:-1px;">
-          ${f(avg)}<span style="font-size:10px;color:#9ca3af;font-weight:500;">/10</span>
-        </span>
-      </div>
-      ${rows}
-    </div>`;
+// Rating bucket used for the plain-language badge next to the overall score
+const ratingBucket = (score) => {
+  const s = parseFloat(score || 0);
+  if (s >= 8)   return { key: 'excellent', bg: '#dcfce7', color: '#15803d' };
+  if (s >= 6.5) return { key: 'good',       bg: '#ccfbf1', color: '#0f766e' };
+  if (s >= 5)   return { key: 'average',    bg: '#fef3c7', color: '#b45309' };
+  return              { key: 'needsWork',  bg: '#fee2e2', color: '#b91c1c' };
 };
 
-export const buildPDFHTML = (report, player, academyName = 'RunAiNi Academy') => {
+// Trend arrow vs the previous month's value — omitted when there's nothing to compare to
+const trendHTML = (current, previous) => {
+  if (previous === undefined || previous === null) return '';
+  const diff = parseFloat(current || 0) - parseFloat(previous || 0);
+  if (Math.abs(diff) < 0.05) {
+    return `<span style="font-size:12px;font-weight:800;color:#9ca3af;">–</span>`;
+  }
+  const up    = diff > 0;
+  const color = up ? '#15803d' : '#b91c1c';
+  const arrow = up ? '▲' : '▼';
+  return `<span style="font-size:12px;font-weight:800;color:${color};">${arrow} ${Math.abs(diff).toFixed(1)}</span>`;
+};
+
+const pillarCard = (label, avg, prevAvg) => `
+  <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#fafafa;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${ACCENT};">${label}</span>
+      ${trendHTML(avg, prevAvg)}
+    </div>
+    <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px;">
+      <span style="font-size:32px;font-weight:900;color:${ACCENT};line-height:1;letter-spacing:-0.5px;">${f(avg)}</span>
+      <span style="font-size:12px;color:#9ca3af;">/10</span>
+    </div>
+    ${barOnly(avg)}
+  </div>`;
+
+const badge = (label, ok) => `
+  <span style="font-size:10px;padding:4px 12px;border-radius:99px;font-weight:800;
+    background:${ok ? '#dcfce7' : '#fee2e2'};color:${ok ? '#15803d' : '#b91c1c'};
+    border:1px solid ${ok ? '#86efac' : '#fca5a5'};">${label}</span>`;
+
+/**
+ * @param {object} report          the selected month's PlayerReport
+ * @param {object} player          player profile (full_name, position, group, photo)
+ * @param {string} academyName
+ * @param {object} options
+ * @param {function} options.t            i18next t() bound to the 'coachplayers' namespace
+ * @param {string}   options.language     current i18n language ('fr' | 'en' | 'ar')
+ * @param {object}   [options.previousReport]  the month right before this one, for trend arrows
+ * @param {string}   [options.playerPhotoUrl]  player's profile picture URL, if any
+ */
+export const buildPDFHTML = (report, player, academyName , options = {}) => {
+  const {
+    t = (key) => key,
+    language = 'en',
+    previousReport = null,
+    playerPhotoUrl = null,
+  } = options;
+
+  const isRtl = language === 'ar';
+  const dir   = isRtl ? 'rtl' : 'ltr';
+  const rowDir = isRtl ? 'row-reverse' : 'row';
+
   const attPct = report.attendance_total > 0
     ? Math.round((report.attendance_present / report.attendance_total) * 100)
     : null;
 
   const overall  = parseFloat(report.overall_score || 0);
+  const rating   = ratingBucket(overall);
   const initial  = (player?.full_name || 'P').charAt(0).toUpperCase();
 
   const [year, month] = (report.month || '').split('-');
   const monthLabel = report.month
-    ? new Date(+year, +month - 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+    ? toWestern(new Date(+year, +month - 1).toLocaleDateString(language, { month: 'long', year: 'numeric' }))
     : '—';
 
-  const allCriteria = {
-    ...report.technical_scores,
-    ...report.tactical_scores,
-    ...report.physical_scores,
-    ...report.mental_scores,
-  };
-  const entries = Object.entries(allCriteria);
-  const col1 = entries.filter((_, i) => i % 3 === 0);
-  const col2 = entries.filter((_, i) => i % 3 === 1);
-  const col3 = entries.filter((_, i) => i % 3 === 2);
+  const commentBlock = (label, value, accentColor) => value ? `
+    <div style="border:1px solid #e5e7eb;border-radius:8px;padding:11px 14px;background:#fafafa;border-${isRtl ? 'right' : 'left'}:3px solid ${accentColor};">
+      <div style="font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${accentColor};margin-bottom:5px;">${label}</div>
+      <div style="font-size:11.5px;color:#374151;line-height:1.6;">${value}</div>
+    </div>` : '';
 
-  const microCol = (list) => list.map(([k, v]) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;
-        padding:2.5px 0;border-bottom:1px solid #f9fafb;">
-      <span style="font-size:7.5px;color:#6b7280;text-transform:capitalize;">${k.replace(/_/g,' ')}</span>
-      <span style="font-size:8px;font-weight:700;color:#111827;">${f(v)}</span>
-    </div>`).join('');
+  const comments = [
+    commentBlock(t('Strengths'), report.strength, '#15803d'),
+    commentBlock(t('toImprove'), report.to_improve, '#b45309'),
+    commentBlock(t('Objective For Next Month'), report.objective, ACCENT),
+    commentBlock(t('CoachComment'), report.comment, '#6b7280'),
+  ].filter(Boolean);
 
   return `
 <style>
@@ -83,7 +132,7 @@ export const buildPDFHTML = (report, player, academyName = 'RunAiNi Academy') =>
   .pdf-root table { border-collapse:collapse; width:100%; }
 </style>
 
-<div class="pdf-root" style="
+<div class="pdf-root" dir="${dir}" style="
   font-family:-apple-system,'Helvetica Neue',Arial,Helvetica,sans-serif;
   background:#ffffff;
   color:#111827;
@@ -107,148 +156,115 @@ export const buildPDFHTML = (report, player, academyName = 'RunAiNi Academy') =>
   <!-- PAGE -->
   <div style="position:relative;z-index:1;height:1122px;display:flex;flex-direction:column;">
 
-    <!-- BLACK HEADER -->
+    <!-- HEADER: player photo + name, month, overall score & rating -->
     <div style="background:#111827;flex-shrink:0;">
       <div style="height:4px;background:${RED};"></div>
-      <div style="padding:13px 22px;display:flex;align-items:center;justify-content:space-between;">
-        <!-- Left: Logo + Title -->
-        <div style="display:flex;align-items:center;gap:13px;">
-          <div style="width:44px;height:44px;border-radius:8px;background:${ACCENT};
-            border:2px solid rgba(255,255,255,0.15);flex-shrink:0;
-            display:flex;align-items:center;justify-content:center;
-            font-size:19px;font-weight:900;color:#fff;">${initial}</div>
-          <div>
-            <div style="font-size:8px;color:#9ca3af;text-transform:uppercase;letter-spacing:2.5px;font-weight:700;margin-bottom:3px;">${academyName}</div>
-            <div style="font-size:17px;font-weight:900;color:#fff;letter-spacing:-0.3px;">Official Performance Report</div>
+      <div style="padding:18px 24px;display:flex;flex-direction:${rowDir};align-items:center;justify-content:space-between;gap:16px;">
+
+        <!-- Player -->
+        <div style="display:flex;flex-direction:${rowDir};align-items:center;gap:14px;">
+          <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.2);
+            flex-shrink:0;background:${ACCENT};display:flex;align-items:center;justify-content:center;">
+            ${playerPhotoUrl
+              ? `<img src="${playerPhotoUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+              : `<span style="font-size:22px;font-weight:900;color:#fff;">${initial}</span>`}
+          </div>
+          <div style="text-align:${isRtl ? 'right' : 'left'};">
+            <div style="font-size:19px;font-weight:900;color:#fff;letter-spacing:-0.3px;">${player?.full_name || '—'}</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:3px;">
+              ${player?.position || ''}${player?.group?.name ? ` · ${player.group.name}` : ''}
+            </div>
           </div>
         </div>
-        <!-- Centre: Cycle -->
+
+        <!-- Cycle -->
         <div style="text-align:center;">
-          <div style="font-size:8px;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;">Reference Cycle</div>
-          <div style="font-size:13px;font-weight:800;color:#fff;">${monthLabel}</div>
-          <div style="font-size:8px;color:#4b5563;margin-top:3px;">Issued: ${new Date().toLocaleDateString('en-GB')}</div>
+          <div style="font-size:8.5px;color:#4b5563;text-transform:uppercase;letter-spacing:2px;">${academyName}</div>
+          <div style="font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-top:3px;">${t('Rapport de Performance')}</div>
+          <div style="font-size:15px;font-weight:800;color:#fff;margin-top:4px;">${monthLabel}</div>
         </div>
-        <!-- Right: Overall -->
-        <div style="text-align:right;">
-          <div style="font-size:8px;color:#6b7280;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:4px;">Overall Index</div>
-          <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-3px;line-height:1;">
-            ${f(overall)}<span style="font-size:15px;color:#4b5563;font-weight:500;">/10</span>
+
+        <!-- Overall -->
+        <div style="text-align:${isRtl ? 'left' : 'right'};">
+          <div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">${t('Overall_Score')}</div>
+          <div style="font-size:38px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-top:3px;">
+            ${f(overall)}<span style="font-size:14px;color:#6b7280;font-weight:500;">/10</span>
+          </div>
+          <div style="margin-top:5px;">
+            <span style="font-size:10px;font-weight:800;padding:3px 11px;border-radius:99px;background:${rating.bg};color:${rating.color};">
+              ${t(rating.key)}
+            </span>
           </div>
         </div>
       </div>
       <div style="height:3px;background:${RED};"></div>
     </div>
 
-    <!-- PLAYER STRIP -->
-    <div style="background:#f9fafb;border-bottom:1px solid #e5e7eb;
-      padding:9px 22px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div>
-        <span style="font-size:15px;font-weight:900;color:#111827;text-transform:uppercase;letter-spacing:-0.3px;">
-          ${player?.full_name || '—'}
-        </span>
-        <span style="font-size:10px;color:#6b7280;margin-left:12px;">
-          ${player?.position || ''} &nbsp;·&nbsp; Group: ${player?.group?.name || 'Unassigned'}
-        </span>
-      </div>
-      <div style="display:flex;gap:5px;align-items:center;">
-        ${report.is_injured
-          ? '<span style="font-size:8px;padding:3px 10px;border-radius:99px;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-weight:800;">INJURY ACTIVE</span>'
-          : '<span style="font-size:8px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;border:1px solid #86efac;font-weight:800;">CLEARED</span>'}
-        ${attPct !== null ? `<span style="font-size:8px;padding:3px 10px;border-radius:99px;background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;font-weight:800;">ATT. ${attPct}%</span>` : ''}
-        ${report.medical_cert_valid
-          ? '<span style="font-size:8px;padding:3px 10px;border-radius:99px;background:#dcfce7;color:#15803d;border:1px solid #86efac;font-weight:800;">CERT. VALID</span>'
-          : '<span style="font-size:8px;padding:3px 10px;border-radius:99px;background:#fef9c3;color:#92400e;border:1px solid #fcd34d;font-weight:800;">CERT. REQUIRED</span>'}
-      </div>
-    </div>
+   
 
     <!-- BODY -->
-    <div style="padding:12px 22px;flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+    <div style="padding:16px 24px;flex:1;display:flex;flex-direction:column;gap:14px;overflow:hidden;">
 
       <!-- 2×2 PILLAR GRID -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0;">
-        ${pillarCard('Technical', report.technical_avg, report.technical_scores)}
-        ${pillarCard('Tactical',  report.tactical_avg,  report.tactical_scores)}
-        ${pillarCard('Physical',  report.physical_avg,  report.physical_scores)}
-        ${pillarCard('Mental',    report.mental_avg,    report.mental_scores)}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex-shrink:0;">
+        ${pillarCard(t('technical'), report.technical_avg, previousReport?.technical_avg)}
+        ${pillarCard(t('tactical'),  report.tactical_avg,  previousReport?.tactical_avg)}
+        ${pillarCard(t('physical'),  report.physical_avg,  previousReport?.physical_avg)}
+        ${pillarCard(t('mental'),    report.mental_avg,    previousReport?.mental_avg)}
       </div>
-
-      <!-- MICRO-CRITERIA 3-col -->
-      ${entries.length > 0 ? `
-      <div style="border:1px solid #e5e7eb;border-radius:6px;padding:9px 13px;background:#fafafa;flex-shrink:0;">
-        <div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:${ACCENT};
-            margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid #f3f4f6;">
-          Micro-Criteria Assessment
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px;">
-          <div>${microCol(col1)}</div>
-          <div>${microCol(col2)}</div>
-          <div>${microCol(col3)}</div>
-        </div>
+      ${previousReport ? `
+      <div style="text-align:${isRtl ? 'right' : 'left'};margin-top:-6px;">
+        <span style="font-size:9px;color:#9ca3af;font-style:italic;">${t('pdf_vsLastMonth')}</span>
       </div>` : ''}
 
       <!-- HEALTH / ATTENDANCE / ACADEMIC TABLE -->
-      <div style="border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;flex-shrink:0;">
-        <div style="background:#111827;padding:6px 13px;">
-          <span style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#fff;">
-            Health, Attendance &amp; Academic
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;flex-shrink:0;">
+        <div style="background:#111827;padding:8px 16px;">
+          <span style="font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#fff;">
+            ${t('Health&Academic')}
           </span>
         </div>
         <table>
           <tbody>
             <tr style="background:#f9fafb;">
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:25%;">Injury</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:${report.is_injured ? '#b91c1c' : '#15803d'};border-bottom:1px solid #f3f4f6;width:25%;">${report.is_injured ? 'Active' : 'None'}</td>
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;border-bottom:1px solid #f3f4f6;border-left:1px solid #e5e7eb;width:25%;">Training Att.</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;width:25%;">${attPct !== null ? `${attPct}% (${report.attendance_present}/${report.attendance_total})` : '—'}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:25%;">${t('Injured Status')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:${report.is_injured ? '#b91c1c' : '#15803d'};border-bottom:1px solid #f3f4f6;width:25%;">${report.is_injured ? t('Injured Status') : t('not Injured')}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #f3f4f6;border-${isRtl ? 'right' : 'left'}:1px solid #e5e7eb;width:25%;">${t('Training Attendance')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;width:25%;">${attPct !== null ? `${attPct}% ` : '—'}</td>
             </tr>
             <tr>
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;border-bottom:1px solid #f3f4f6;">Fatigue</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;">${report.fatigue_level ? report.fatigue_level + '/5' : '—'}</td>
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;border-bottom:1px solid #f3f4f6;border-left:1px solid #e5e7eb;">Academic Grade</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;">${report.school_grade_avg ? f(report.school_grade_avg) + '/20' : '—'}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #f3f4f6;">${t('Fatigue')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;">${report.fatigue_level ? report.fatigue_level + '/5' : '—'}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;border-bottom:1px solid #f3f4f6;border-${isRtl ? 'right' : 'left'}:1px solid #e5e7eb;">${t('Grade')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#111827;border-bottom:1px solid #f3f4f6;">${report.school_grade_avg ? f(report.school_grade_avg) + '/20' : '—'}</td>
             </tr>
             <tr style="background:#f9fafb;">
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;">Sleep</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:#111827;">${report.sleep_quality ? report.sleep_quality + '/5' : '—'}</td>
-              <td style="padding:5px 12px;font-size:9px;color:#6b7280;border-left:1px solid #e5e7eb;">School Att.</td>
-              <td style="padding:5px 12px;font-size:9px;font-weight:700;color:#111827;">${report.school_attendance ? f(report.school_attendance, 0) + '%' : '—'}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;">${t('Sleep')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#111827;">${report.sleep_quality ? report.sleep_quality + '/5' : '—'}</td>
+              <td style="padding:8px 16px;font-size:11px;color:#6b7280;border-${isRtl ? 'right' : 'left'}:1px solid #e5e7eb;">${t('School Attendance')}</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#111827;">${report.school_attendance ? f(report.school_attendance, 0) + '%' : '—'}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- STRATEGIC COMMENTS -->
-      <div style="display:grid;grid-template-columns:${(report.strength && report.to_improve) ? '1fr 1fr' : '1fr'};gap:8px;flex-shrink:0;">
-        ${report.strength ? `
-        <div style="border:1px solid #e5e7eb;border-top:3px solid #15803d;border-radius:0 0 6px 6px;padding:9px 13px;background:#fafafa;">
-          <div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#15803d;margin-bottom:6px;">Core Strengths</div>
-          <div style="font-size:9px;color:#374151;line-height:1.6;">${report.strength}</div>
-        </div>` : ''}
-        ${report.to_improve ? `
-        <div style="border:1px solid #e5e7eb;border-top:3px solid #b45309;border-radius:0 0 6px 6px;padding:9px 13px;background:#fafafa;">
-          <div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#b45309;margin-bottom:6px;">Development Areas</div>
-          <div style="font-size:9px;color:#374151;line-height:1.6;">${report.to_improve}</div>
-        </div>` : ''}
-      </div>
-
-      ${report.comment ? `
-      <div style="border:1px solid #e5e7eb;border-left:3px solid ${ACCENT};border-radius:0 6px 6px 0;padding:9px 13px;background:#fafafa;flex-shrink:0;">
-        <div style="font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:${ACCENT};margin-bottom:5px;">Official Technical Comment</div>
-        <div style="font-size:9px;color:#374151;font-style:italic;line-height:1.6;">${report.comment}</div>
+      <!-- COMMENTS -->
+      ${comments.length > 0 ? `
+      <div style="display:grid;grid-template-columns:${comments.length > 1 ? '1fr 1fr' : '1fr'};gap:10px;flex-shrink:0;">
+        ${comments.join('')}
       </div>` : ''}
 
       <div style="flex:1;"></div>
 
       <!-- FOOTER -->
-      <div style="padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;">
-        <div>
-          <div style="font-size:8px;color:#9ca3af;letter-spacing:0.5px;">Ref: ${player?.id || '—'} · ${monthLabel}</div>
-          <div style="font-size:7px;color:#d1d5db;margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Strictly Confidential — ${academyName}</div>
+      <div style="padding-top:12px;border-top:1px solid #e5e7eb;display:flex;flex-direction:${rowDir};justify-content:space-between;align-items:flex-end;flex-shrink:0;gap:16px;">
+        <div style="text-align:${isRtl ? 'right' : 'left'};">
+          <div style="font-size:9.5px;color:#9ca3af;">${t('pdf_reportRef')}: ${player?.id || '—'} · ${monthLabel}</div>
+          <div style="font-size:9px;color:#c4c9d2;margin-top:3px;">${t('pdf_confidentialNote', { academy: academyName })}</div>
         </div>
-        <div style="text-align:right;">
-          <div style="width:210px;height:1px;background:#d1d5db;margin-bottom:7px;margin-left:auto;"></div>
-          <div style="font-size:9px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:2px;">Head Coach</div>
-          <div style="font-size:7.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Authorized Signature</div>
+        <div style="text-align:${isRtl ? 'left' : 'right'};">
+          <div style="width:190px;height:1px;background:#d1d5db;margin-bottom:7px;${isRtl ? 'margin-right' : 'margin-left'}:auto;"></div>
+          <div 
         </div>
       </div>
 

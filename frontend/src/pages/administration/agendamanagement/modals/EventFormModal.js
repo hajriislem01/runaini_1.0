@@ -130,7 +130,7 @@ const EventFormModal = ({
   handleSubmit, isSubmitting,
   groupsWithSubgroups, coaches, players,
   handleGroupToggle, handleSubgroupToggle,
-  handleCoachToggle, handlePlayerToggle,
+  handleCoachToggle, handlePlayerToggle, apiError
 }) => {
   const { t, i18n } = useTranslation('agendamanagement');
   const isRtl = i18n.language === 'ar';
@@ -189,6 +189,15 @@ const EventFormModal = ({
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8 custom-scrollbar">
             <form id="event-form" onSubmit={handleSubmit} className="space-y-8">
+              {apiError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-200 text-sm font-medium"
+                >
+                  {apiError}
+                </motion.div>
+              )}
 
               {/* ── Basic Info ── */}
               <section className="space-y-4">

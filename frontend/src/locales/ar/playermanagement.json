@@ -21,7 +21,8 @@
     "save": "حفظ التغييرات",
     "cancel": "إلغاء",
     "removeFromGroup": "إزالة من المجموعة",
-    "addToGroup": "إضافة إلى المجموعة"
+    "addToGroup": "إضافة إلى المجموعة",
+    "createGroup": "إنشاء مجموعة"
   },
   "status": {
     "active": "نشط",
@@ -64,7 +65,16 @@
     "assignedPlayers": "اللاعبون المعينون",
     "availablePlayers": "اللاعبون المتاحون",
     "playerSingle": "لاعب",
-    "playerPlural": "لاعبين"
+    "playerPlural": "لاعبين",
+    "dobLabel": "تاريخ الميلاد",
+    "addPhone": "إضافة هاتف",
+    "selectSubgroupPlaceholder": "اختر الوحدة...",
+    "phoneLabels": {
+      "father": "الأب",
+      "mother": "الأم",
+      "personal": "شخصي",
+      "other": "آخر"
+    }
   },
   "positions": {
     "midfielder": "لاعب وسط",
@@ -111,5 +121,7 @@
     "good": "جيد",
     "strong": "قوي",
     "excellent": "ممتاز"
-  }
+  },
+  "playersTab": "اللاعبون",
+  "groupsTab": "المجموعات"
 }

@@ -14,6 +14,10 @@ class CoachViewSet(viewsets.ModelViewSet):
         return CustomUser.objects.filter(
             role="coach",
             academy=self.request.user.academy
+        ).select_related('coach_profile', 'academy').prefetch_related(
+            'coach_profile__assigned_groups__subgroups',
+            'coach_profile__full_access_groups',
+            'coach_profile__assigned_subgroups__group',
         )
 
     def update(self, request, *args, **kwargs):

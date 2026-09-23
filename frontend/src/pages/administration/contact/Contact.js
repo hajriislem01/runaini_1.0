@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiUsers } from 'react-icons/fi';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { useTranslation } from 'react-i18next';
 
 import { useContactData } from './hooks/useContactData';
@@ -39,7 +39,7 @@ const Contact = () => {
       initial="hidden" animate="visible" variants={containerVariants}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         <ContactHeader stats={stats} itemVariants={itemVariants} />

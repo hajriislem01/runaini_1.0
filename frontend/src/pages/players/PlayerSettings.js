@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiUser, FiLock, FiSave, FiCheck, FiEye, FiEyeOff, FiX, FiUpload } from 'react-icons/fi';
+import { FiUser, FiLock, FiSave, FiCheck, FiEye, FiEyeOff, FiX, FiUpload, FiPlus, FiTrash2, FiAlertCircle } from 'react-icons/fi';
 import { usePlayer } from '../../context/PlayerContext';
 import { useTranslation } from 'react-i18next';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 
 const PlayerSettings = () => {
   const { player, isLoading: playerLoading, updatePlayer, photoUrl } = usePlayer();
@@ -15,10 +16,12 @@ const PlayerSettings = () => {
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
+    phones: [{ number: '', label: 'Personal' }],
     address: '',
     notes: '',
     height: '',
-    weight: ''
+    weight: '',
+    date_of_birth: ''
   });
   
   const [passwordData, setPasswordData] = useState({
@@ -36,6 +39,11 @@ const PlayerSettings = () => {
   const [isPhotoSaving, setIsPhotoSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Inline API error states
+  const [profileError, setProfileError] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
+  const [photoError, setPhotoError] = useState(null);
+
   // Initialization & Sync
   useEffect(() => {
     if (!player || isSaving || isPhotoSaving || hasChanges) return;
@@ -43,10 +51,14 @@ const PlayerSettings = () => {
     setFormData({
       full_name: player.full_name || '',
       phone: player.phone || '',
+      phones: (player.phones && Array.isArray(player.phones) && player.phones.length > 0)
+        ? player.phones
+        : (player.phone ? [{ number: player.phone, label: 'Personal' }] : [{ number: '', label: 'Personal' }]),
       address: player.address || '',
       notes: player.notes || '',
       height: player.height || '',
-      weight: player.weight || ''
+      weight: player.weight || '',
+      date_of_birth: player.date_of_birth || ''
     });
 
     if (!photoFile) {
@@ -98,7 +110,8 @@ const PlayerSettings = () => {
     if (!photoFile) return;
 
     setIsPhotoSaving(true);
-    
+    setPhotoError(null);
+
     try {
       const fd = new FormData();
       fd.append('photo', photoFile);
@@ -108,7 +121,32 @@ const PlayerSettings = () => {
       updatePlayer(res.data);
       toast.success(t('messages.photoUpdated'));
       setPhotoFile(null);
+      setPhotoError(null);
     } catch (err) {
+      const msg = err.response?.data?.photo?.[0] || t('messages.photoFailed');
+      setPhotoError(msg);
+      toast.error(msg);
+    } finally {
+      setIsPhotoSaving(false);
+    }
+  };
+
+  const handleRemovePhoto = async (e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    setIsPhotoSaving(true);
+    setPhotoError(null);
+    try {
+      const fd = new FormData();
+      fd.append('remove_photo', 'true');
+      const res = await API.patch('players/me/', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      updatePlayer(res.data);
+      setPhotoFile(null);
+      setPreviewURL(null);
+      if (fileRef.current) fileRef.current.value = '';
+      toast.success(t('messages.photoRemoved', 'Photo removed'));
+    } catch {
       toast.error(t('messages.photoFailed'));
     } finally {
       setIsPhotoSaving(false);
@@ -118,27 +156,39 @@ const PlayerSettings = () => {
   const handleSaveProfile = async (e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!formData.full_name.trim()) {
-      toast.error(t('messages.nameRequired'));
+      const msg = t('messages.nameRequired');
+      setProfileError(msg);
+      toast.error(msg);
       return;
     }
 
     setIsSaving(true);
+    setProfileError(null);
 
     try {
+      const validPhones = (formData.phones || []).filter(p => p.number && p.number.trim());
       const payload = {
         full_name: formData.full_name,
-        phone: formData.phone,
+        phone: validPhones.length > 0 ? validPhones[0].number : formData.phone,
+        phones: validPhones,
         address: formData.address,
         notes: formData.notes,
         height: formData.height ? parseFloat(formData.height) : null,
         weight: formData.weight ? parseFloat(formData.weight) : null,
+        date_of_birth: formData.date_of_birth || null,
       };
 
       const res = await API.patch('players/me/', payload);
       updatePlayer(res.data);
       setHasChanges(false);
+      setProfileError(null);
       toast.success(t('messages.profileUpdated'));
     } catch (err) {
+      const data = err.response?.data;
+      const msg = data
+        ? Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : v}`).join(' | ')
+        : t('messages.profileFailed');
+      setProfileError(msg);
       toast.error(t('messages.profileFailed'));
     } finally {
       setIsSaving(false);
@@ -148,28 +198,38 @@ const PlayerSettings = () => {
   const handleSavePassword = async (e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!passwordData.current_password || !passwordData.new_password) {
-      toast.error(t('messages.pwdRequired'));
+      const msg = t('messages.pwdRequired');
+      setPasswordError(msg);
+      toast.error(msg);
       return;
     }
     if (passwordData.new_password !== passwordData.confirm_password) {
-      toast.error(t('messages.pwdMismatch'));
+      const msg = t('messages.pwdMismatch');
+      setPasswordError(msg);
+      toast.error(msg);
       return;
     }
     if (passwordData.new_password.length < 8) {
-      toast.error(t('messages.pwdTooShort'));
+      const msg = t('messages.pwdTooShort');
+      setPasswordError(msg);
+      toast.error(msg);
       return;
     }
 
     setIsSaving(true);
+    setPasswordError(null);
     try {
       await API.patch('players/me/', {
         current_password: passwordData.current_password,
         new_password: passwordData.new_password,
       });
       setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+      setPasswordError(null);
       toast.success(t('messages.pwdChanged'));
     } catch (err) {
-      toast.error(err.response?.data?.error || t('messages.pwdFailed'));
+      const msg = err.response?.data?.error || err.response?.data?.current_password?.[0] || t('messages.pwdFailed');
+      setPasswordError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -198,7 +258,7 @@ const PlayerSettings = () => {
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
     >
-      <Toaster position={isRtl ? 'top-left' : 'top-right'} />
+      <AdminToaster position={isRtl ? 'top-left' : 'top-right'} />
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* ── Header ── */}
@@ -244,14 +304,27 @@ const PlayerSettings = () => {
 
             <div className={`flex flex-col sm:flex-row items-center ${isRtl ? 'justify-center md:justify-end' : 'justify-center md:justify-start'} gap-3`}>
               {!photoFile ? (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-semibold text-white border border-gray-700 transition-all flex items-center gap-2"
-                >
-                  <FiUpload size={16} />
-                  {t('profile.choosePhoto')}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="px-5 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-semibold text-white border border-gray-700 transition-all flex items-center gap-2"
+                  >
+                    <FiUpload size={16} />
+                    {t('profile.choosePhoto')}
+                  </button>
+                  {previewURL && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      disabled={isPhotoSaving}
+                      className="px-5 py-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-semibold transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <FiTrash2 size={16} />
+                      {t('profile.removePhoto', 'Remove photo')}
+                    </button>
+                  )}
+                </>
               ) : (
                 <>
                   <button
@@ -277,6 +350,13 @@ const PlayerSettings = () => {
                   </button>
                 </>
               )}
+            {photoError && (
+              <div className="w-full mt-2 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm"
+                style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: '#fca5a5' }}>
+                <FiAlertCircle size={14} className="flex-shrink-0" />
+                {photoError}
+              </div>
+            )}
             </div>
             <p className="text-xs text-gray-500 mt-4">{t('profile.photoSizeWarning')}</p>
           </div>
@@ -303,18 +383,65 @@ const PlayerSettings = () => {
               />
             </div>
 
-            {/* Phone */}
-            <div>
-              <label className={labelCls}>{t('profile.phone')}</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={inputCls}
-                placeholder="+216 55 123 456"
-                inputMode="numeric"
-              />
+            {/* Phones */}
+            <div className="col-span-full">
+              <label className={labelCls}>📱 {t('profile.phone', 'Phone Numbers')}</label>
+              <div className="space-y-2">
+                {(formData.phones || [{ number: '', label: 'Personal' }]).map((phone, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="tel"
+                      value={phone.number}
+                      onChange={e => {
+                        const updated = [...formData.phones];
+                        updated[idx] = { ...updated[idx], number: e.target.value };
+                        setFormData(prev => ({ ...prev, phones: updated }));
+                        setHasChanges(true);
+                      }}
+                      className={`flex-1 px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#00d0cb] focus:ring-1 focus:ring-[#00d0cb] transition-all`}
+                      placeholder="+216 55 123 456"
+                      dir="ltr"
+                    />
+                    <select
+                      value={phone.label}
+                      onChange={e => {
+                        const updated = [...formData.phones];
+                        updated[idx] = { ...updated[idx], label: e.target.value };
+                        setFormData(prev => ({ ...prev, phones: updated }));
+                        setHasChanges(true);
+                      }}
+                      className="px-3 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-sm text-white focus:outline-none focus:border-[#00d0cb] transition-all"
+                    >
+                      <option value="Personal">{t('profile.phoneLabels.personal', 'Personal')}</option>
+                      <option value="Mother">{t('profile.phoneLabels.mother', 'Mother')}</option>
+                      <option value="Father">{t('profile.phoneLabels.father', 'Father')}</option>
+                      <option value="Other">{t('profile.phoneLabels.other', 'Other')}</option>
+                    </select>
+                    {formData.phones.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, phones: prev.phones.filter((_, i) => i !== idx) }));
+                          setHasChanges(true);
+                        }}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all"
+                      >
+                        <FiTrash2 size={15} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({ ...prev, phones: [...(prev.phones || []), { number: '', label: 'Personal' }] }));
+                  setHasChanges(true);
+                }}
+                className="mt-2 flex items-center gap-1.5 text-[#00d0cb] hover:text-[#00d0cb]/80 text-sm font-medium transition-all"
+              >
+                <FiPlus size={14} /> {t('profile.addPhone', 'Add Phone')}
+              </button>
             </div>
 
             {/* Location */}
@@ -370,6 +497,18 @@ const PlayerSettings = () => {
               />
             </div>
 
+            {/* Date of Birth */}
+            <div>
+              <label className={labelCls}>{t('profile.dateOfBirth', 'Date of Birth')}</label>
+              <input
+                type="date"
+                name="date_of_birth"
+                value={formData.date_of_birth}
+                onChange={handleChange}
+                className={inputCls}
+              />
+            </div>
+
             {/* Bio */}
             <div className="md:col-span-2">
               <label className={labelCls}>{t('profile.bio')}</label>
@@ -385,20 +524,29 @@ const PlayerSettings = () => {
           </div>
 
           {/* Save Profile Button */}
-          <div className={`pt-6 border-t border-gray-800 flex ${isRtl ? 'justify-start' : 'justify-end'}`}>
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={isSaving || !hasChanges}
-              className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:brightness-110 text-sm font-bold text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
-              style={{ boxShadow: '0 0 20px rgba(144,43,209,0.3)' }}
-            >
-              {isSaving
-                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : <FiSave size={16} />
-              }
-              {isSaving ? t('profile.saving') : t('profile.saveChanges')}
-            </button>
+          <div className={`pt-6 border-t border-gray-800 flex flex-col gap-3`}>
+            {profileError && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+                style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: '#fca5a5' }}>
+                <FiAlertCircle size={14} className="flex-shrink-0" />
+                <span>{profileError}</span>
+              </div>
+            )}
+            <div className={`flex ${isRtl ? 'justify-start' : 'justify-end'}`}>
+              <button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={isSaving || !hasChanges}
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#902bd1] to-[#4fb0ff] hover:brightness-110 text-sm font-bold text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+                style={{ boxShadow: '0 0 20px rgba(144,43,209,0.3)' }}
+              >
+                {isSaving
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <FiSave size={16} />
+                }
+                {isSaving ? t('profile.saving') : t('profile.saveChanges')}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -494,20 +642,29 @@ const PlayerSettings = () => {
           </div>
 
           {/* Update Password Footer */}
-          <div className={`pt-6 flex flex-col md:flex-row ${isRtl ? 'md:flex-row-reverse' : ''} justify-between items-center gap-4 border-t border-gray-800`}>
-            <p className="text-xs text-gray-500">{t('security.minChars')}</p>
-            <button
-              type="button"
-              onClick={handleSavePassword}
-              disabled={isSaving || !passwordData.current_password}
-              className="w-full md:w-auto px-8 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-gray-700 hover:border-[#902bd1]"
-            >
-              {isSaving
-                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : <FiLock size={16} />
-              }
-              {isSaving ? t('security.updating') : t('security.updatePassword')}
-            </button>
+          <div className={`pt-6 flex flex-col gap-3 border-t border-gray-800`}>
+            {passwordError && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+                style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', color: '#fca5a5' }}>
+                <FiAlertCircle size={14} className="flex-shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+            <div className={`flex flex-col md:flex-row ${isRtl ? 'md:flex-row-reverse' : ''} justify-between items-center gap-4`}>
+              <p className="text-xs text-gray-500">{t('security.minChars')}</p>
+              <button
+                type="button"
+                onClick={handleSavePassword}
+                disabled={isSaving || !passwordData.current_password}
+                className="w-full md:w-auto px-8 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-sm font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 border border-gray-700 hover:border-[#902bd1]"
+              >
+                {isSaving
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <FiLock size={16} />
+                }
+                {isSaving ? t('security.updating') : t('security.updatePassword')}
+              </button>
+            </div>
           </div>
         </form>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { FiSearch } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
@@ -68,7 +68,7 @@ const CoachManagement = () => {
         />
 
       </div>
-      <Toaster position={isRtl ? "top-left" : "top-right"} containerStyle={{ zIndex: 10000 }} />
+      <AdminToaster position={isRtl ? 'top-left' : 'top-right'} />
     </motion.div>
   );
 };

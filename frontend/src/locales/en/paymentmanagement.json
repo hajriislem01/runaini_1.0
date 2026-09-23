@@ -115,7 +115,8 @@
     "print": "Print",
     "transactionId": "Transaction ID",
     "close": "Close",
-    "paymentReceipt": "Payment Receipt"
+    "paymentReceipt": "Payment Receipt",
+    "paymentHistory": "Payment History"
   },
   "reminder": {
     "sendTitle": "Send Payment Reminder",

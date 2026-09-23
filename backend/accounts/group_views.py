@@ -28,7 +28,9 @@ class GroupViewSet(viewsets.ModelViewSet):
             except Exception:
                 return Group.objects.none()
         # ✅ Admin voit tous les groupes de son académie
-        return Group.objects.filter(academy=user.academy)
+        return Group.objects.filter(academy=user.academy).prefetch_related(
+            'subgroups', 'assigned_coaches__user', 'full_access_coaches'
+        )
 
     def perform_create(self, serializer):
         serializer.save(academy=self.request.user.academy)

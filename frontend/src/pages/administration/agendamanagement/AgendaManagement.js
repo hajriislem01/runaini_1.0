@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { useTranslation } from 'react-i18next';
 
 import { containerVariants, itemVariants } from './utils/agendaConstants';
@@ -30,7 +30,7 @@ const AgendaManagement = () => {
     handleFormChange, handleGroupToggle, handleSubgroupToggle,
     handleCoachToggle, handlePlayerToggle, resetForm,
     handleSubmit, handleEditEvent, handleConfirmDelete, handleDayClick, createEventForDay,
-    filteredEvents, stats, calendarDays,
+    filteredEvents, stats, calendarDays, apiError,
     detailSession, setDetailSession, isDetailLoading, handleOpenDetail
   } = useAgendaData();
 
@@ -43,7 +43,7 @@ const AgendaManagement = () => {
       variants={containerVariants}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         <AgendaHeader
           stats={stats}
@@ -89,6 +89,7 @@ const AgendaManagement = () => {
           handleSubgroupToggle={handleSubgroupToggle}
           handleCoachToggle={handleCoachToggle}
           handlePlayerToggle={handlePlayerToggle}
+          apiError={apiError}
         />
 
         <DayEventsModal

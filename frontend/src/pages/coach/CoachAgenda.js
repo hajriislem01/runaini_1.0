@@ -14,7 +14,8 @@ import {
 } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import EventDetailDrawer from '../../components/common/EventDetailDrawer';
 import { useTranslation } from 'react-i18next';
 
@@ -88,6 +89,7 @@ const CoachAgenda = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteAll, setDeleteAll] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [editForm, setEditForm] = useState({
     date: '', start_time: '10:00', end_time: '12:00', location: '',
   });
@@ -248,6 +250,7 @@ const CoachAgenda = () => {
   };
 
   const openEdit = (s) => {
+    setApiError(null);
     setSelectedSession(s);
     setEditForm({
       date: s.date,
@@ -259,6 +262,7 @@ const CoachAgenda = () => {
   };
 
   const openDelete = (s, all = false) => {
+    setApiError(null);
     setSelectedSession(s);
     setDeleteAll(all);
     setShowDeleteModal(true);
@@ -279,7 +283,19 @@ const CoachAgenda = () => {
       toast.success(t('toast.update_success'));
       setShowEditModal(false);
       setSelectedSession(null);
-    } catch { toast.error(t('toast.update_error')); }
+    } catch (err) {
+      const errorData = err.response?.data;
+      let msg = t('toast.update_error');
+      if (typeof errorData === 'object' && errorData !== null) {
+        msg = Object.entries(errorData)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join(' | ');
+      } else if (typeof errorData === 'string' && !errorData.includes('<!DOCTYPE')) {
+        msg = errorData;
+      }
+      setApiError(msg);
+      toast.error(msg, { duration: 5000 });
+    }
     finally { setIsSubmitting(false); }
   };
 
@@ -307,7 +323,19 @@ const CoachAgenda = () => {
       toast.success(t('toast.delete_success'));
       setShowDeleteModal(false);
       setSelectedSession(null);
-    } catch { toast.error(t('toast.delete_error')); }
+    } catch (err) {
+      const errorData = err.response?.data;
+      let msg = t('toast.delete_error');
+      if (typeof errorData === 'object' && errorData !== null) {
+        msg = Object.entries(errorData)
+          .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+          .join(' | ');
+      } else if (typeof errorData === 'string' && !errorData.includes('<!DOCTYPE')) {
+        msg = errorData;
+      }
+      setApiError(msg);
+      toast.error(msg, { duration: 5000 });
+    }
     finally { setIsSubmitting(false); }
   };
 
@@ -494,7 +522,7 @@ const CoachAgenda = () => {
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* ── Header ── */}
@@ -944,6 +972,16 @@ const CoachAgenda = () => {
                     </div>
                   )}
                 </div>
+
+                {/* API Error Banner for Edit Modal */}
+                {apiError && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                    className="mx-6 mb-4 bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400">
+                    <FiX className="text-xl flex-shrink-0" />
+                    <p className="text-sm font-medium">{apiError}</p>
+                  </motion.div>
+                )}
+
                 <div className="flex gap-3 px-6 pb-6">
                   <button type="button" onClick={() => setShowEditModal(false)}
                     className="px-5 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50">
@@ -1168,6 +1206,16 @@ const CoachAgenda = () => {
                   : t('modal.delete_single_warning')
                 }
               </p>
+
+              {/* API Error Banner for Delete Modal */}
+              {apiError && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                  className="mb-5 bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400">
+                  <FiX className="text-xl flex-shrink-0" />
+                  <p className="text-sm font-medium">{apiError}</p>
+                </motion.div>
+              )}
+
               <div className="flex gap-3">
                 <button onClick={() => setShowDeleteModal(false)}
                   className="flex-1 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50 text-sm">
@@ -1186,7 +1234,7 @@ const CoachAgenda = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       {/* Universal Detail Drawer */}
       <EventDetailDrawer

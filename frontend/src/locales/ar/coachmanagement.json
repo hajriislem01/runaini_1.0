@@ -57,7 +57,14 @@
     "syncingUnits": "جارٍ مزامنة الوحدات...",
     "noUnitsForGroup": "لا توجد وحدات لهذه المجموعة.",
     "activateGroupFirst": "قم بتفعيل مجموعة أولاً.",
-    "fullAccess": "صلاحية كاملة"
+    "fullAccess": "صلاحية كاملة",
+    "dobLabel": "تاريخ الميلاد",
+    "addPhone": "إضافة هاتف",
+    "phoneLabels": {
+      "work": "العمل",
+      "personal": "شخصي",
+      "other": "آخر"
+    }
   },
   "messages": {
     "addSuccess": "تمت إضافة المدرب بنجاح!",

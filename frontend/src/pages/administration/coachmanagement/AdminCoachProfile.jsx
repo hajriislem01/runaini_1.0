@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import {
   FiArrowLeft, FiUser, FiPhone, FiMail, FiMapPin,
   FiAward, FiBriefcase, FiUsers, FiEdit2,
@@ -87,7 +88,7 @@ const AdminCoachProfile = () => {
     <motion.div className="min-h-screen text-white p-4 sm:p-6 md:p-8"
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       <div className="max-w-7xl mx-auto">
       {/* ══ HERO BANNER ══ */}

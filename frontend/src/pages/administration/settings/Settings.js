@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { useTranslation } from 'react-i18next';
 
 import { useSettingsData } from './hooks/useSettingsData';
@@ -30,7 +30,7 @@ const Settings = () => {
     academyData, setAcademyData,
     preferences, setPreferences,
     handleSubmit, handleSavePassword,
-    handleImageSelect, confirmImageUpload, cancelImageSelection,
+    handleImageSelect, confirmImageUpload, cancelImageSelection, removeImage,
     handlePhoneVerification, handleVerifyCode
   } = useSettingsData();
 
@@ -54,7 +54,7 @@ const Settings = () => {
       animate="visible"
       variants={containerVariants}
     >
-      <Toaster position={isRtl ? 'top-left' : 'top-right'} />
+      <AdminToaster position={isRtl ? 'top-left' : 'top-right'} />
 
       <SettingsSidebar t={t} isRtl={isRtl} itemVariants={itemVariants} />
 
@@ -72,6 +72,7 @@ const Settings = () => {
               handleImageSelect={handleImageSelect}
               confirmImageUpload={confirmImageUpload}
               cancelImageSelection={cancelImageSelection}
+              removeImage={removeImage}
               itemVariants={itemVariants}
             />
 

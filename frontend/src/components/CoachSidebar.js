@@ -3,17 +3,19 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FiHome, FiUsers, FiSettings, FiCalendar, FiUser, FiLogOut,
-  FiX, FiMenu, FiChevronRight
+  FiX, FiMenu, FiChevronRight, FiCheckSquare
 } from 'react-icons/fi';
 import { FaFutbol } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCoachSession } from '../context/CoachSessionContext';
+import { dispatchAuthChange } from '../utils/authEvents';
 
 const navItems = [
   { to: '/coach/dashboard', icon: <FiHome />, key: 'dashboard' },
   { to: '/coach/profile', icon: <FiUser />, key: 'profile' },
   { to: '/coach/players', icon: <FiUsers />, key: 'players' },
   { to: '/coach/training', icon: <FaFutbol />, key: 'training' },
+  { to: '/coach/attendance', icon: <FiCheckSquare />, key: 'attendance' },
   { to: '/coach/agenda', icon: <FiCalendar />, key: 'agenda' },
   { to: '/coach/settings', icon: <FiSettings />, key: 'settings' },
 ];
@@ -45,6 +47,9 @@ const CoachSidebar = ({
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('academy_id');
+    dispatchAuthChange('logout');
     navigate('/login');
     setIsMobileOpen(false);
   };

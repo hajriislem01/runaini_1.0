@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import PlayerProfileView from './shared/PlayerProfileView';
 import API from '../../api';
 
@@ -36,7 +37,7 @@ const PlayerProfile = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <PlayerProfileView
         player={player}
         onBack={() => navigate(-1)}

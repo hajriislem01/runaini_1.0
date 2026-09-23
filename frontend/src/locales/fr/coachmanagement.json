@@ -57,7 +57,14 @@
     "syncingUnits": "Synchronisation des unités...",
     "noUnitsForGroup": "Aucune unité pour ce groupe.",
     "activateGroupFirst": "Activez d'abord un groupe.",
-    "fullAccess": "Accès Complet"
+    "fullAccess": "Accès Complet",
+    "dobLabel": "Date de Naissance",
+    "addPhone": "Ajouter un téléphone",
+    "phoneLabels": {
+      "work": "Travail",
+      "personal": "Personnel",
+      "other": "Autre"
+    }
   },
   "messages": {
     "addSuccess": "Entraîneur ajouté avec succès !",

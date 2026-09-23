@@ -6,7 +6,7 @@ import {
   FiCheck, FiX, FiTrash2, FiPlus, FiAward, FiActivity, FiUserCheck
 } from 'react-icons/fi';
 import { FaTrophy, FaFutbol, FaMedal } from 'react-icons/fa';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 
 import { useEventDetail } from './hooks/useEventDetail';
 import { formatDate, getStatusColor, containerVariants, itemVariants } from './utils/eventConstants';
@@ -67,7 +67,7 @@ const EventDetail = () => {
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-8">

@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import API from '../pages/api';
+import { AUTH_CHANGE_EVENT } from '../utils/authEvents';
 
 const CoachSessionContext = createContext(null);
 
 export const CoachSessionProvider = ({ children }) => {
-  const [coachPhoto, setCoachPhoto]   = useState(null);   // absolute URL or null
-  const [coachName,  setCoachName]    = useState('Coach');
-  const [isReady,    setIsReady]      = useState(false);
+  const [coachPhoto, setCoachPhoto] = useState(null);   // absolute URL or null
+  const [coachName, setCoachName]   = useState('Coach');
+  const [isReady,   setIsReady]     = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -24,6 +25,25 @@ export const CoachSessionProvider = ({ children }) => {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  // ── React to login / logout events ────────────────────────────────────────
+  useEffect(() => {
+    const handleAuthChange = (e) => {
+      const type = e?.detail?.type;
+      if (type === 'logout') {
+        // Clear stale coach data immediately
+        setCoachPhoto(null);
+        setCoachName('Coach');
+        setIsReady(false);
+      } else {
+        // Re-fetch for the newly logged-in coach
+        refresh();
+      }
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+  }, [refresh]);
+
   return (
     <CoachSessionContext.Provider value={{ coachPhoto, coachName, refresh, isReady }}>
       {children}
@@ -33,6 +53,6 @@ export const CoachSessionProvider = ({ children }) => {
 
 export const useCoachSession = () => {
   const ctx = useContext(CoachSessionContext);
-  if (!ctx) throw new Error('useCoachSession must be used inside <CoachSessionProvider>');
+  if (!ctx) throw new Error('useCoachSession must be inside <CoachSessionProvider>');
   return ctx;
 };

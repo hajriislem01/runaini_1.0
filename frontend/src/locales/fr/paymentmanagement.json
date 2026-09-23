@@ -115,7 +115,8 @@
     "print": "Imprimer",
     "transactionId": "ID de Transaction",
     "close": "Fermer",
-    "paymentReceipt": "Reçu de Paiement"
+    "paymentReceipt": "Reçu de Paiement",
+    "paymentHistory": "Historique des paiements"
   },
   "reminder": {
     "sendTitle": "Envoyer un Rappel de Paiement",

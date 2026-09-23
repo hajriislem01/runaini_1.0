@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FiUsers, FiTarget, FiCalendar, FiMapPin, FiZap, FiChevronRight } from 'react-icons/fi';
 import { FaTrophy, FaFutbol } from 'react-icons/fa';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 
 import { useCreateEvent } from './hooks/useCreateEvent';
 import { containerVariants, itemVariants } from './utils/eventConstants';
@@ -20,7 +20,7 @@ const CreateEvent = () => {
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       {/* Header */}
       <motion.div variants={itemVariants}

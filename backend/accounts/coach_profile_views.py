@@ -55,6 +55,18 @@ class CoachProfileView(APIView):
             user.save()
 
         # ── Mise à jour CoachProfile via serializer ───────────────────────────
+        if 'phones' in request.data and isinstance(request.data['phones'], list):
+            profile.phones = request.data['phones']
+            if len(request.data['phones']) > 0 and request.data['phones'][0].get('number'):
+                user.phone = request.data['phones'][0].get('number')
+                user.save()
+
+        if str(request.data.get('remove_photo', '')).lower() in ('1', 'true', 'yes'):
+            if profile.photo:
+                profile.photo.delete(save=False)
+            profile.photo = None
+            profile.save()
+
         serializer = CoachProfileSerializer(
             profile,
             data=request.data,

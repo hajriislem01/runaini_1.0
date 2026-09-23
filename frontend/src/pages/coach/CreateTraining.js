@@ -8,7 +8,8 @@ import {
 import { FaDumbbell } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import { useTranslation } from 'react-i18next';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const CreateTraining = () => {
 
   const [step, setStep]           = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   // ── Data from API ─────────────────────────────────────────────────────────
   const [groups,    setGroups]    = useState([]);
@@ -327,6 +329,7 @@ const CreateTraining = () => {
 
       await API.post('trainings/', payload);
       toast.success(t('toast.session_created'));
+      setApiError(null);
       setTimeout(() => navigate('/coach/agenda'), 1200);
     } catch (err) {
       const errorData = err.response?.data;
@@ -338,6 +341,7 @@ const CreateTraining = () => {
       } else if (typeof errorData === 'string' && !errorData.includes('<!DOCTYPE')) {
         msg = errorData;
       }
+      setApiError(msg);
       toast.error(msg, { duration: 5000 });
     } finally {
       setIsSubmitting(false);
@@ -378,7 +382,7 @@ const CreateTraining = () => {
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -1160,6 +1164,15 @@ const CreateTraining = () => {
                       </div>
                     ))}
                   </div>
+                )}
+
+                {/* API Error Banner */}
+                {apiError && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400">
+                    <FiX className="text-xl flex-shrink-0" />
+                    <p className="text-sm font-medium">{apiError}</p>
+                  </motion.div>
                 )}
 
                 <motion.button type="button" onClick={handleSubmit}

@@ -35,5 +35,10 @@ urlpatterns = [
     path('academies/', AcademyDirectoryView.as_view(), name='academy-directory'),
     path('coachprofile/', CoachProfileView.as_view(), name='coach-profile'),
     
+    path('attendance/coach/players/', __import__('accounts.attendance_views', fromlist=['']).get_coach_attendance_players, name='attendance-coach-players'),
+    path('attendance/coach/mark/', __import__('accounts.attendance_views', fromlist=['']).mark_attendance, name='attendance-coach-mark'),
+    path('attendance/admin/report/', __import__('accounts.attendance_views', fromlist=['']).get_admin_attendance_report, name='attendance-admin-report'),
+    path('attendance/player/my/', __import__('accounts.attendance_views', fromlist=['']).get_player_my_attendance, name='attendance-player-my'),
+
     path('', include('accounts.api_urls')),  # ✅ toujours en dernier
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

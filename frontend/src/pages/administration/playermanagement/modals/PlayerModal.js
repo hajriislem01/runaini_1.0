@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiEye, FiEyeOff, FiCheck, FiShield, FiUsers, FiTarget, FiActivity, FiChevronDown } from 'react-icons/fi';
+import { FiX, FiEye, FiEyeOff, FiCheck, FiShield, FiUsers, FiTarget, FiActivity, FiChevronDown, FiPlus, FiTrash2, FiPhone } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { strengthColors, strengthLabels } from '../utils/playerHelpers';
 
 const PlayerModal = ({
   showModal, setShowModal, editPlayerId, resetForm, handleSubmit,
-  formData, handleChange, handleGroupChangeInForm, handlePasswordChange,
+  formData, setFormData, handleChange, handleGroupChangeInForm, handlePasswordChange,
   errors, showPassword, setShowPassword, passwordStrength,
   groupOptionsForPlayer, subgroupOptionsForPlayer, apiError
 }) => {
@@ -176,17 +176,58 @@ const PlayerModal = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    {t('form.phoneLabel', 'Phone Number')}
+                  <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <FiPhone className="text-[#00d0cb]" size={14} />
+                    {t('form.phoneLabel', 'Phone Numbers')}
                   </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
-                    placeholder={t('form.phonePlaceholder', 'Enter phone number')}
-                  />
+                  <div className="space-y-2">
+                    {(formData.phones || [{ number: '', label: 'Personal' }]).map((phone, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <input
+                          type="tel"
+                          value={phone.number}
+                          onChange={e => {
+                            const updated = [...formData.phones];
+                            updated[idx] = { ...updated[idx], number: e.target.value };
+                            setFormData(prev => ({ ...prev, phones: updated }));
+                          }}
+                          className="flex-1 px-3 py-2 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all text-sm"
+                          placeholder="+216 12 345 678"
+                          dir="ltr"
+                        />
+                        <select
+                          value={phone.label}
+                          onChange={e => {
+                            const updated = [...formData.phones];
+                            updated[idx] = { ...updated[idx], label: e.target.value };
+                            setFormData(prev => ({ ...prev, phones: updated }));
+                          }}
+                          className="px-2 py-2 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white text-sm focus:ring-2 focus:ring-[#00d0cb]/50 outline-none transition-all"
+                        >
+                          <option value="Personal">{t('form.phoneLabels.personal', 'Personal')}</option>
+                          <option value="Mother">{t('form.phoneLabels.mother', 'Mother')}</option>
+                          <option value="Father">{t('form.phoneLabels.father', 'Father')}</option>
+                          <option value="Other">{t('form.phoneLabels.other', 'Other')}</option>
+                        </select>
+                        {formData.phones.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, phones: prev.phones.filter((_, i) => i !== idx) }))}
+                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all"
+                          >
+                            <FiTrash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, phones: [...(prev.phones || []), { number: '', label: 'Personal' }] }))}
+                    className="mt-2 flex items-center gap-1.5 text-[#00d0cb] hover:text-[#00d0cb]/80 text-sm font-medium transition-all"
+                  >
+                    <FiPlus size={14} /> {t('form.addPhone', 'Add Phone')}
+                  </button>
                 </div>
               </div>
 
@@ -327,7 +368,7 @@ const PlayerModal = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     {t('form.heightLabel', 'Height (cm)')}
@@ -338,8 +379,6 @@ const PlayerModal = ({
                     value={formData.height}
                     onChange={handleChange}
                     className={`w-full px-4 py-2.5 bg-gray-800/70 border ${errors.height ? 'border-red-500/50' : 'border-gray-600/50'} rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300`}
-                    min="100"
-                    max="250"
                     placeholder="160-200"
                   />
                   {errors.height && <p className="mt-2 text-sm text-red-400">{errors.height}</p>}
@@ -355,11 +394,22 @@ const PlayerModal = ({
                     value={formData.weight}
                     onChange={handleChange}
                     className={`w-full px-4 py-2.5 bg-gray-800/70 border ${errors.weight ? 'border-red-500/50' : 'border-gray-600/50'} rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300`}
-                    min="30"
-                    max="200"
                     placeholder="50-100"
                   />
                   {errors.weight && <p className="mt-2 text-sm text-red-400">{errors.weight}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    {t('form.dobLabel', 'Date of Birth')}
+                  </label>
+                  <input
+                    type="date"
+                    name="date_of_birth"
+                    value={formData.date_of_birth || ''}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-gray-800/70 border border-gray-600/50 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#00d0cb]/50 focus:border-[#00d0cb]/50 outline-none transition-all duration-300"
+                  />
                 </div>
               </div>
 

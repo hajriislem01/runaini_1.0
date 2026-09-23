@@ -3,8 +3,21 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Avg, Count
-from .models import PlayerReport, PlayerProfile
+from .models import PlayerReport, PlayerProfile, PlayerAttendance
 from .serializers import PlayerReportSerializer
+from .ai_report_service import generate_report_texts, AIReportError
+
+
+def _attendance_for_month(player, month):
+    """Real attendance count for a player during a given 'YYYY-MM' month — the single source of truth."""
+    try:
+        year, mon = (int(x) for x in month.split('-')[:2])
+    except (ValueError, AttributeError):
+        return 0, 0
+    qs = PlayerAttendance.objects.filter(player=player, date__year=year, date__month=mon)
+    total = qs.count()
+    present = qs.filter(status='Present').count()
+    return present, total
 
 
 class PlayerReportViewSet(viewsets.ModelViewSet):
@@ -47,14 +60,99 @@ class PlayerReportViewSet(viewsets.ModelViewSet):
                 coach_profile = user.coach_profile
             except Exception:
                 pass
+        player  = serializer.validated_data.get('player')
+        month   = serializer.validated_data.get('month')
+        present, total = _attendance_for_month(player, month)
         serializer.save(
             academy=user.academy,
             coach=coach_profile,
+            attendance_present=present,
+            attendance_total=total,
         )
 
     # ── PUT / PATCH — recalcul automatique ────────────────────────────────────
     def perform_update(self, serializer):
-        serializer.save()
+        player = serializer.instance.player
+        month  = serializer.validated_data.get('month', serializer.instance.month)
+        present, total = _attendance_for_month(player, month)
+        serializer.save(attendance_present=present, attendance_total=total)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACTION : Attendance stats — pour pré-remplir automatiquement l'évaluation
+    # GET /api/reports/attendance-stats/?player=<id>&month=2026-03
+    # ─────────────────────────────────────────────────────────────────────────
+    @action(detail=False, methods=['get'], url_path='attendance-stats')
+    def attendance_stats(self, request):
+        player_id = request.query_params.get('player')
+        month     = request.query_params.get('month')
+        if not player_id or not month:
+            return Response({'error': 'player and month are required'}, status=400)
+
+        try:
+            player = PlayerProfile.objects.get(id=player_id, academy=request.user.academy)
+        except PlayerProfile.DoesNotExist:
+            return Response({'error': 'Player not found'}, status=404)
+
+        present, total = _attendance_for_month(player, month)
+        return Response({'attendance_present': present, 'attendance_total': total})
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACTION : Génération IA des textes (points forts / à améliorer / objectif)
+    # POST /api/reports/generate-report-texts/
+    # Body: scores + contexte saisis dans le modal d'évaluation (pas encore
+    # sauvegardés) — la clé Gemini reste côté serveur.
+    # ─────────────────────────────────────────────────────────────────────────
+    @action(detail=False, methods=['post'], url_path='generate-report-texts')
+    def generate_report_texts_action(self, request):
+        data      = request.data
+        player_id = data.get('player')
+        month     = data.get('month')
+        if not player_id or not month:
+            return Response({'error': 'player and month are required'}, status=400)
+
+        try:
+            player = PlayerProfile.objects.get(id=player_id, academy=request.user.academy)
+        except PlayerProfile.DoesNotExist:
+            return Response({'error': 'Player not found'}, status=404)
+
+        scores_piliers = {
+            'technical': data.get('technical_avg'),
+            'tactical':  data.get('tactical_avg'),
+            'physical':  data.get('physical_avg'),
+            'mental':    data.get('mental_avg'),
+        }
+        valid_avgs = [float(v) for v in scores_piliers.values() if v]
+        score_global = round(sum(valid_avgs) / len(valid_avgs), 1) if valid_avgs else 0
+
+        player_data = {
+            'nom':     player.full_name,
+            'poste':   player.position,
+            'periode': month,
+            'score_global': score_global,
+            'scores_piliers': scores_piliers,
+            'sous_scores': {
+                'technical': data.get('technical_scores', {}),
+                'tactical':  data.get('tactical_scores', {}),
+                'physical':  data.get('physical_scores', {}),
+                'mental':    data.get('mental_scores', {}),
+            },
+            'contexte': {
+                'fatigue':                data.get('fatigue_level'),
+                'sommeil':                data.get('sleep_quality'),
+                'blessure':               bool(data.get('is_injured')),
+                'note_ecole_sur_20':      data.get('school_grade_avg'),
+                'assiduite_ecole_pct':    data.get('school_attendance'),
+                'comportement_ecole_sur_10': data.get('school_behaviour'),
+                'presence_entrainement':  f"{data.get('attendance_present', 0)}/{data.get('attendance_total', 0)}",
+            },
+        }
+
+        try:
+            texts = generate_report_texts(player_data)
+        except AIReportError as exc:
+            return Response({'error': str(exc)}, status=502)
+
+        return Response(texts)
 
     # ─────────────────────────────────────────────────────────────────────────
     # ACTION : KPI Analysis — données pour les graphes CoachAnalysis

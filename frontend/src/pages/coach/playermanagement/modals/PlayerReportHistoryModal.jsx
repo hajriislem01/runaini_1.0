@@ -82,7 +82,13 @@ const PlayerReportHistoryModal = ({ player, onClose }) => {
   const handleExportPDF = (e) => {
     e?.stopPropagation();
     if (!report || isGenerating) return;
-    generatePDF(report, player, academyData?.name || 'RunAiNi Academy');
+    const previousReport = activeIndex > 0 ? reports[activeIndex - 1] : null;
+    generatePDF(report, player, academyData?.name || 'RunAiNi Academy', {
+      t,
+      language: i18n.language,
+      previousReport,
+      playerPhotoUrl: player?.profile_picture || player?.photo_url || null,
+    });
   };
 
   const fmtMonth = (m) => {

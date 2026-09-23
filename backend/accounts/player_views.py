@@ -14,7 +14,11 @@ class PlayerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user     = self.request.user
-        queryset = PlayerProfile.objects.filter(academy=user.academy)
+        queryset = PlayerProfile.objects.filter(academy=user.academy).select_related(
+            'user', 'group', 'subgroup', 'academy'
+        ).prefetch_related(
+            'group__subgroups', 'group__assigned_coaches__user'
+        )
 
         if user.role == 'coach':
             try:

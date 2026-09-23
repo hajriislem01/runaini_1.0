@@ -55,10 +55,8 @@ const Navbar = () => {
 
         {/* Left: Logo */}
         <div className={`flex ${isRtl ? 'justify-end lg:justify-start' : 'justify-start'}`}>
-          <Link to="/" className="text-2xl font-black flex items-center gap-0.5 tracking-tighter" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-            <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              RUNAINI
-            </span>
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-90" dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+            <img src="/name.png" alt="RunAiNi" className="h-7 lg:h-8 w-auto object-contain" />
           </Link>
         </div>
 

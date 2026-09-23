@@ -115,7 +115,8 @@
     "print": "طباعة",
     "transactionId": "معرّف المعاملة",
     "close": "إغلاق",
-    "paymentReceipt": "إيصال الدفع"
+    "paymentReceipt": "إيصال الدفع",
+    "paymentHistory": "سجل المدفوعات"
   },
   "reminder": {
     "sendTitle": "إرسال تذكير بالدفع",

@@ -10,8 +10,11 @@ import { FaFutbol, FaHeartbeat, FaGraduationCap } from 'react-icons/fa';
 import { usePlayer } from '../../context/PlayerContext';
 import { useAcademyData } from '../../context/AdminContext';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
+import BMIWidget from '../../components/common/BMIWidget';
 import { format } from 'date-fns';
+import { calculateAge } from '../../utils/dateHelpers';
 
 const scoreColor = (s) => {
   if (!s && s !== 0) return '#64748b';
@@ -32,6 +35,7 @@ const POSITION_COLORS = {
   Midfielder: '#4fb0ff',
   Defender:   '#22c55e',
   Goalkeeper: '#f59e0b',
+  Indisponible: '#94a3b8',
 };
 
 // Helper: format report month with Western numerals
@@ -110,11 +114,13 @@ const PlayerProfile = () => {
     ? t(`status.${statusKey}`, { defaultValue: player.status })
     : player.status;
 
+  const computedAge = calculateAge(player.date_of_birth) ?? player.age;
+
   return (
     <motion.div className="min-h-screen text-white p-4 sm:p-6 md:p-8"
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       <div className="max-w-7xl mx-auto">
         {/* ── Hero banner ── */}
@@ -197,6 +203,11 @@ const PlayerProfile = () => {
                     </span>
                   </div>
                 )}
+                {(computedAge !== null && computedAge !== undefined) && (
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white border border-white/20">
+                    <span className="text-sm">🎂 {computedAge} {t('labels.years', 'years old')}</span>
+                  </div>
+                )}
                 {player.height && (
                   <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg text-white border border-white/20">
                     <span className="text-sm">{player.height} cm</span>
@@ -214,6 +225,11 @@ const PlayerProfile = () => {
 
         {/* ── Content ── */}
         <div>
+          {/* ── BMI Widget ── */}
+          {player?.weight && player?.height && (
+            <BMIWidget player={player} t={t} />
+          )}
+
           {/* Stats row */}
           {!loadingExtra && report && (
             <motion.div variants={iV} className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
@@ -277,19 +293,30 @@ const PlayerProfile = () => {
                       <span className="text-sm text-gray-300 truncate">{player.user.email}</span>
                     </div>
                   )}
-                  {player.phone && (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
-                      <FiPhone className="text-[#00d0cb] flex-shrink-0" size={13} />
-                      <span className="text-sm text-gray-300">{player.phone}</span>
-                    </div>
-                  )}
+                  {(player.phones && Array.isArray(player.phones) && player.phones.length > 0)
+                    ? player.phones.map((p, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={13} />
+                          <span className="text-sm text-gray-300">{p.number}</span>
+                          {p.label && (
+                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-[#00d0cb]/10 text-[#00d0cb] border border-[#00d0cb]/20">{p.label}</span>
+                          )}
+                        </div>
+                      ))
+                    : player.phone && (
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
+                          <FiPhone className="text-[#00d0cb] flex-shrink-0" size={13} />
+                          <span className="text-sm text-gray-300">{player.phone}</span>
+                        </div>
+                      )
+                  }
                   {player.address && (
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
                       <FiMapPin className="text-[#902bd1] flex-shrink-0" size={13} />
                       <span className="text-sm text-gray-300">{player.address}</span>
                     </div>
                   )}
-                  {!player.user?.email && !player.phone && !player.address && (
+                  {!player.user?.email && !player.phone && !(player.phones && player.phones.length > 0) && !player.address && (
                     <p className="text-xs text-gray-600">{t('contact.noInfo')}</p>
                   )}
                 </div>
@@ -304,6 +331,7 @@ const PlayerProfile = () => {
                 <div className="space-y-2">
                   {[
                     { label: t('labels.position'), value: positionLabel, color: posColor },
+                    { label: t('labels.age', 'Age'), value: (computedAge !== null && computedAge !== undefined) ? `${computedAge} ${t('labels.years', 'years old')}` : '—', color: '#ec4899' },
                     { label: t('labels.height'), value: player.height ? `${player.height} cm` : '—', color: '#4fb0ff' },
                     { label: t('labels.weight'), value: player.weight ? `${player.weight} kg` : '—', color: '#f59e0b' },
                     { label: t('labels.group'), value: player.group?.name || '—', color: '#902bd1' },

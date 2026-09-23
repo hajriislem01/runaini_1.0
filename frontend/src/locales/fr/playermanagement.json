@@ -21,7 +21,8 @@
     "save": "Enregistrer les modifications",
     "cancel": "Annuler",
     "removeFromGroup": "Retirer du groupe",
-    "addToGroup": "Ajouter au groupe"
+    "addToGroup": "Ajouter au groupe",
+    "createGroup": "Créer un Groupe"
   },
   "status": {
     "active": "Actif",
@@ -64,7 +65,16 @@
     "assignedPlayers": "Joueurs Assignés",
     "availablePlayers": "Joueurs Disponibles",
     "playerSingle": "joueur",
-    "playerPlural": "joueurs"
+    "playerPlural": "joueurs",
+    "dobLabel": "Date de Naissance",
+    "addPhone": "Ajouter un téléphone",
+    "selectSubgroupPlaceholder": "Sélectionner une unité...",
+    "phoneLabels": {
+      "father": "Père",
+      "mother": "Mère",
+      "personal": "Personnel",
+      "other": "Autre"
+    }
   },
   "positions": {
     "midfielder": "Milieu de terrain",
@@ -111,5 +121,7 @@
     "good": "Bon",
     "strong": "Fort",
     "excellent": "Excellent"
-  }
+  },
+  "playersTab": "Joueurs",
+  "groupsTab": "Groupes"
 }

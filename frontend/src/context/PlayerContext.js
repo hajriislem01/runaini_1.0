@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import API from '../pages/administration/api';
+import { AUTH_CHANGE_EVENT } from '../utils/authEvents';
 
 const PlayerContext = createContext();
 
@@ -39,6 +40,25 @@ export const PlayerProvider = ({ children }) => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [fetchPlayer]);
 
+  // ── React to login / logout events dispatched by LoginForm & sidebars ─────
+  useEffect(() => {
+    const handleAuthChange = (e) => {
+      const type = e?.detail?.type;
+      if (type === 'logout') {
+        // Immediately clear stale state so next render shows nothing
+        setPlayer(null);
+        setError(null);
+        setIsLoading(false);
+      } else {
+        // type === 'login' — re-fetch for the newly logged-in user
+        fetchPlayer();
+      }
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+  }, [fetchPlayer]);
+
   const refreshPlayer = useCallback(async () => {
     await fetchPlayer();
   }, [fetchPlayer]);
@@ -60,7 +80,7 @@ export const PlayerProvider = ({ children }) => {
   const playerInitial = playerName?.charAt(0)?.toUpperCase() || 'P';
 
   // Standardized photoUrl logic: priority to profile_picture (absolute URL from backend)
-  const photoUrl = player?.profile_picture 
+  const photoUrl = player?.profile_picture
     || player?.photo_url
     || (player?.photo
       ? player.photo.startsWith('http')
@@ -74,7 +94,7 @@ export const PlayerProvider = ({ children }) => {
       isLoading,
       error,
       refreshPlayer,
-      updatePlayer, // ✅ Added for immediate sync
+      updatePlayer,
       playerName,
       playerInitial,
       photoUrl,

@@ -11,13 +11,16 @@ import {
 import { FaDumbbell, FaStar, FaRegStar, FaBolt, FaHeartbeat } from 'react-icons/fa';
 import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import {
   format, isToday, parseISO, startOfDay, isBefore,
-  differenceInMinutes, startOfWeek, addDays, isSameDay
+  differenceInMinutes, startOfWeek, addDays, isSameDay, differenceInDays
 } from 'date-fns';
 import EventDetailDrawer from '../../components/common/EventDetailDrawer';
 import DayEventsModal from '../administration/agendamanagement/modals/DayEventsModal';
+import BMIWidget from '../../components/common/BMIWidget';
+import BiometricUpdateModal from '../../components/common/BiometricUpdateModal';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CATEGORIES = {
@@ -141,6 +144,7 @@ const PlayersDashboard = () => {
   const { t, i18n } = useTranslation('playerdashboard');
 
   const [sessions, setSessions] = useState([]);
+  const [isBioModalOpen, setIsBioModalOpen] = useState(false);
   const [report, setReport] = useState(null);
   const [history, setHistory] = useState([]);   // 6 derniers rapports
   const [groupAvg, setGroupAvg] = useState(null);
@@ -309,6 +313,14 @@ const PlayersDashboard = () => {
     return list;
   }, [player, report, t]);
 
+  // ── Biometric Update Check ────────────────────────────────────────────────
+  const needsBiometricUpdate = useMemo(() => {
+    if (!player) return false;
+    if (!player.last_biometric_update) return true;
+    const daysSince = differenceInDays(new Date(), parseISO(player.last_biometric_update));
+    return daysSince >= 30;
+  }, [player]);
+
   // ── Motivation message ────────────────────────────────────────────────────
   const motivation = useMemo(() => {
     if (!report) return { msg: t('motivation.ready'), color: '#00d0cb' };
@@ -340,7 +352,7 @@ const PlayersDashboard = () => {
     <motion.div className="min-h-screen text-white p-6 md:p-8 lg:p-10"
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* ── Header ── */}
@@ -386,6 +398,35 @@ const PlayersDashboard = () => {
                 {a.msg}
               </div>
             ))}
+          </motion.div>
+        )}
+
+        {/* ── Biometric Reminder Banner ── */}
+        {!isLoading && needsBiometricUpdate && (
+          <motion.div variants={iV}
+            onClick={() => setIsBioModalOpen(true)}
+            className="cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-4 rounded-2xl border mb-6 relative overflow-hidden transition-transform hover:scale-[1.01]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(79,176,255,0.1), rgba(16,185,129,0.1))',
+              borderColor: 'rgba(79,176,255,0.3)',
+              boxShadow: '0 0 20px rgba(79,176,255,0.1)'
+            }}>
+            <div className="absolute inset-0 bg-blue-500/5 animate-pulse" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="p-2 bg-blue-500/20 rounded-xl text-blue-400">
+                <FaHeartbeat size={18} className="animate-bounce" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm">{t('bmi.checkin_title', 'Monthly Physical Check-in Required')}</h4>
+                <p className="text-gray-400 text-xs mt-0.5">{t('bmi.checkin_subtitle', 'Update your weight and height to track your growth!')}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsBioModalOpen(true)}
+              className="relative z-10 px-4 py-2 rounded-xl text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 transition-colors whitespace-nowrap shadow-lg shadow-blue-500/25 border border-blue-400"
+            >
+              {t('bmi.update_measurements', 'Update Measurements')}
+            </button>
           </motion.div>
         )}
 
@@ -516,6 +557,11 @@ const PlayersDashboard = () => {
               {player.medical_cert_valid ? t('medical.valid') : t('medical.expired')}
             </span>
           </motion.div>
+        )}
+
+        {/* ── BMI Widget ── */}
+        {!isLoading && player?.weight && player?.height && (
+          <BMIWidget player={player} t={t} />
         )}
 
         {/* ── 2 colonnes ── */}
@@ -867,6 +913,12 @@ const PlayersDashboard = () => {
         isDetailLoading={isDetailLoading}
         userType="player"
         playerId={player?.id}
+      />
+      {/* Modals */}
+      <BiometricUpdateModal
+        isOpen={isBioModalOpen}
+        onClose={() => setIsBioModalOpen(false)}
+        player={player}
       />
     </motion.div>
   );

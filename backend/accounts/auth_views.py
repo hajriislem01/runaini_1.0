@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
+from django.db.models import Q
 from .models import CustomUser, CoachProfile, PlayerProfile, Group, SubGroup
 from .serializers import PlayerProfileSerializer
 from .permissions import IsAdmin, IsSuperAdmin
@@ -25,15 +26,21 @@ class AdminSignupView(APIView):
         if not all(data.get(f) for f in required):
             return Response({"error": f"Missing required fields: {', '.join(required)}"}, status=400)
 
-        if CustomUser.objects.filter(email=data["email"]).exists():
+        email = str(data["email"]).strip().lower()
+        username = str(data["username"]).strip()
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
             return Response({"error": "A user with this email already exists"}, status=400)
+
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            return Response({"error": "A user with this username already exists"}, status=400)
 
         try:
             academy, user = create_academy_with_admin(
-                academy_name=data.get("academy_name", f"{data['username']}'s Academy"),
-                email=data["email"],
+                academy_name=data.get("academy_name", f"{username}'s Academy"),
+                email=email,
                 password=data["password"],
-                username=data["username"],
+                username=username,
                 first_name=data.get("first_name", ""),
                 last_name=data.get("last_name", ""),
                 phone=data.get("phone", ""),
@@ -58,16 +65,30 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get("email")
+        identifier = (
+            request.data.get("identifier") or 
+            request.data.get("emailOrUsername") or 
+            request.data.get("email") or 
+            request.data.get("username")
+        )
         password = request.data.get("password")
 
-        if not email or not password:
-            return Response({"error": "Email et mot de passe requis"}, status=400)
+        if not identifier or not password:
+            return Response({"error": "Identifiant et mot de passe requis"}, status=400)
+
+        identifier = str(identifier).strip()
 
         try:
-            user = CustomUser.objects.get(email=email)
+            user = CustomUser.objects.get(
+                Q(email__iexact=identifier) | Q(username__iexact=identifier)
+            )
         except CustomUser.DoesNotExist:
             return Response({"error": "Identifiants invalides"}, status=401)
+        except CustomUser.MultipleObjectsReturned:
+            user = CustomUser.objects.filter(email__iexact=identifier).first() or \
+                   CustomUser.objects.filter(username__iexact=identifier).first()
+            if not user:
+                return Response({"error": "Identifiants invalides"}, status=401)
 
         if user.check_password(password):
             token, _ = Token.objects.get_or_create(user=user)
@@ -78,7 +99,7 @@ class LoginView(APIView):
                     "email": user.email,
                     "role": user.role,
                     "username": user.username,
-                    "academy_id": user.academy_id  # ✅ retourne l'ID de l'académie
+                    "academy_id": user.academy_id
                 }
             }, status=200)
         else:
@@ -98,10 +119,19 @@ class CoachSignupView(APIView):
         if not all(field in data for field in required_fields):
             return Response({"error": "Missing required fields"}, status=400)
 
+        username = str(data["username"]).strip()
+        email = str(data["email"]).strip().lower()
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            return Response({"error": "A user with this email already exists"}, status=400)
+
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            return Response({"error": "A user with this username already exists"}, status=400)
+
         try:
             user = CustomUser.objects.create(
-                username=data["username"],
-                email=data["email"],
+                username=username,
+                email=email,
                 password=make_password(data["password"]),
                 role="coach",
                 first_name=data.get("first_name", ""),
@@ -118,6 +148,13 @@ class CoachSignupView(APIView):
             coach_profile.years_of_experience = data.get("years_of_experience", 0)
             coach_profile.certification = data.get("certification", "")
             coach_profile.notes = data.get("notes", "")
+            if data.get("date_of_birth"):
+                coach_profile.date_of_birth = data.get("date_of_birth")
+            if data.get("phones") and isinstance(data.get("phones"), list):
+                coach_profile.phones = data.get("phones")
+                if len(data.get("phones")) > 0 and data.get("phones")[0].get("number"):
+                    user.phone = data.get("phones")[0].get("number")
+                    user.save()
             coach_profile.save()
 
             # ✅ Assigne le groupe au coach
@@ -144,6 +181,21 @@ class PlayerSignupView(APIView):
         if not all(field in data for field in required_fields):
             return Response(
                 {"error": f"Missing required fields: {', '.join(required_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        username = str(data["username"]).strip()
+        email = str(data["email"]).strip().lower()
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            return Response(
+                {"error": "A user with this email already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            return Response(
+                {"error": "A user with this username already exists"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -196,11 +248,19 @@ class PlayerSignupView(APIView):
 
                 player.height = clean_decimal(data.get("height"))
                 player.weight = clean_decimal(data.get("weight"))
+                if data.get("date_of_birth"):
+                    player.date_of_birth = data.get("date_of_birth")
                 player.position = data.get("position") or "Midfielder"
                 player.status = data.get("status") or "Active"
                 player.group = group_instance
                 player.subgroup = subgroup_instance
                 player.phone = data.get("phone", "")
+                if data.get("phones") and isinstance(data.get("phones"), list):
+                    player.phones = data.get("phones")
+                    if len(data.get("phones")) > 0 and data.get("phones")[0].get("number"):
+                        player.phone = data.get("phones")[0].get("number")
+                        user.phone = player.phone
+                        user.save()
                 player.address = data.get("address", "")
                 player.notes = data.get("notes", "")
                 player.academy = request.user.academy

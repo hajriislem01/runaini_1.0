@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,7 @@ import {
 
 import PlayerHeader from './components/PlayerHeader';
 import TabNavigation from './components/TabNavigation';
-import NotificationToast from './components/NotificationToast';
+import AdminToaster from '../shared/AdminToaster';
 
 import PlayersTab from './tabs/PlayersTab';
 import GroupsTab from './tabs/GroupsTab';
@@ -27,7 +28,7 @@ const PlayerManagement = () => {
     showGroupDetailModal, setShowGroupDetailModal, viewingGroup, setViewingGroup,
     searchTerm, setSearchTerm, groupSearchTerm, setGroupSearchTerm,
     showPassword, setShowPassword, passwordStrength, setPasswordStrength,
-    editPlayerId, setEditPlayerId, errors, setErrors, notifications, addNotification,
+    editPlayerId, setEditPlayerId, errors, setErrors,
     showGroupModal, setShowGroupModal, groupForm, setGroupForm,
     isEditingGroup, setIsEditingGroup, selectedGroup, setSelectedGroup,
     selectedSubgroup, setSelectedSubgroup, loading, formData, setFormData,
@@ -41,8 +42,9 @@ const PlayerManagement = () => {
   const resetForm = useCallback(() => {
     setFormData({
       username: "", full_name: '', email: '', password: '', phone: '',
+      phones: [{ number: '', label: 'Personal' }],
       position: '', status: 'Active', group: '', subgroup: '',
-      height: '', weight: '', address: '', notes: ''
+      height: '', weight: '', date_of_birth: '', address: '', notes: ''
     });
     setPasswordStrength(0);
     setEditPlayerId(null);
@@ -116,7 +118,7 @@ const PlayerManagement = () => {
       if (selectedGroupObj) {
         groupId = selectedGroupObj.id;
       } else {
-        addNotification(t('messages.groupNotFound', 'Selected group not found'), 'error');
+        toast.error(t('messages.groupNotFound', 'Selected group not found'));
         return;
       }
     }
@@ -144,7 +146,9 @@ const PlayerManagement = () => {
       group: groupId || formData.group || null,
       subgroup: subgroupId || formData.subgroup || null,
       height: formData.height === '' || formData.height == null ? 0 : Number(formData.height),
-      weight: formData.weight === '' || formData.weight == null ? 0 : Number(formData.weight)
+      weight: formData.weight === '' || formData.weight == null ? 0 : Number(formData.weight),
+      date_of_birth: formData.date_of_birth || null,
+      phones: formData.phones.filter(p => p.number && p.number.trim()),
     };
 
     // DEBUG: Verify exactly what is being sent to the API
@@ -158,7 +162,7 @@ const PlayerManagement = () => {
           headers: { 'Authorization': `Token ${authToken}` }
         });
         if (response.status === 200 || response.status === 204) {
-          addNotification(t('messages.editSuccess', 'Player updated successfully'));
+          toast.success(t('messages.editSuccess', 'Player updated successfully'));
           setShowModal(false);
           resetForm();
           fetchPlayers();
@@ -169,7 +173,7 @@ const PlayerManagement = () => {
           headers: { 'Authorization': `Token ${authToken}` }
         });
         if (response.status === 201 || response.status === 200) {
-          addNotification(t('messages.addSuccess', 'Player added successfully'));
+          toast.success(t('messages.addSuccess', 'Player added successfully'));
           setShowModal(false);
           resetForm();
           fetchPlayers();
@@ -196,7 +200,7 @@ const PlayerManagement = () => {
         }
       }
       setApiError(errMsg);
-      addNotification(errMsg, 'error');
+      toast.error(errMsg);
     }
   };
 
@@ -213,10 +217,14 @@ const PlayerManagement = () => {
       email: player.user?.email || player.email || '',
       password: '',
       phone: player.phone || '',
+      phones: (player.phones && Array.isArray(player.phones) && player.phones.length > 0)
+        ? player.phones
+        : (player.phone ? [{ number: player.phone, label: 'Personal' }] : [{ number: '', label: 'Personal' }]),
       position: player.position || '',
       status: player.status || 'Active',
       group: playerGroup, subgroup: playerSubgroup,
       height: player.height || '', weight: player.weight || '',
+      date_of_birth: player.date_of_birth || '',
       address: player.address || '', notes: player.notes || ''
     });
     setShowModal(true);
@@ -228,11 +236,11 @@ const PlayerManagement = () => {
       if (window.confirm(t('messages.deleteConfirm', { name: playerName }) || `Are you sure you want to delete ${playerName}?`)) {
         await axios.delete(`${API_URL}/players/${id}/`, { headers: { 'Authorization': `Token ${authToken}` } });
         setPlayers(players.filter(player => player.id !== id));
-        addNotification(t('messages.deleteSuccess', 'Player deleted successfully'));
+        toast.success(t('messages.deleteSuccess', 'Player deleted successfully'));
       }
     } catch (error) {
       console.error('Delete failed:', error);
-      addNotification(t('messages.deleteFailed', 'Failed to delete player'), 'error');
+      toast.error(t('messages.deleteFailed', 'Failed to delete player'));
     }
   };
 
@@ -259,7 +267,7 @@ const PlayerManagement = () => {
     const name = groupForm.name.trim();
     const subgroups = groupForm.subgroups.map(s => s.trim()).filter(Boolean);
     const coachId = groupForm.coach || null;
-    if (!name) return addNotification(t('messages.groupNameRequired', 'Group name is required'), 'error');
+    if (!name) return toast.error(t('messages.groupNameRequired', 'Group name is required'));
 
     try {
       setGroupApiError(null);
@@ -287,7 +295,7 @@ const PlayerManagement = () => {
       }
       if (groupResponse && (groupResponse.status === 200 || groupResponse.status === 201 || groupResponse.status === 204)) {
         fetchGroups();
-        addNotification(isEditingGroup ? t('messages.groupUpdated', 'Group updated') : t('messages.groupCreated', 'Group created'));
+        toast.success(isEditingGroup ? t('messages.groupUpdated', 'Group updated') : t('messages.groupCreated', 'Group created'));
         setShowGroupModal(false);
         resetGroupForm();
       }
@@ -310,7 +318,7 @@ const PlayerManagement = () => {
         }
       }
       setGroupApiError(errorMsg);
-      addNotification(errorMsg, 'error');
+      toast.error(errorMsg);
     }
   };
 
@@ -342,10 +350,10 @@ const PlayerManagement = () => {
           const pg = typeof p.group === 'object' ? p.group?.name : p.group;
           return pg === groupName ? { ...p, group: null, subgroup: null } : p;
         }));
-        addNotification(t('messages.groupDeleteSuccess', 'Group deleted successfully'));
+        toast.success(t('messages.groupDeleteSuccess', 'Group deleted successfully'));
       } catch (error) {
         console.error('Delete group failed:', error);
-        addNotification(t('messages.groupDeleteFailed', 'Failed to delete group'), 'error');
+        toast.error(t('messages.groupDeleteFailed', 'Failed to delete group'));
       }
     }
   };
@@ -366,9 +374,9 @@ const PlayerManagement = () => {
       if (!player) return;
       await axios.put(`${API_URL}/players/${playerId}/`, { ...player, group: viewingGroup.id, subgroup: null }, { headers: { 'Authorization': `Token ${authToken}` } });
       fetchPlayers();
-      addNotification(t('messages.addedToGroup', 'Player added to group'));
+      toast.success(t('messages.addedToGroup', 'Player added to group'));
     } catch (error) {
-      addNotification(t('messages.failedAddIntoGroup', 'Failed to add player to group'), 'error');
+      toast.error(t('messages.failedAddIntoGroup', 'Failed to add player to group'));
     }
   };
 
@@ -379,9 +387,9 @@ const PlayerManagement = () => {
       if (!player) return;
       await axios.put(`${API_URL}/players/${playerId}/`, { ...player, subgroup: null }, { headers: { 'Authorization': `Token ${authToken}` } });
       fetchPlayers();
-      addNotification(t('messages.removedFromGroup', 'Player removed from group'));
+      toast.success(t('messages.removedFromGroup', 'Player removed from group'));
     } catch (error) {
-      addNotification(t('messages.failedRemoveFromGroup', 'Failed to remove player from group'), 'error');
+      toast.error(t('messages.failedRemoveFromGroup', 'Failed to remove player from group'));
     }
   };
 
@@ -457,7 +465,7 @@ const PlayerManagement = () => {
 
       <PlayerModal
         showModal={showModal} setShowModal={setShowModal} editPlayerId={editPlayerId} resetForm={resetForm} handleSubmit={handlePlayerSubmit}
-        formData={formData} handleChange={handleChange} handleGroupChangeInForm={handleGroupChangeInForm} handlePasswordChange={handlePasswordChange}
+        formData={formData} setFormData={setFormData} handleChange={handleChange} handleGroupChangeInForm={handleGroupChangeInForm} handlePasswordChange={handlePasswordChange}
         errors={errors} showPassword={showPassword} setShowPassword={setShowPassword} passwordStrength={passwordStrength}
         groupOptionsForPlayer={groupOptionsForPlayer} subgroupOptionsForPlayer={subgroupOptionsForPlayer}
         apiError={apiError}
@@ -477,7 +485,7 @@ const PlayerManagement = () => {
       />
 
       {/* Moved to bottom for better z-index stacking context */}
-      <NotificationToast notifications={notifications} />
+      <AdminToaster position="top-right" />
 
     </motion.div>
   );

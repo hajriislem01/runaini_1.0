@@ -11,7 +11,8 @@ import {
 } from 'chart.js';
 import { Radar, Bar, Line } from 'react-chartjs-2';
 import API from '../../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../../administration/shared/AdminToaster';
 import { format } from 'date-fns';
 
 ChartJS.register(
@@ -186,6 +187,7 @@ const CoachAnalysis = () => {
   const [groups,        setGroups]        = useState([]);
   const [isLoading,     setIsLoading]     = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedSubgroup, setSelectedSubgroup] = useState('');
   const [monthsRange,   setMonthsRange]   = useState(6);
   const [progType,      setProgType]      = useState('line');
   const [activeView,    setActiveView]    = useState('advanced');
@@ -202,12 +204,14 @@ const CoachAnalysis = () => {
 
   const [showRangeDropdown,    setShowRangeDropdown]    = useState(false);
   const [showGroupDropdown,    setShowGroupDropdown]    = useState(false);
+  const [showSubgroupDropdown, setShowSubgroupDropdown] = useState(false);
   const [showNoteTypeDropdown, setShowNoteTypeDropdown] = useState(false);
 
   useEffect(() => {
     const closeAll = () => {
       setShowRangeDropdown(false);
       setShowGroupDropdown(false);
+      setShowSubgroupDropdown(false);
       setShowNoteTypeDropdown(false);
     };
     window.addEventListener('click', closeAll);
@@ -240,6 +244,18 @@ const CoachAnalysis = () => {
     load();
   // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const params = selectedPlayers.length === 1 ? { player: selectedPlayers[0] } : {};
+        const res = await API.get('coach-notes/', { params });
+        setNotes(res.data);
+      } catch { /* private notes are secondary — fail silently */ }
+    };
+    loadNotes();
+  // eslint-disable-next-line
+  }, [selectedPlayers]);
 
   useEffect(() => {
     if (selectedPlayers.length === 0) return;
@@ -299,8 +315,19 @@ const CoachAnalysis = () => {
   };
 
   const filteredPlayers = useMemo(() =>
-    players.filter(p => !selectedGroup || p.group?.id === parseInt(selectedGroup))
-  , [players, selectedGroup]);
+    players.filter(p =>
+      (!selectedGroup    || p.group?.id    === parseInt(selectedGroup)) &&
+      (!selectedSubgroup || p.subgroup?.id === parseInt(selectedSubgroup))
+    )
+  , [players, selectedGroup, selectedSubgroup]);
+
+  // Subgroups available for the current group filter (all of them, flattened, when no group is picked)
+  const availableSubgroups = useMemo(() => {
+    if (selectedGroup) {
+      return groups.find(g => Number(g.id) === Number(selectedGroup))?.subgroups || [];
+    }
+    return groups.flatMap(g => (g.subgroups || []).map(sg => ({ ...sg, groupName: g.name })));
+  }, [groups, selectedGroup]);
 
   const allAlerts = useMemo(() => {
     const result = [];
@@ -440,10 +467,26 @@ const CoachAnalysis = () => {
     }},
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     if (!noteTitle.trim() || !noteText.trim()) { toast.error(t('noteTitleRequired')); return; }
-    setNotes(prev => [{ id:Date.now(), type:noteType, title:noteTitle, text:noteText, date:format(new Date(),'MMM d, yyyy') }, ...prev]);
-    setNoteTitle(''); setNoteText('');
+    try {
+      const payload = {
+        type:  noteType,
+        title: noteTitle,
+        text:  noteText,
+        player: selectedPlayers.length === 1 ? selectedPlayers[0] : null,
+      };
+      const res = await API.post('coach-notes/', payload);
+      setNotes(prev => [res.data, ...prev]);
+      setNoteTitle(''); setNoteText('');
+    } catch { toast.error(t('failedToLoad')); }
+  };
+
+  const deleteNote = async (id) => {
+    const prev = notes;
+    setNotes(n => n.filter(note => note.id !== id));
+    try { await API.delete(`coach-notes/${id}/`); }
+    catch { setNotes(prev); toast.error(t('failedToLoad')); }
   };
 
   const iV = { hidden:{ y:16, opacity:0 }, visible:{ y:0, opacity:1 } };
@@ -552,7 +595,7 @@ const CoachAnalysis = () => {
       style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}
       dir={isRtl ? 'rtl' : 'ltr'}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* ── Header ── */}
@@ -617,13 +660,13 @@ const CoachAnalysis = () => {
                   {showGroupDropdown && (
                     <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
                       className="absolute top-full mt-2 right-0 w-max min-w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1">
-                      <div onClick={() => { setSelectedGroup(''); setShowGroupDropdown(false); }}
+                      <div onClick={() => { setSelectedGroup(''); setSelectedSubgroup(''); setShowGroupDropdown(false); }}
                         className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
                         <span className="font-medium">{t('allGroups_kpi')}</span>
                         {!selectedGroup && <FiCheck className="text-[#00d0cb]" />}
                       </div>
                       {groups.map(g => (
-                        <div key={g.id} onClick={() => { setSelectedGroup(g.id); setShowGroupDropdown(false); }}
+                        <div key={g.id} onClick={() => { setSelectedGroup(g.id); setSelectedSubgroup(''); setShowGroupDropdown(false); }}
                           className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
                           <span className="font-medium">{g.name}</span>
                           {Number(selectedGroup) === Number(g.id) && <FiCheck className="text-[#00d0cb]" />}
@@ -633,6 +676,39 @@ const CoachAnalysis = () => {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Subgroup Filter */}
+              {availableSubgroups.length > 0 && (
+                <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
+                  <button onClick={() => { setShowSubgroupDropdown(!showSubgroupDropdown); setShowRangeDropdown(false); setShowGroupDropdown(false); }}
+                    className="px-4 py-2.5 bg-gray-900/65 border border-gray-700/50 hover:border-[#00d0cb]/40 rounded-xl text-white text-sm flex items-center gap-3 transition-all min-w-[150px]">
+                    <FiUsers className={selectedSubgroup ? 'text-[#00d0cb]' : 'text-gray-500'} />
+                    <span className="font-medium truncate max-w-[100px]">
+                      {selectedSubgroup ? availableSubgroups.find(sg => Number(sg.id) === Number(selectedSubgroup))?.name : t('allSubgroups_kpi', 'All Subgroups')}
+                    </span>
+                    <FiChevronDown className={`transition-transform duration-200 ${showSubgroupDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {showSubgroupDropdown && (
+                      <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-10 }}
+                        className="absolute top-full mt-2 right-0 w-max min-w-full z-[100] bg-[#0c132a]/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden p-2 space-y-1">
+                        <div onClick={() => { setSelectedSubgroup(''); setShowSubgroupDropdown(false); }}
+                          className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between">
+                          <span className="font-medium">{t('allSubgroups_kpi', 'All Subgroups')}</span>
+                          {!selectedSubgroup && <FiCheck className="text-[#00d0cb]" />}
+                        </div>
+                        {availableSubgroups.map(sg => (
+                          <div key={sg.id} onClick={() => { setSelectedSubgroup(sg.id); setShowSubgroupDropdown(false); }}
+                            className="px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl cursor-pointer transition-all flex items-center justify-between gap-4">
+                            <span className="font-medium">{sg.name}{sg.groupName ? ` (${sg.groupName})` : ''}</span>
+                            {Number(selectedSubgroup) === Number(sg.id) && <FiCheck className="text-[#00d0cb]" />}
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -685,25 +761,34 @@ const CoachAnalysis = () => {
 
             {/* Player selector */}
             <motion.div variants={iV} className="bg-gray-900/65 rounded-2xl p-5 border border-gray-700/50 mb-5">
-              <div className="text-sm font-medium text-gray-300 mb-3">
-                {t('selectPlayersHint')}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-medium text-gray-300">
+                  {t('selectPlayersHint')}
+                </div>
+                {selectedPlayers.length > 0 && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#00d0cb]/15 text-[#00d0cb] font-semibold">
+                    {selectedPlayers.length} {t('selected', 'selected')}
+                  </span>
+                )}
               </div>
-              <div className="flex flex-wrap gap-3">
-                {isLoading ? [1,2,3,4].map(i => <div key={i} className="h-10 w-32 bg-gray-700/50 rounded-xl animate-pulse"/>) :
+              <div className="max-h-80 overflow-y-auto rounded-xl border border-gray-700/40 divide-y divide-gray-800/60">
+                {isLoading ? [1,2,3,4].map(i => <div key={i} className="h-14 bg-gray-800/30 animate-pulse"/>) :
                   filteredPlayers.length === 0 ? (
-                    <p className="text-sm text-gray-500 py-2">{t('noPlayersAddFirst')}</p>
+                    <p className="text-sm text-gray-500 py-4 px-4">{t('noPlayersAddFirst')}</p>
                   ) :
                   filteredPlayers.map((p, idx) => {
                     const sel   = selectedPlayers.includes(p.id);
                     const color = KPI_COLORS[idx % KPI_COLORS.length];
                     const pAlerts = computeAlerts(p.id, reportsData[p.id] || []);
                     return (
-                      <motion.button key={p.id} whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
-                        onClick={() => togglePlayer(p)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                          sel ? 'text-white' : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:text-white'}`}
-                        style={sel ? { background: color+'30', borderColor: color } : {}}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative overflow-hidden"
+                      <div key={p.id} onClick={() => togglePlayer(p)}
+                        className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all ${isRtl ? 'flex-row-reverse text-right' : ''} ${sel ? '' : 'hover:bg-white/5'}`}
+                        style={sel ? { background: color+'15' } : {}}>
+                        <div className="w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0"
+                          style={sel ? { background: color, borderColor: color } : { borderColor: '#475569' }}>
+                          {sel && <FiCheck size={12} className="text-white" />}
+                        </div>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative overflow-hidden"
                           style={{ background: sel ? color : '#374151' }}>
                           {p.profile_picture || p.photo_url ? (
                             <img src={p.profile_picture || p.photo_url} alt="" className="absolute inset-0 w-full h-full object-cover z-10"
@@ -711,15 +796,16 @@ const CoachAnalysis = () => {
                           ) : null}
                           <span className="relative z-0">{p.full_name?.charAt(0)?.toUpperCase() || 'P'}</span>
                         </div>
-                        <div>
-                          <div style={{ color: sel ? color : undefined }}>{p.full_name}</div>
-                          <div className="text-xs text-gray-500">{p.position}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate" style={{ color: sel ? color : '#e5e7eb' }}>{p.full_name}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {p.position}{p.group?.name ? ` · ${p.group.name}` : ''}{p.subgroup?.name ? ` (${p.subgroup.name})` : ''}
+                          </div>
                         </div>
                         {pAlerts.some(a => a.type === 'danger') && (
-                          <span className="w-2 h-2 rounded-full bg-red-500 ml-1 flex-shrink-0"></span>
+                          <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
                         )}
-                        {sel && <div className="w-2 h-2 rounded-full ml-1" style={{ background: color }}/>}
-                      </motion.button>
+                      </div>
                     );
                   })
                 }
@@ -935,9 +1021,9 @@ const CoachAnalysis = () => {
                     <div className="flex-1">
                       <div className={`text-sm font-medium ${c.title}`}>{note.title}</div>
                       <div className={`text-xs mt-1 ${c.text}`}>{note.text}</div>
-                      <div className="text-xs text-gray-500 mt-1">{note.date}</div>
+                      <div className="text-xs text-gray-500 mt-1">{format(new Date(note.created_at), 'MMM d, yyyy')}</div>
                     </div>
-                    <button onClick={() => setNotes(prev => prev.filter(n => n.id !== note.id))}
+                    <button onClick={() => deleteNote(note.id)}
                       className="text-gray-500 hover:text-white flex-shrink-0"><FiX size={14}/></button>
                   </motion.div>
                 );

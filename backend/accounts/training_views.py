@@ -20,7 +20,7 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
         user     = self.request.user
         queryset = TrainingSession.objects.filter(
             academy=user.academy
-        ).prefetch_related('groups', 'subgroups')
+        ).select_related('coach__user').prefetch_related('groups', 'subgroups')
 
         # Coach → seulement ses séances
         if user.role == 'coach':

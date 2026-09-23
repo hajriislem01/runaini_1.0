@@ -2,6 +2,7 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "my_profile": "My Profile",
+    "attendance": "Attendance",
     "training": "Training",
     "matches": "Matches",
     "stats": "Stats",

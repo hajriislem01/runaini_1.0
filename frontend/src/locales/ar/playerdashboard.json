@@ -104,5 +104,44 @@
   },
   "common": {
     "failedLoad": "فشل تحميل البيانات"
+  },
+  "bmi": {
+    "title_rich": "الأداء البدني ومؤشر كتلة الجسم",
+    "subtitle": "التتبع البيومتري وتكوين الجسم",
+    "imc_score": "مؤشر كتلة الجسم",
+    "pediatric_notice": "بالنسبة للاعبي الأكاديمية الشباب، يتم تقييم مؤشر كتلة الجسم جنباً إلى جنب مع مراحل النمو والتطور البدني — وليس وفقاً للمعايير الصارمة للبالغين فقط. استشر الطاقم الطبي للنادي لمعرفة النسب المئوية الدقيقة للنمو.",
+    "success_msg": "تم تحديث المقاييس بنجاح!",
+    "weight_increased": "زيادة صحية في الوزن +{{delta}} كجم",
+    "weight_dropped": "انخفاض في الوزن {{delta}} كجم",
+    "weight_stable": "تقدم رياضي مستقر، لم يتغير الوزن.",
+    "error_msg": "فشل في تحديث المقاييس.",
+    "update_title": "تحديث البيانات البيومترية",
+    "update_desc": "سجل أحدث قياساتك لتتبع نموك البدني وتطورك الرياضي.",
+    "height": "الطول (سم)",
+    "weight": "الوزن (كجم)",
+    "save_update": "حفظ التحديث",
+    "checkin_title": "مطلوب فحص بدني شهري",
+    "checkin_subtitle": "قم بتحديث وزنك وطولك لتتبع نموك!",
+    "update_measurements": "تحديث القياسات",
+    "categories": {
+      "Severe_Thinness": "نحافة شديدة",
+      "Moderate_Thinness": "نحافة متوسطة",
+      "Mild_Thinness": "نحافة خفيفة",
+      "Normal_Weight": "وزن طبيعي",
+      "Overweight": "وزن زائد",
+      "Obese_Class_I": "سمنة من الدرجة الأولى",
+      "Obese_Class_II": "سمنة من الدرجة الثانية",
+      "Obese_Class_III": "سمنة من الدرجة الثالثة"
+    },
+    "status": {
+      "Needs_Medical_Review": "يحتاج إلى فحص طبي",
+      "Monitor_Nutrition": "مراقبة التغذية",
+      "Steady_Growth": "نمو مستقر",
+      "Optimal_Weight": "وزن مثالي",
+      "Good_Athletic_Balance": "توازن رياضي جيد",
+      "Adjust_Nutrition": "تعديل التغذية",
+      "Review_Diet_Plan": "مراجعة النظام الغذائي",
+      "Weight_Management": "إدارة الوزن"
+    }
   }
 }

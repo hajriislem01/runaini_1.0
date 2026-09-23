@@ -3,17 +3,18 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FiHome, FiUser, FiSettings, FiLogOut, FiX, FiMenu,
-  FiTrendingUp, FiActivity, FiChevronRight
+  FiTrendingUp, FiActivity, FiChevronRight, FiCheckSquare, FiCalendar
 } from 'react-icons/fi';
 import { FaDumbbell } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { dispatchAuthChange } from '../utils/authEvents';
 import { usePlayer } from '../context/PlayerContext';
 
 const navItems = [
   { to: '/players', icon: <FiHome />, key: 'dashboard' },
   { to: '/players/profile', icon: <FiUser />, key: 'my_profile' },
+  { to: '/players/attendance', icon: <FiCheckSquare />, key: 'attendance' },
   { to: '/players/training', icon: <FaDumbbell />, key: 'training' },
-  { to: '/players/matches', icon: <FiActivity />, key: 'matches' },
   { to: '/players/performance', icon: <FiTrendingUp />, key: 'stats' },
   { to: '/players/settings', icon: <FiSettings />, key: 'settings' },
 ];
@@ -45,6 +46,9 @@ const PlayerSidebar = ({
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('academy_id');
+    dispatchAuthChange('logout');
     navigate('/login');
     setIsMobileOpen(false);
   };

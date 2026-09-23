@@ -53,8 +53,8 @@ export const validatePlayerForm = (formData, editPlayerId, setErrors) => {
     newErrors.height = 'Height must be between 100-250 cm';
   }
 
-  if (formData.weight && (formData.weight < 30 || formData.weight > 200)) {
-    newErrors.weight = 'Weight must be between 30-200 kg';
+  if (formData.weight && formData.weight <= 0) {
+    newErrors.weight = 'Weight must be a positive number';
   }
 
   setErrors(newErrors);

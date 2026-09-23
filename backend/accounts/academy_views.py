@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from .models import Academy
+from .models import Academy, CustomUser
 from .serializers import AcademySerializer
 from .permissions import IsAdmin
 
@@ -49,6 +49,16 @@ class AcademyView(APIView):
         user = request.user
         user_changed = False
 
+        # Handle image removal (logo / kits) — done before the serializer so a
+        # removal request with no new file doesn't get silently ignored.
+        for model_field, remove_flag in [('logo', 'remove_logo'), ('home_kit', 'remove_home_kit'), ('away_kit', 'remove_away_kit')]:
+            if str(request.data.get(remove_flag, '')).lower() in ('1', 'true', 'yes'):
+                file_field = getattr(academy, model_field)
+                if file_field:
+                    file_field.delete(save=False)
+                setattr(academy, model_field, None)
+                academy.save()
+
         # Handle password change
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
@@ -63,6 +73,28 @@ class AcademyView(APIView):
             
             user.set_password(new_password)
             user_changed = True
+
+        # Handle email change — this is both the academy's public contact email
+        # and the admin's login email, so keep the admin's account in sync.
+        new_email = request.data.get('email')
+        if new_email is not None:
+            new_email  = str(new_email).strip().lower()
+            old_email  = (user.email or '').lower()
+            if new_email and new_email != old_email:
+                if CustomUser.objects.filter(email__iexact=new_email).exclude(id=user.id).exists():
+                    return Response({"error": "This email is already in use by another account"}, status=400)
+
+                # If the username was never customized (it still mirrors the old email —
+                # the default when a super admin approves a lead without setting one),
+                # keep it in sync too. Otherwise the old email keeps working forever
+                # as a de-facto username, defeating the whole point of changing it.
+                if (user.username or '').lower() == old_email:
+                    if CustomUser.objects.filter(username__iexact=new_email).exclude(id=user.id).exists():
+                        return Response({"error": "This email is already taken as a username by another account"}, status=400)
+                    user.username = new_email
+
+                user.email = new_email
+                user_changed = True
 
         if user_changed:
             user.save()

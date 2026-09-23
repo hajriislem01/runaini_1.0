@@ -26,10 +26,10 @@
   "trainingMethodology": "منهجية التدريب",
   "professionalExperience": "الخبرة المهنية",
   "certifications": "الشهادات",
-  
   "coachSettings": "إعدادات المدرب",
   "manageProfile": "إدارة ملفك المهني",
   "savePhoto": "حفظ الصورة",
+  "removePhoto": "حذف الصورة",
   "uploadPhoto": "رفع صورة",
   "personalInformation": "المعلومات الشخصية",
   "personalDetails": "التفاصيل الشخصية",
@@ -53,5 +53,8 @@
   "year": "السنة",
   "saveChangesWarning": "* سيتم حفظ جميع التغييرات في ملفك الشخصي",
   "saveAllChanges": "حفظ التغييرات",
-  "saving": "جاري الحفظ..."
+  "saving": "جاري الحفظ...",
+  "age": "العمر",
+  "yearsOld": "سنة",
+  "dateOfBirth": "تاريخ الميلاد"
 }

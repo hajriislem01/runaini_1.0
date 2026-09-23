@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaRegBuilding, FaTshirt } from 'react-icons/fa';
-import { FiCamera, FiCheck, FiX, FiChevronDown } from 'react-icons/fi';
+import { FiCamera, FiCheck, FiX, FiChevronDown, FiTrash2 } from 'react-icons/fi';
 import { northAfricanCountries } from '../utils/settingsConstants';
 
 /* ─── Helper: always render a number with Western Arabic (latn) digits ───── */
@@ -17,6 +17,7 @@ const AcademyInfoSection = ({
   handleImageSelect,
   confirmImageUpload,
   cancelImageSelection,
+  removeImage,
   itemVariants
 }) => {
 
@@ -83,6 +84,27 @@ const AcademyInfoSection = ({
                 className="px-3 py-2 rounded-xl text-xs bg-gray-800/80 text-gray-300 hover:bg-gray-700 backdrop-blur-sm border border-gray-600/30 transition-all"
               >
                 <FiX className="text-sm" />
+              </button>
+            </motion.div>
+          )}
+          {!hasNewFile && preview && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="w-full max-w-[160px] mt-4"
+            >
+              <button
+                type="button"
+                onClick={() => removeImage(fieldName)}
+                disabled={isUpdating}
+                className="w-full flex justify-center items-center gap-2 py-2 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/20 transition-all disabled:opacity-50"
+              >
+                {isUpdating ? (
+                  <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <><FiTrash2 className="text-sm" /> {t('actions.remove', 'Remove')}</>
+                )}
               </button>
             </motion.div>
           )}

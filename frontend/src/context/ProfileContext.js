@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { AUTH_CHANGE_EVENT } from '../utils/authEvents';
 
 const ProfileContext = createContext();
 
@@ -119,6 +120,27 @@ export const ProfileProvider = ({ children }) => {
       safeSetItem('user', updated);
       return updated;
     });
+  }, []);
+
+  // ── React to login / logout events ────────────────────────────────────────
+  useEffect(() => {
+    const handleAuthChange = (e) => {
+      const type = e?.detail?.type;
+      if (type === 'logout') {
+        setProfileData(null);
+      } else {
+        // Re-read fresh user data from localStorage (just written by LoginForm)
+        try {
+          const stored = localStorage.getItem('user');
+          setProfileData(stored ? JSON.parse(stored) : null);
+        } catch {
+          setProfileData(null);
+        }
+      }
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
   }, []);
 
   const updatePersonalInfo = useCallback((newInfo) => {

@@ -16,12 +16,21 @@
     "bio": "Bio / Notes",
     "bioPlaceholder": "Parlez-nous de vous...",
     "choosePhoto": "Choisir une nouvelle photo",
+    "removePhoto": "Supprimer la photo",
     "confirmPhoto": "Confirmer la photo",
     "cancel": "Annuler",
     "saving": "Enregistrement...",
     "saveChanges": "Enregistrer les modifications",
     "photoSizeWarning": "JPG ou PNG. Taille max 5MB.",
-    "photoMaxSize": "La photo doit faire moins de 5MB"
+    "photoMaxSize": "La photo doit faire moins de 5MB",
+    "dateOfBirth": "Date de Naissance",
+    "addPhone": "Ajouter un téléphone",
+    "phoneLabels": {
+      "father": "Père",
+      "mother": "Mère",
+      "personal": "Personnel",
+      "other": "Autre"
+    }
   },
   "security": {
     "title": "Sécurité & Mot de passe",
@@ -34,6 +43,7 @@
   },
   "messages": {
     "photoUpdated": "Photo de profil mise à jour avec succès",
+    "photoRemoved": "Photo de profil supprimée",
     "photoFailed": "Échec de la mise à jour de la photo",
     "nameRequired": "Le nom complet est requis",
     "profileUpdated": "Profil mis à jour avec succès",

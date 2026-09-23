@@ -104,5 +104,44 @@
   },
   "common": {
     "failedLoad": "Échec du chargement des données"
+  },
+  "bmi": {
+    "title_rich": "Performance Physique & IMC",
+    "subtitle": "Suivi biométrique et composition corporelle",
+    "imc_score": "Score IMC",
+    "pediatric_notice": "Pour les jeunes de l'académie, l'IMC est évalué en fonction des stades de croissance et du développement physique — et non des seuils stricts pour adultes. Consultez le personnel médical du club pour connaître les percentiles de croissance exacts.",
+    "success_msg": "Mesures mises à jour avec succès !",
+    "weight_increased": "Prise de poids saine +{{delta}}kg",
+    "weight_dropped": "Perte de poids {{delta}}kg",
+    "weight_stable": "Progression athlétique stable, poids inchangé.",
+    "error_msg": "Échec de la mise à jour des mesures.",
+    "update_title": "Mettre à jour la biométrie",
+    "update_desc": "Enregistrez vos dernières mesures pour suivre votre croissance physique et votre développement athlétique.",
+    "height": "Taille (cm)",
+    "weight": "Poids (kg)",
+    "save_update": "Enregistrer",
+    "checkin_title": "Bilan Physique Mensuel Requis",
+    "checkin_subtitle": "Mettez à jour votre taille et votre poids pour suivre votre croissance !",
+    "update_measurements": "Mettre à jour",
+    "categories": {
+      "Severe_Thinness": "Minceur sévère",
+      "Moderate_Thinness": "Minceur modérée",
+      "Mild_Thinness": "Minceur légère",
+      "Normal_Weight": "Poids normal",
+      "Overweight": "Surpoids",
+      "Obese_Class_I": "Obésité modérée",
+      "Obese_Class_II": "Obésité sévère",
+      "Obese_Class_III": "Obésité morbide"
+    },
+    "status": {
+      "Needs_Medical_Review": "Avis médical requis",
+      "Monitor_Nutrition": "Surveiller la nutrition",
+      "Steady_Growth": "Croissance régulière",
+      "Optimal_Weight": "Poids optimal",
+      "Good_Athletic_Balance": "Bon équilibre athlétique",
+      "Adjust_Nutrition": "Ajuster la nutrition",
+      "Review_Diet_Plan": "Revoir le régime alimentaire",
+      "Weight_Management": "Gestion du poids"
+    }
   }
 }

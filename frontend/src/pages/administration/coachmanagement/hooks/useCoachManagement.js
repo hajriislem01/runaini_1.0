@@ -22,12 +22,14 @@ export const useCoachManagement = () => {
     email: '',
     password: '',
     phone: '',
+    phones: [{ number: '', label: 'Personal' }],
     club: '',
     role: 'coach',
     assignments: [], // Array of objects: { group_id, full_access, subgroups: [] }
     specialization: '',
     years_of_experience: '',
     certification: '',
+    date_of_birth: '',
   });
 
   useEffect(() => {
@@ -112,7 +114,9 @@ export const useCoachManagement = () => {
           specialization: formData.specialization,
           years_of_experience: formData.years_of_experience || 0,
           certification: formData.certification,
+          date_of_birth: formData.date_of_birth || null,
           assignments: formData.assignments,
+          phones: (formData.phones || []).filter(p => p.number && p.number.trim()),
         };
         const response = await API.post('signup/coach/', payload);
         
@@ -158,6 +162,9 @@ export const useCoachManagement = () => {
       email: coach.email || '',
       password: '',
       phone: coach.phone || '',
+      phones: (coach.coach_profile?.phones && Array.isArray(coach.coach_profile.phones) && coach.coach_profile.phones.length > 0)
+        ? coach.coach_profile.phones
+        : (coach.phone ? [{ number: coach.phone, label: 'Personal' }] : [{ number: '', label: 'Personal' }]),
       club: coach.club || '',
       role: 'coach',
       assignments: (coach.groups || []).map(g => ({
@@ -168,6 +175,7 @@ export const useCoachManagement = () => {
       specialization: coach.coach_profile?.specialization || '',
       years_of_experience: coach.coach_profile?.years_of_experience || '',
       certification: coach.coach_profile?.certification || '',
+      date_of_birth: coach.coach_profile?.date_of_birth || '',
     });
     setApiError(null);
     setEditCoachId(coach.id);
@@ -187,9 +195,11 @@ export const useCoachManagement = () => {
 
   const resetForm = () => {
     setFormData({
-      first_name: '', last_name: '', username: '', email: '', password: '', phone: '', club: '',
+      first_name: '', last_name: '', username: '', email: '', password: '', phone: '',
+      phones: [{ number: '', label: 'Personal' }],
+      club: '',
       role: 'coach', assignments: [],
-      specialization: '', years_of_experience: '', certification: '',
+      specialization: '', years_of_experience: '', certification: '', date_of_birth: '',
     });
     setApiError(null);
     setPasswordStrength(0);

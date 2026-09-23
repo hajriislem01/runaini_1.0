@@ -9,7 +9,7 @@ const PDF_H = 1122;
 const useReportPDF = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generatePDF = useCallback(async (report, player, academyName = '') => {
+  const generatePDF = useCallback(async (report, player, academyName = '', pdfOptions = {}) => {
     if (!report) {
       toast.error('No report data available');
       return;
@@ -42,7 +42,8 @@ const useReportPDF = () => {
       container.innerHTML = buildPDFHTML(
         report,
         player,
-        academyName || 'RunAiNi Academy'
+        academyName || 'RunAiNi Academy',
+        pdfOptions
       );
       document.body.appendChild(container);
 

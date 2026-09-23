@@ -26,10 +26,10 @@
   "trainingMethodology": "Training methodology",
   "professionalExperience": "Professional Experience",
   "certifications": "Certifications",
-  
   "coachSettings": "Coach Settings",
   "manageProfile": "Manage your professional profile",
   "savePhoto": "Save Photo",
+  "removePhoto": "Remove Photo",
   "uploadPhoto": "Upload Photo",
   "personalInformation": "Personal Information",
   "personalDetails": "Personal Details",
@@ -53,5 +53,8 @@
   "year": "Year",
   "saveChangesWarning": "* All changes will be saved to your profile",
   "saveAllChanges": "Save Changes",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "age": "Age",
+  "yearsOld": "years old",
+  "dateOfBirth": "Date of Birth"
 }

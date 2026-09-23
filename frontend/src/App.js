@@ -34,6 +34,7 @@ import Contact from './pages/administration/contact/Contact';
 import EventsManagement from './pages/administration/eventsmanagement/EventsManagement';
 import CreateEvent from './pages/administration/eventsmanagement/CreateEvent';
 import EventDetail from './pages/administration/eventsmanagement/EventDetail';
+import AdminAttendanceReports from './pages/administration/attendance/AdminAttendanceReports';
 
 // ── Coach ──────────────────────────────────────────────────────────────────────
 import CoachLayout from './layouts/CoachLayout';
@@ -47,10 +48,12 @@ import CoachProfile from './pages/coach/CoachProfile';
 import CoachSettings from './pages/coach/CoachSettings';
 import CoachAnalysis from './pages/coach/playermanagement/CoachAnalysis';
 import CoachPlayerProfile from './pages/coach/playermanagement/CoachPlayerProfile';
+import CoachAttendance from './pages/coach/CoachAttendance';
 
 // ── Player ─────────────────────────────────────────────────────────────────────
 import PlayerLayout from './layouts/PlayerLayout';
 import PlayersDashboard from './pages/players/PlayersDashboard';
+import PlayerAttendanceView from './pages/player/PlayerAttendanceView';
 import Training from './pages/players/Training';
 import Performance from './pages/players/Performance';
 import PlayerProfile from './pages/players/PlayerProfile';
@@ -183,6 +186,7 @@ function App() {
                     <Route path="events-management" element={<EventsManagement />} />
                     <Route path="create-event" element={<CreateEvent />} />
                     <Route path="event/:id" element={<EventDetail />} />
+                    <Route path="attendance-reports" element={<AdminAttendanceReports />} />
                     <Route path="agenda-management" element={
                       <AgendaManagement
                         events={events} addEvent={addEvent}
@@ -207,6 +211,7 @@ function App() {
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="players" element={<CoachPlayerManagement />} />
                     <Route path="training" element={<CreateTraining />} />
+                    <Route path="attendance" element={<CoachAttendance />} />
                     <Route path="agenda" element={<CoachAgenda />} />
                     <Route path="matches" element={<Navigate to="/coach/dashboard" replace />} />
                     <Route path="profile" element={<CoachProfile />} />
@@ -223,6 +228,7 @@ function App() {
                 }>
                   <Route element={<PlayerLayout />}>
                     <Route index element={<PlayersDashboard />} />
+                    <Route path="attendance" element={<PlayerAttendanceView />} />
                     <Route path="training" element={<Training />} />
                     <Route path="performance" element={<Performance />} />
                     <Route path="profile" element={<PlayerProfile />} />

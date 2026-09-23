@@ -7,6 +7,7 @@ from .player_report_views import PlayerReportViewSet
 from .training_views import TrainingSessionViewSet
 from .exercise_template_views import ExerciseTemplateViewSet
 from .notification_views import NotificationViewSet
+from .coach_note_views import CoachNoteViewSet
 
 router = DefaultRouter()
 router.register(r'coaches',       CoachViewSet,           basename='coaches')
@@ -19,5 +20,6 @@ router.register(r'reports',       PlayerReportViewSet,    basename='reports')
 router.register(r'trainings',     TrainingSessionViewSet, basename='trainings')
 router.register(r'exercises',     ExerciseTemplateViewSet,basename='exercises')
 router.register(r'notifications', NotificationViewSet,    basename='notifications')
+router.register(r'coach-notes',   CoachNoteViewSet,       basename='coach-notes')
 
 urlpatterns = router.urls

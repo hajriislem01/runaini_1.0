@@ -13,3 +13,13 @@ class IsSuperAdmin(BasePermission):
             u.is_authenticated
             and getattr(u, "role", None) == "superadmin"
         )
+
+
+class IsCoach(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == "coach"
+
+
+class IsPlayer(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == "player"

@@ -54,10 +54,8 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link to="/" className="text-2xl font-extrabold inline-flex mb-4">
-              <span style={{ background: `linear-gradient(90deg,${P},${B})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                RUNAINI
-              </span>
+            <Link to="/" className="inline-flex mb-6 transition-opacity hover:opacity-90">
+              <img src="/name.png" alt="RunAiNi" className="h-7 lg:h-8 w-auto object-contain" />
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed mb-5">
               {t('description')}
@@ -105,7 +103,7 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ borderTop: '1px solid rgba(144,43,209,0.1)' }}>
           <p className="text-gray-600 text-xs">© {new Date().getFullYear()} RunAiNi. All rights reserved.</p>
-          <p className="text-gray-700 text-xs flex items-center gap-1">Crafted with precision for football's elite ⚽</p>
+          <p className="text-gray-700 text-xs flex items-center gap-1">Crafted with precision for football's elite.</p>
         </div>
       </div>
     </footer>

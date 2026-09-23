@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import API from '../../../api';
 import { useAdminData } from '../../../../context/AdminContext';
-import { toastStyles } from '../utils/settingsConstants';
 
 export const useSettingsData = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -62,11 +61,11 @@ export const useSettingsData = () => {
   const handleImageSelect = (file, fieldName) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload a valid image file', toastStyles.error);
+      toast.error('Please upload a valid image file');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB', toastStyles.error);
+      toast.error('Image size should be less than 5MB');
       return;
     }
 
@@ -75,6 +74,38 @@ export const useSettingsData = () => {
       ...prev,
       [fieldName]: { ...prev[fieldName], file, preview: previewUrl }
     }));
+  };
+
+  const removeImage = async (fieldName) => {
+    setImageStates(prev => ({
+      ...prev,
+      [fieldName]: { ...prev[fieldName], isUpdating: true }
+    }));
+
+    try {
+      const formData = new FormData();
+      formData.append(`remove_${fieldName}`, 'true');
+
+      const response = await API.put('academy/', formData);
+
+      const urlField = `${fieldName}_url`;
+      const updatedData = { ...adminData, ...response.data, [fieldName]: null, [urlField]: null };
+
+      setAcademyData(updatedData);
+      setImageStates(prev => ({
+        ...prev,
+        [fieldName]: { file: null, preview: null, isUpdating: false }
+      }));
+      updateAdminData(updatedData);
+
+      toast.success('Image removed successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to remove image');
+      setImageStates(prev => ({
+        ...prev,
+        [fieldName]: { ...prev[fieldName], isUpdating: false }
+      }));
+    }
   };
 
   const cancelImageSelection = (fieldName) => {
@@ -122,7 +153,7 @@ export const useSettingsData = () => {
       }));
       updateAdminData(updatedData);
 
-      toast.success('Image updated successfully!', toastStyles.success);
+      toast.success('Image updated successfully!');
     } catch (error) {
       console.error(`❌ ${fieldName} Upload Error:`, error.response?.data);
       cancelImageSelection(fieldName);
@@ -131,9 +162,9 @@ export const useSettingsData = () => {
       if (typeof errorData === 'object' && errorData !== null) {
         const firstErrorKey = Object.keys(errorData)[0];
         const errorMessage = Array.isArray(errorData[firstErrorKey]) ? errorData[firstErrorKey][0] : JSON.stringify(errorData);
-        toast.error(`${firstErrorKey}: ${errorMessage}`, toastStyles.error);
+        toast.error(`${firstErrorKey}: ${errorMessage}`);
       } else {
-        toast.error('Failed to upload image', toastStyles.error);
+        toast.error('Failed to upload image');
       }
     } finally {
       setImageStates(prev => ({
@@ -146,7 +177,7 @@ export const useSettingsData = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!academyData.name?.trim()) {
-      toast.error('Academy name is required', toastStyles.error);
+      toast.error('Academy name is required');
       return;
     }
 
@@ -154,15 +185,15 @@ export const useSettingsData = () => {
     const isUpdatingPassword = passwords.currentPassword || passwords.newPassword;
     if (isUpdatingPassword) {
       if (!passwords.currentPassword || !passwords.newPassword) {
-        toast.error('Both current and new password are required', toastStyles.error);
+        toast.error('Both current and new password are required');
         return;
       }
       if (passwords.newPassword !== passwords.confirmPassword) {
-        toast.error('Passwords do not match', toastStyles.error);
+        toast.error('Passwords do not match');
         return;
       }
       if (passwords.newPassword.length < 8) {
-        toast.error('Password must be at least 8 characters', toastStyles.error);
+        toast.error('Password must be at least 8 characters');
         return;
       }
     }
@@ -191,9 +222,9 @@ export const useSettingsData = () => {
       
       if (isUpdatingPassword) {
         setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        toast.success('Settings and password updated successfully!', toastStyles.success);
+        toast.success('Settings and password updated successfully!');
       } else {
-        toast.success(adminData ? 'Settings updated successfully!' : 'Academy created successfully!', toastStyles.success);
+        toast.success(adminData ? 'Settings updated successfully!' : 'Academy created successfully!');
       }
     } catch (error) {
       const data = error.response?.data;
@@ -201,9 +232,9 @@ export const useSettingsData = () => {
       if (typeof errorData === 'object' && errorData !== null) {
         const firstErrorKey = Object.keys(errorData)[0];
         const errorMessage = Array.isArray(errorData[firstErrorKey]) ? errorData[firstErrorKey][0] : JSON.stringify(errorData);
-        toast.error(`${firstErrorKey}: ${errorMessage}`, toastStyles.error);
+        toast.error(`${firstErrorKey}: ${errorMessage}`);
       } else {
-        toast.error(data?.error || 'Failed to update settings', toastStyles.error);
+        toast.error(data?.error || 'Failed to update settings');
       }
     } finally {
       setIsSubmitting(false);
@@ -235,22 +266,22 @@ export const useSettingsData = () => {
     setShowVerificationModal(false);
     setVerificationCode('');
     setVerificationStep('phone');
-    toast.success('Phone verified!', toastStyles.success);
+    toast.success('Phone verified!');
   };
 
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   const handleSavePassword = async () => {
     if (!passwords.currentPassword || !passwords.newPassword) {
-      toast.error('Current and new password are required', toastStyles.error);
+      toast.error('Current and new password are required');
       return;
     }
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error('Passwords do not match', toastStyles.error);
+      toast.error('Passwords do not match');
       return;
     }
     if (passwords.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters', toastStyles.error);
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
@@ -264,10 +295,10 @@ export const useSettingsData = () => {
       await API[method]('academy/', formData);
 
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      toast.success('Password updated successfully', toastStyles.success);
+      toast.success('Password updated successfully');
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Failed to update password';
-      toast.error(errorMsg, toastStyles.error);
+      toast.error(errorMsg);
     } finally {
       setIsSubmittingPassword(false);
     }
@@ -284,7 +315,7 @@ export const useSettingsData = () => {
     academyData, setAcademyData,
     preferences, setPreferences,
     handleSubmit, handleSavePassword,
-    handleImageSelect, confirmImageUpload, cancelImageSelection,
+    handleImageSelect, confirmImageUpload, cancelImageSelection, removeImage,
     handlePhoneVerification, handleVerifyCode
   };
 };

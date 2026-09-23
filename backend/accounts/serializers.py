@@ -1,9 +1,34 @@
 from rest_framework import serializers
 import os
+import datetime
+
+
+def _parse_dob(dob):
+    """Return a datetime.date object from a DateField value that may be a str or date."""
+    if dob is None:
+        return None
+    if isinstance(dob, datetime.date):
+        return dob
+    try:
+        return datetime.datetime.strptime(str(dob)[:10], '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return None
+
+
+def _calc_age(dob):
+    """Calculate age in whole years from a dob value (str or date). Returns None if unavailable."""
+    parsed = _parse_dob(dob)
+    if parsed is None:
+        return None
+    today = datetime.date.today()
+    return today.year - parsed.year - ((today.month, today.day) < (parsed.month, parsed.day))
+
+
 from .models import (
     Payment, Group, CustomUser, CoachProfile, PlayerProfile,
     SubGroup, Academy, AcademyLeadRequest, Event, EventParticipant,
-    PlayerReport, TrainingSession, ExerciseTemplate, Notification
+    PlayerReport, TrainingSession, ExerciseTemplate, Notification,
+    PlayerAttendance, CoachNote
 )
 from django.db import models
 
@@ -86,6 +111,24 @@ class CoachSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {'role': {'default': 'coach'}}
 
+    def validate_username(self, value):
+        if not value:
+            return value
+        val = str(value).strip()
+        user_id = self.instance.id if self.instance else None
+        if CustomUser.objects.filter(models.Q(username__iexact=val) | models.Q(email__iexact=val)).exclude(id=user_id).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return val
+
+    def validate_email(self, value):
+        if not value:
+            return value
+        val = str(value).strip().lower()
+        user_id = self.instance.id if self.instance else None
+        if CustomUser.objects.filter(models.Q(email__iexact=val) | models.Q(username__iexact=val)).exclude(id=user_id).exists():
+            raise serializers.ValidationError("This email is already taken.")
+        return val
+
     def get_coach_profile(self, obj):
         if hasattr(obj, 'coach_profile'):
             profile = obj.coach_profile
@@ -94,6 +137,7 @@ class CoachSerializer(serializers.ModelSerializer):
                 request = self.context.get('request')
                 photo_url = request.build_absolute_uri(profile.photo.url) if request else f"{os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')}{profile.photo.url}"
 
+            phones = profile.phones if (profile.phones and isinstance(profile.phones, list) and len(profile.phones) > 0) else ([{'number': obj.phone, 'label': 'Personal'}] if obj.phone else [])
             return {
                 'id':                  profile.id,
                 'specialization':      profile.specialization,
@@ -104,31 +148,35 @@ class CoachSerializer(serializers.ModelSerializer):
                 'bio':                 profile.bio,
                 'notes':               profile.notes,
                 'photo':               photo_url,
+                'date_of_birth':       profile.date_of_birth,
+                'age':                 _calc_age(profile.date_of_birth),
+                'phones':              phones,
             }
         return None
 
     def get_groups(self, obj):
         if hasattr(obj, 'coach_profile'):
-            # Return groups where coach is assigned
-            groups = obj.coach_profile.assigned_groups.all()
-            return [{'id': g.id, 'name': g.name, 'full_access': g in obj.coach_profile.full_access_groups.all()} for g in groups]
+            profile = obj.coach_profile
+            # .all() on a prefetched M2M manager is served from cache, no extra query
+            full_access_ids = {g.id for g in profile.full_access_groups.all()}
+            groups = profile.assigned_groups.all()
+            return [{'id': g.id, 'name': g.name, 'full_access': g.id in full_access_ids} for g in groups]
         return []
 
     def get_subgroups(self, obj):
         if hasattr(obj, 'coach_profile'):
             profile = obj.coach_profile
-            # Return subgroups based on logic:
-            # 1. All subgroups for full_access groups
-            # 2. Specifically assigned subgroups
-            from .models import SubGroup
-            full_access_ids = profile.full_access_groups.values_list('id', flat=True)
-            
-            subgroups = SubGroup.objects.filter(
-                models.Q(group_id__in=full_access_ids) |
-                models.Q(assigned_coaches=profile)
-            ).distinct()
-            
-            return [{'id': s.id, 'name': s.name, 'group': s.group.id} for s in subgroups]
+            # Built from already-prefetched relations instead of a fresh SubGroup query
+            full_access_ids = {g.id for g in profile.full_access_groups.all()}
+            seen = {}
+            for group in profile.assigned_groups.all():
+                if group.id in full_access_ids:
+                    for sg in group.subgroups.all():
+                        seen[sg.id] = sg
+            for sg in profile.assigned_subgroups.all():
+                seen[sg.id] = sg
+
+            return [{'id': s.id, 'name': s.name, 'group': s.group_id} for s in seen.values()]
         return []
 
     def create(self, validated_data):
@@ -178,6 +226,14 @@ class CoachSerializer(serializers.ModelSerializer):
                     coach_instance.years_of_experience = 0
             if 'certification' in initial_data:
                 coach_instance.certification = initial_data['certification']
+            if 'date_of_birth' in initial_data:
+                coach_instance.date_of_birth = initial_data['date_of_birth'] or None
+            if 'phones' in initial_data:
+                phones = initial_data['phones'] if isinstance(initial_data['phones'], list) else []
+                coach_instance.phones = phones
+                if phones and len(phones) > 0 and phones[0].get('number'):
+                    user_instance.phone = phones[0].get('number')
+                    user_instance.save()
                 
             coach_instance.save()
             
@@ -249,19 +305,26 @@ class CoachProfileSerializer(serializers.ModelSerializer):
     username   = serializers.CharField(source='user.username',   read_only=True)
     phone      = serializers.CharField(source='user.phone',      read_only=True)
     photo_url  = serializers.SerializerMethodField()
+    groups     = serializers.SerializerMethodField()
+    age        = serializers.SerializerMethodField()
 
     class Meta:
         model  = CoachProfile
         fields = [
             'id',
-            'first_name', 'last_name', 'email', 'username', 'phone',
+            'first_name', 'last_name', 'email', 'username', 'phone', 'phones',
             'specialization', 'years_of_experience', 'certification',
             'status', 'address', 'notes',
-            'photo', 'photo_url', 'bio',
+            'photo', 'photo_url', 'bio', 'date_of_birth', 'age',
+            'groups',
         ]
         extra_kwargs = {
             'photo': {'required': False, 'allow_null': True},
+            'date_of_birth': {'required': False, 'allow_null': True},
         }
+
+    def get_age(self, obj):
+        return _calc_age(obj.date_of_birth)
 
     def get_photo_url(self, obj):
         if not obj.photo:
@@ -271,6 +334,44 @@ class CoachProfileSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.photo.url)
         base = os.environ.get('RENDER_EXTERNAL_URL', 'http://localhost:8000')
         return f'{base}{obj.photo.url}'
+
+    def get_groups(self, obj):
+        """
+        Return the coach's assigned groups, each with the subgroups they can access.
+        - full_access groups → all subgroups included
+        - partial access groups → only specifically assigned subgroups
+        """
+        full_access_ids = set(obj.full_access_groups.values_list('id', flat=True))
+        assigned_subgroups = obj.assigned_subgroups.select_related('group').all()
+
+        # Build a map: group_id → list of accessible subgroup dicts
+        subgroup_map = {}
+        for sg in assigned_subgroups:
+            subgroup_map.setdefault(sg.group_id, []).append({'id': sg.id, 'name': sg.name})
+
+        result = []
+        for group in obj.assigned_groups.prefetch_related('subgroups').all():
+            if group.id in full_access_ids:
+                subgroups = [{'id': sg.id, 'name': sg.name} for sg in group.subgroups.all()]
+            else:
+                subgroups = subgroup_map.get(group.id, [])
+
+            result.append({
+                'id': group.id,
+                'name': group.name,
+                'full_access': group.id in full_access_ids,
+                'subgroups': subgroups,
+            })
+        return result
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if not representation.get('phones') or len(representation.get('phones')) == 0:
+            if instance.user and instance.user.phone:
+                representation['phones'] = [{'number': instance.user.phone, 'label': 'Personal'}]
+            else:
+                representation['phones'] = []
+        return representation
 
 
 # ─── 6. Group ─────────────────────────────────────────────────────────────────
@@ -285,19 +386,24 @@ class GroupSerializer(serializers.ModelSerializer):
         # Filter subgroups based on current user if it's a coach
         request = self.context.get('request')
         user = request.user if request else None
-        
-        all_subgroups = obj.subgroups.all()
-        
+
+        all_subgroups = obj.subgroups.all()  # served from prefetch cache when available
+
         if user and user.role == 'coach' and hasattr(user, 'coach_profile'):
             profile = user.coach_profile
+            # Computed once per request/list instead of re-querying per group
+            if '_full_access_ids' not in self.context:
+                self.context['_full_access_ids'] = set(profile.full_access_groups.values_list('id', flat=True))
+            full_access_ids = self.context['_full_access_ids']
+
             # 1. If group is in full_access_groups, return all
-            if obj in profile.full_access_groups.all():
+            if obj.id in full_access_ids:
                 return SubGroupSerializer(all_subgroups, many=True).data
-            
+
             # 2. Otherwise return only specifically assigned subgroups
-            assigned = all_subgroups.filter(assigned_coaches=profile)
+            assigned = obj.subgroups.filter(assigned_coaches=profile)
             return SubGroupSerializer(assigned, many=True).data
-            
+
         return SubGroupSerializer(all_subgroups, many=True).data
 
     def to_representation(self, instance):
@@ -319,24 +425,27 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
     email     = serializers.EmailField(write_only=True, required=False)
     current_password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     new_password     = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    password         = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     def validate_username(self, value):
+        if not value:
+            return value
+        val = str(value).strip()
         user = self.instance.user if self.instance else None
-        academy = user.academy if user else None
-        
-        # If academy is not set on the user yet, try to get it from the context
-        if not academy and 'request' in self.context:
-            academy = self.context['request'].user.academy
-
-        if CustomUser.objects.filter(username=value, academy=academy).exclude(id=user.id if user else None).exists():
-            raise serializers.ValidationError("This username is already taken in your academy.")
-        return value
+        user_id = user.id if user else None
+        if CustomUser.objects.filter(models.Q(username__iexact=val) | models.Q(email__iexact=val)).exclude(id=user_id).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return val
 
     def validate_email(self, value):
+        if not value:
+            return value
+        val = str(value).strip().lower()
         user = self.instance.user if self.instance else None
-        if CustomUser.objects.filter(email=value).exclude(id=user.id if user else None).exists():
-            raise serializers.ValidationError("This email is already in use globally.")
-        return value
+        user_id = user.id if user else None
+        if CustomUser.objects.filter(models.Q(email__iexact=val) | models.Q(username__iexact=val)).exclude(id=user_id).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return val
 
     group     = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all(), required=False, allow_null=True
@@ -346,11 +455,18 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
     )
     photo_url = serializers.SerializerMethodField()
     profile_picture = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
 
     class Meta:
         model  = PlayerProfile
         fields = '__all__'
-        extra_kwargs = {'user': {'read_only': True}}
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'date_of_birth': {'required': False, 'allow_null': True},
+        }
+
+    def get_age(self, obj):
+        return _calc_age(obj.date_of_birth)
 
     def get_profile_picture(self, obj):
         return self.get_photo_url(obj)
@@ -358,7 +474,8 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         username = validated_data.pop('username', None)
         email    = validated_data.pop('email',    None)
-        
+        password = validated_data.pop('password',  None)
+
         current_password = validated_data.pop('current_password', None)
         new_password     = validated_data.pop('new_password', None)
 
@@ -368,13 +485,32 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
             user.username = username
         if email:
             user.email = email
-            
-        if current_password and new_password:
+
+        request = self.context.get('request')
+        requesting_user = getattr(request, 'user', None)
+        is_self_edit = requesting_user is not None and requesting_user.id == user.id
+
+        if password and not is_self_edit:
+            # Admin/coach resetting another user's password: no current-password check needed.
+            user.set_password(password)
+        elif current_password and new_password:
             if not user.check_password(current_password):
                 raise serializers.ValidationError({"error": "Incorrect current password."})
             user.set_password(new_password)
         elif new_password:
             raise serializers.ValidationError({"error": "Current password is required to change password."})
+
+        initial_data = getattr(self, 'initial_data', {})
+        phones = validated_data.get('phones', initial_data.get('phones'))
+        if phones is not None and isinstance(phones, list):
+            instance.phones = phones
+            if len(phones) > 0 and isinstance(phones[0], dict) and phones[0].get('number'):
+                instance.phone = phones[0]['number']
+
+        if str(initial_data.get('remove_photo', '')).lower() in ('1', 'true', 'yes'):
+            if instance.photo:
+                instance.photo.delete(save=False)
+            instance.photo = None
 
         user.save()
         return super().update(instance, validated_data)
@@ -385,6 +521,11 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
             representation['group'] = GroupSerializer(instance.group).data
         if instance.subgroup:
             representation['subgroup'] = SubGroupSerializer(instance.subgroup).data
+        if not representation.get('phones') or len(representation.get('phones')) == 0:
+            if instance.phone:
+                representation['phones'] = [{'number': instance.phone, 'label': 'Personal'}]
+            else:
+                representation['phones'] = []
         return representation
 
     def get_photo_url(self, obj):
@@ -566,6 +707,7 @@ class PlayerReportSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             'id', 'academy', 'coach', 'overall_score',
+            'attendance_present', 'attendance_total',
             'created_at', 'updated_at',
             'player_name', 'player_position', 'group_name',
             'coach_name', 'attendance_pct',
@@ -814,3 +956,31 @@ class SuperAdminAdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'phone', 'date_joined', 'last_login')
+
+
+class PlayerAttendanceSerializer(serializers.ModelSerializer):
+    player_name = serializers.CharField(source='player.full_name', read_only=True)
+    coach_name = serializers.SerializerMethodField()
+    group_name = serializers.CharField(source='group.name', read_only=True)
+    subgroup_name = serializers.CharField(source='subgroup.name', read_only=True, allow_null=True)
+
+    class Meta:
+        model = PlayerAttendance
+        fields = [
+            'id', 'player', 'player_name', 'coach', 'coach_name',
+            'group', 'group_name', 'subgroup', 'subgroup_name',
+            'academy', 'date', 'status', 'notes', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'academy', 'created_at', 'updated_at']
+
+    def get_coach_name(self, obj):
+        if obj.coach and obj.coach.user:
+            return f"{obj.coach.user.first_name} {obj.coach.user.last_name}".strip() or obj.coach.user.username
+        return ''
+
+
+class CoachNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CoachNote
+        fields = ['id', 'player', 'type', 'title', 'text', 'created_at']
+        read_only_fields = ['id', 'created_at']

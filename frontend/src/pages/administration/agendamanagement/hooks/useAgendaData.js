@@ -43,6 +43,7 @@ export const useAgendaData = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   // Detail view states
   const [detailSession, setDetailSession] = useState(null);
@@ -181,12 +182,14 @@ export const useAgendaData = () => {
     });
     setSelectedEvent(null);
     setShowEventModal(false);
+    setApiError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateEventForm()) return;
     setIsSubmitting(true);
+    setApiError(null);
 
     try {
       const payload = {
@@ -217,12 +220,18 @@ export const useAgendaData = () => {
       resetForm();
     } catch (error) {
       console.error('Error saving event:', error.response?.data || error);
+      let errMsg = 'Failed to save event';
       if (error.response?.data) {
-        const errorDetails = JSON.stringify(error.response.data);
-        toast.error(`Failed to save event: ${errorDetails}`);
-      } else {
-        toast.error('Failed to save event');
+        if (typeof error.response.data === 'object') {
+          errMsg = Object.entries(error.response.data)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join(' | ');
+        } else {
+          errMsg = String(error.response.data);
+        }
       }
+      setApiError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -352,7 +361,7 @@ export const useAgendaData = () => {
     handleFormChange, handleGroupToggle, handleSubgroupToggle,
     handleCoachToggle, handlePlayerToggle, resetForm,
     handleSubmit, handleEditEvent, handleConfirmDelete, handleDayClick, createEventForDay,
-    filteredEvents, stats, calendarDays,
+    filteredEvents, stats, calendarDays, apiError,
     // Detail view
     detailSession, setDetailSession, isDetailLoading, handleOpenDetail
   };

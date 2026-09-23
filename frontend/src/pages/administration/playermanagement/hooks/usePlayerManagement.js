@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import API from '../../api';
+import toast from 'react-hot-toast';
 
 export const usePlayerManagement = () => {
   const [players, setPlayers] = useState([]);
@@ -16,7 +16,6 @@ export const usePlayerManagement = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [editPlayerId, setEditPlayerId] = useState(null);
   const [errors, setErrors] = useState({});
-  const [notifications, setNotifications] = useState([]);
   const [showGroupModal, setShowGroupModal] = useState(false);
   const [groupForm, setGroupForm] = useState({
     id: '',
@@ -37,26 +36,20 @@ export const usePlayerManagement = () => {
     email: '',
     password: '',
     phone: '',
+    phones: [{ number: '', label: 'Personal' }],
     position: '',
     status: 'Active',
     group: '',
     subgroup: '',
     height: '',
     weight: '',
+    date_of_birth: '',
     address: '',
     notes: ''
   });
 
   const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api/').replace(/\/$/, '');
   const authToken = localStorage.getItem('token');
-
-  const addNotification = (message, type = 'success') => {
-    const id = Date.now();
-    setNotifications(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 5000);
-  };
 
   const fetchPlayers = async () => {
     try {
@@ -66,7 +59,7 @@ export const usePlayerManagement = () => {
       setPlayers(response.data);
     } catch (error) {
       console.error('Error fetching players:', error);
-      addNotification('Failed to fetch players', 'error');
+      toast.error('Failed to fetch players');
     } finally {
       setLoading(false);
     }
@@ -80,7 +73,7 @@ export const usePlayerManagement = () => {
       setGroups(response.data);
     } catch (error) {
       console.error('Error fetching groups:', error);
-      addNotification('Failed to fetch groups', 'error');
+      toast.error('Failed to fetch groups');
     }
   };
 
@@ -92,7 +85,7 @@ export const usePlayerManagement = () => {
       setCoaches(response.data);
     } catch (error) {
       console.error('Error fetching coaches:', error);
-      addNotification('Failed to fetch coaches', 'error');
+      toast.error('Failed to fetch coaches');
     }
   };
 
@@ -108,7 +101,7 @@ export const usePlayerManagement = () => {
     showGroupDetailModal, setShowGroupDetailModal, viewingGroup, setViewingGroup,
     searchTerm, setSearchTerm, groupSearchTerm, setGroupSearchTerm,
     showPassword, setShowPassword, passwordStrength, setPasswordStrength,
-    editPlayerId, setEditPlayerId, errors, setErrors, notifications, addNotification,
+    editPlayerId, setEditPlayerId, errors, setErrors,
     showGroupModal, setShowGroupModal, groupForm, setGroupForm,
     isEditingGroup, setIsEditingGroup, expandedGroup, setExpandedGroup,
     expandedSubgroup, setExpandedSubgroup, selectedGroup, setSelectedGroup,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { useTranslation } from 'react-i18next';
 
 import { usePaymentManagement } from './hooks/usePaymentManagement';
@@ -38,7 +38,7 @@ const PaymentManagement = () => {
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position={isRtl ? 'top-left' : 'top-right'} />
+      <AdminToaster position={isRtl ? 'top-left' : 'top-right'} />
       <div className="max-w-7xl mx-auto">
         
         <motion.div variants={itemVariants} className="mb-8">

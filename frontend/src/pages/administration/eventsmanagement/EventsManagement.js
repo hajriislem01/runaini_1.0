@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import AdminToaster from '../shared/AdminToaster';
 import { FaRegCalendarCheck } from 'react-icons/fa';
 import { FiPlus, FiX, FiClock, FiMapPin, FiExternalLink } from 'react-icons/fi';
 
@@ -30,7 +30,7 @@ const EventsManagement = () => {
       style={{ background: 'linear-gradient(135deg, #000000 0%, #0a0f2a 45%, #180033 100%)' }}
       initial="hidden" animate="visible" variants={containerVariants}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
 
       {/* Event Detail Modal */}
       <AnimatePresence>

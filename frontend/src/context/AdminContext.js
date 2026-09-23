@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import API from '../pages/administration/api';
+import { AUTH_CHANGE_EVENT } from '../utils/authEvents';
 
 const AcademyContext = createContext();
 
@@ -32,6 +33,22 @@ export const AdminProvider = ({ children }) => {
 
   useEffect(() => {
     refreshAcademyData();
+  }, [refreshAcademyData]);
+
+  // ── React to login / logout events ────────────────────────────────────────
+  useEffect(() => {
+    const handleAuthChange = (e) => {
+      const type = e?.detail?.type;
+      if (type === 'logout') {
+        setAcademyData(null);
+        setIsLoading(false);
+      } else {
+        refreshAcademyData();
+      }
+    };
+
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
   }, [refreshAcademyData]);
 
   useEffect(() => {

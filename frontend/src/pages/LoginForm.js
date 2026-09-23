@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiEye, FiEyeOff, FiMail, FiLock, FiArrowLeft,
+  FiEye, FiEyeOff, FiMail, FiUser, FiLock, FiArrowLeft,
   FiAlertCircle, FiCheckCircle, FiArrowRight,
 } from 'react-icons/fi';
 import axios from 'axios';
 import { useAdminData } from '../context/AdminContext';
 import { useTranslation } from 'react-i18next';
+import { dispatchAuthChange } from '../utils/authEvents';
 
 /* ── Brand tokens ──────────────────────────────────── */
 const P = '#902bd1';   // purple
@@ -102,7 +103,7 @@ const Login = () => {
   const { refreshAdminData } = useAdminData();
 
   // ── Local state ───────────────────────────────────
-  const [email, setEmail]         = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword]   = useState('');
   const [showPwd, setShowPwd]     = useState(false);
   const [remember, setRemember]   = useState(false);
@@ -125,10 +126,10 @@ const Login = () => {
     }
   }, [navigate]);
 
-  /* ── Restore remembered email ───────────────────── */
+  /* ── Restore remembered login ───────────────────── */
   useEffect(() => {
-    const saved = localStorage.getItem('remember_email');
-    if (saved) { setEmail(saved); setRemember(true); }
+    const saved = localStorage.getItem('remember_email') || localStorage.getItem('remember_identifier');
+    if (saved) { setIdentifier(saved); setRemember(true); }
   }, []);
 
   /* ── Submit ─────────────────────────────────────── */
@@ -137,12 +138,8 @@ const Login = () => {
     setError(''); setSuccess('');
 
     // Inline validation – uses translated error messages
-    if (!email || !password) {
+    if (!identifier.trim() || !password) {
       setError(t('fillAllFields', 'Please fill in all fields.'));
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError(t('emailInvalid'));
       return;
     }
 
@@ -150,7 +147,7 @@ const Login = () => {
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api/'}login/`,
-        { email, password }
+        { identifier: identifier.trim(), email: identifier.trim(), password }
       );
       const { token, user: userData } = res.data;
 
@@ -163,11 +160,19 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('role', userData.role);
       localStorage.setItem('academy_id', userData.academy_id);
-      if (remember) localStorage.setItem('remember_email', email);
-      else          localStorage.removeItem('remember_email');
+      if (remember) {
+        localStorage.setItem('remember_email', identifier.trim());
+        localStorage.setItem('remember_identifier', identifier.trim());
+      } else {
+        localStorage.removeItem('remember_email');
+        localStorage.removeItem('remember_identifier');
+      }
+
+      // Broadcast login to all context providers so they re-fetch immediately
+      dispatchAuthChange('login');
 
       setSuccess(t('accessGranted', 'Access granted. Entering your workspace…'));
-      setEmail(''); setPassword('');
+      setIdentifier(''); setPassword('');
 
       setTimeout(async () => {
         if (userData.role === 'superadmin') {
@@ -287,14 +292,14 @@ const Login = () => {
             {/* ── Login form ────────────────────────── */}
             <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Email */}
+              {/* Email or Username */}
               <GoldInput
-                label={t('emailLabel')}
-                icon={FiMail}
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError(''); }}
-                autoComplete="email"
+                label={t('emailLabel', 'Email or Username')}
+                icon={FiUser}
+                type="text"
+                value={identifier}
+                onChange={e => { setIdentifier(e.target.value); setError(''); }}
+                autoComplete="username"
                 required
                 isRtl={isRtl}
               />

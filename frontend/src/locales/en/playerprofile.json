@@ -16,7 +16,9 @@
     "jerseyNumber": "Jersey Number",
     "team": "Team",
     "group": "Group",
-    "subgroup": "Subgroup"
+    "subgroup": "Subgroup",
+    "age": "Age",
+    "years": "years old"
   },
   "actions": {
     "editProfile": "Edit Profile",

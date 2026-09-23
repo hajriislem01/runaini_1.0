@@ -16,12 +16,21 @@
     "bio": "Bio / Notes",
     "bioPlaceholder": "Tell us about yourself...",
     "choosePhoto": "Choose new photo",
+    "removePhoto": "Remove photo",
     "confirmPhoto": "Confirm Photo",
     "cancel": "Cancel",
     "saving": "Saving...",
     "saveChanges": "Save Changes",
     "photoSizeWarning": "JPG or PNG. Max size 5MB.",
-    "photoMaxSize": "Photo must be under 5MB"
+    "photoMaxSize": "Photo must be under 5MB",
+    "dateOfBirth": "Date of Birth",
+    "addPhone": "Add Phone",
+    "phoneLabels": {
+      "father": "Father",
+      "mother": "Mother",
+      "personal": "Personal",
+      "other": "Other"
+    }
   },
   "security": {
     "title": "Security & Password",
@@ -34,6 +43,7 @@
   },
   "messages": {
     "photoUpdated": "Profile photo updated successfully",
+    "photoRemoved": "Profile photo removed",
     "photoFailed": "Failed to update photo",
     "nameRequired": "Full name is required",
     "profileUpdated": "Profile updated successfully",

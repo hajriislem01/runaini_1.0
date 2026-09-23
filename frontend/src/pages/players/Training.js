@@ -11,7 +11,8 @@ import { FaDumbbell, FaBolt } from 'react-icons/fa';
 import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
 import { useTranslation } from 'react-i18next';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import EventDetailDrawer from '../../components/common/EventDetailDrawer';
 import DayEventsModal from '../administration/agendamanagement/modals/DayEventsModal';
 import {
@@ -430,7 +431,7 @@ const PlayerTraining = () => {
       dir={isRtl ? 'rtl' : 'ltr'}
       style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
       initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <style>{`
         .scrollbar-none::-webkit-scrollbar {
           display: none;

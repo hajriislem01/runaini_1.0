@@ -8,7 +8,8 @@ import {
 import { FaStar, FaRegStar, FaHeartbeat } from 'react-icons/fa';
 import { usePlayer } from '../../context/PlayerContext';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import { format, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import useReportPDF from '../coach/playermanagement/hooks/useReportPDF';
@@ -116,29 +117,41 @@ const RadarChart = ({ player, group }) => {
 };
 
 // ── Sparkline ─────────────────────────────────────────────────────────────────
-const Sparkline = ({ data = [], color = '#4fb0ff', height = 40 }) => {
+const Sparkline = ({ data = [], color = '#4fb0ff', height = 52 }) => {
   if (data.length < 2) return null;
-  const vals  = data.map(d => parseFloat(d.overall_score||0));
+  const vals  = data.map(d => parseFloat(d.overall_score || 0));
   const min   = Math.min(...vals);
   const max   = Math.max(...vals);
   const range = max - min || 1;
-  const w = 300;
-  const pts = vals.map((v,i) => {
-    const x = (i/(vals.length-1))*w;
-    const y = height - ((v-min)/range)*(height-6) - 3;
+  const w     = 300;
+  const pad   = 6;
+  const pts   = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = height - pad - ((v - min) / range) * (height - pad * 2);
     return `${x},${y}`;
-  }).join(' ');
+  });
+  const polyPts = pts.map(p => p).join(' ');
+  const id = `spark-${color.replace('#', '')}${height}`;
   return (
-    <svg viewBox={`0 0 ${w} ${height}`} width="100%" style={{ height }}>
-      <polygon points={`0,${height} ${pts} ${w},${height}`} fill={color+'12'}/>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>
-      {vals.map((v,i) => {
-        const x = (i/(vals.length-1))*w;
-        const y = height - ((v-min)/range)*(height-6) - 3;
-        return i===vals.length-1
-          ? <circle key={i} cx={x} cy={y} r="3.5" fill={color}/>
-          : <circle key={i} cx={x} cy={y} r="2" fill={color} opacity=".6"/>;
-      })}
+    <svg viewBox={`0 0 ${w} ${height}`} width="100%" style={{ height, display: 'block' }}>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+        <filter id={`${id}-glow`}>
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <polygon points={`0,${height} ${polyPts} ${w},${height}`} fill={`url(#${id})`} />
+      <polyline points={polyPts} fill="none" stroke={color} strokeWidth="2"
+        strokeLinejoin="round" filter={`url(#${id}-glow)`} />
+      {pts.map(([x, y], i) => (
+        i === vals.length - 1
+          ? <circle key={i} cx={x} cy={y} r="4" fill={color} filter={`url(#${id}-glow)`} />
+          : <circle key={i} cx={x} cy={y} r="2.5" fill={color} opacity="0.7" />
+      ))}
     </svg>
   );
 };
@@ -148,44 +161,57 @@ const MultiLineChart = ({ data = [] }) => {
   const { t } = useTranslation('playerstats');
   if (data.length < 2) return null;
   const LINES = [
-    { key:'technical_avg', color:'#4fb0ff', label: t('categories.technical') },
-    { key:'tactical_avg',  color:'#f59e0b', label: t('categories.tactical') },
-    { key:'physical_avg',  color:'#22c55e', label: t('categories.physical') },
-    { key:'mental_avg',    color:'#a855f7', label: t('categories.mental') },
+    { key: 'technical_avg', color: '#4fb0ff', label: t('categories.technical') },
+    { key: 'tactical_avg',  color: '#f59e0b', label: t('categories.tactical') },
+    { key: 'physical_avg',  color: '#22c55e', label: t('categories.physical') },
+    { key: 'mental_avg',    color: '#a855f7', label: t('categories.mental') },
   ];
-  const w = 300, h = 100;
-  const toY = (v) => h - ((parseFloat(v||0)-0)/(10-0))*(h-8) - 4;
+  const w = 300, h = 110;
+  const pad = { t: 8, b: 20, l: 4, r: 4 };
+  const innerH = h - pad.t - pad.b;
+  const innerW = w - pad.l - pad.r;
+  const toX = (i) => pad.l + (i / (data.length - 1)) * innerW;
+  const toY = (v) => pad.t + innerH - ((parseFloat(v || 0) / 10) * innerH);
   return (
     <div>
-      <svg viewBox={`0 0 ${w} ${h+20}`} width="100%" style={{ height:h+20 }}>
-        {[2,4,6,8,10].map(v => (
-          <line key={v} x1="0" y1={toY(v)} x2={w} y2={toY(v)}
-            stroke="#1e293b" strokeWidth={v===6?'1':'0.5'} strokeDasharray={v===6?'':'3,2'}/>
+      <svg viewBox={`0 0 ${w} ${h}`} width="100%" style={{ height: h, display: 'block' }}>
+        {/* Grid */}
+        {[2, 4, 6, 8, 10].map(v => (
+          <line key={v}
+            x1={pad.l} y1={toY(v)} x2={w - pad.r} y2={toY(v)}
+            stroke={v === 6 ? '#334155' : '#1e293b'}
+            strokeWidth={v === 6 ? '0.8' : '0.4'}
+            strokeDasharray={v === 6 ? '4,3' : '2,3'}
+          />
         ))}
+        {/* Lines */}
         {LINES.map(line => {
-          const pts = data.map((d,i) => {
-            const x = (i/(data.length-1))*w;
-            const y = toY(d[line.key]||0);
-            return `${x},${y}`;
-          }).join(' ');
-          return <polyline key={line.key} points={pts} fill="none"
-            stroke={line.color} strokeWidth="2" strokeLinejoin="round"/>;
-        })}
-        {data.map((d,i) => {
-          const x = (i/(data.length-1))*w;
+          const pts = data.map((d, i) => `${toX(i)},${toY(d[line.key] || 0)}`).join(' ');
           return (
-            <text key={i} x={x} y={h+16} textAnchor="middle"
-              fontSize="8" fill="#475569">
-              {d.month?.slice(5)}
-            </text>
+            <g key={line.key}>
+              <polyline points={pts} fill="none" stroke={line.color} strokeWidth="2"
+                strokeLinejoin="round" opacity="0.9" />
+              {/* Last data point dot */}
+              {(() => {
+                const lastX = toX(data.length - 1);
+                const lastY = toY(data[data.length - 1][line.key] || 0);
+                return <circle cx={lastX} cy={lastY} r="3" fill={line.color} />;
+              })()}
+            </g>
           );
         })}
+        {/* X labels */}
+        {data.map((d, i) => (
+          <text key={i} x={toX(i)} y={h - 5} textAnchor="middle" fontSize="8" fill="#475569">
+            {d.month?.slice(5)}
+          </text>
+        ))}
       </svg>
-      <div className="flex flex-wrap gap-3 mt-2">
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
         {LINES.map(l => (
           <div key={l.key} className="flex items-center gap-1.5">
-            <div className="w-4 h-0.5 rounded" style={{ background:l.color }}/>
-            <span className="text-xs text-gray-500">{l.label}</span>
+            <div className="w-5 h-[2px] rounded-full" style={{ background: l.color }} />
+            <span className="text-[11px] text-gray-500 font-medium">{l.label}</span>
           </div>
         ))}
       </div>
@@ -272,54 +298,72 @@ const Performance = () => {
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <motion.div className="min-h-screen text-white px-4 py-6 md:p-8 lg:p-10"
+    <motion.div
+      className="min-h-screen text-white px-4 py-6 sm:px-6 md:p-8 lg:p-10"
       dir={isRtl ? 'rtl' : 'ltr'}
-      style={{ background:'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
-      initial="hidden" animate="visible" variants={cV}>
-      <Toaster position="top-right"/>
+      style={{ background: 'linear-gradient(135deg,#000000 0%,#0a0f2a 45%,#180033 100%)' }}
+      initial="hidden" animate="visible" variants={cV}
+    >
+      <AdminToaster position="top-right" />
       <div className="max-w-[1400px] mx-auto">
 
         {/* ── Header ── */}
         <motion.div variants={iV} className="mb-6">
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-[#902bd1] via-[#00d0cb] to-[#00d0cb] bg-clip-text text-transparent">
                 {t('header.title')}
               </h1>
               <p className="text-gray-400 mt-1 text-sm">{t('header.subtitle')}</p>
             </div>
-            {/* Export PDF button */}
+            {/* Export PDF */}
             {!isLoading && report && (
-              <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.97 }}
+              <motion.button
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
                 onClick={() => generatePDF(report, player, player?.academy?.name)}
                 disabled={isGenerating}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-60"
-                style={{ background:'linear-gradient(135deg,#902bd1,#4fb0ff)' }}>
+                className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 shadow-lg"
+                style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)', boxShadow: '0 4px 20px rgba(144,43,209,0.3)' }}
+              >
                 {isGenerating
-                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
-                  : <FiDownload size={14}/>}
-                {isGenerating ? t('header.generating') : t('header.exportPdf')}
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <FiDownload size={14} />}
+                <span className="hidden sm:inline">{isGenerating ? t('header.generating') : t('header.exportPdf')}</span>
+                <span className="sm:hidden">{isGenerating ? '...' : 'PDF'}</span>
               </motion.button>
             )}
           </div>
         </motion.div>
 
         {/* ── Tabs ── */}
-        <motion.div variants={iV}
-          className="flex overflow-x-auto scrollbar-none bg-gray-900/70 border border-gray-700/50 rounded-xl mb-6 w-full">
-          {[
-            { key:'report',   label: t('tabs.report') },
-            { key:'progress', label: t('tabs.progress') },
-            { key:'history',  label: t('tabs.history') },
-          ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className="flex-1 min-w-[100px] sm:min-w-0 py-3 text-sm font-semibold transition-all whitespace-nowrap"
-              style={tab===t.key
-                ? { background:'rgba(79,176,255,.2)', color:'#4fb0ff', borderBottom:'2px solid #4fb0ff' }
-                : { color:'#64748b' }}>
-              {t.label}
-            </button>
-          ))}
+        <motion.div variants={iV} className="mb-6">
+          <div
+            className="flex overflow-x-auto scrollbar-none rounded-2xl p-1 gap-1"
+            style={{
+              background: 'rgba(15,23,42,0.7)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
+            {[
+              { key: 'report',   label: t('tabs.report') },
+              { key: 'progress', label: t('tabs.progress') },
+              { key: 'history',  label: t('tabs.history') },
+            ].map(tb => (
+              <button
+                key={tb.key}
+                onClick={() => setTab(tb.key)}
+                className="flex-1 min-w-[90px] sm:min-w-0 py-2.5 text-xs sm:text-sm font-bold transition-all whitespace-nowrap rounded-xl"
+                style={
+                  tab === tb.key
+                    ? { background: 'rgba(79,176,255,0.18)', color: '#4fb0ff', boxShadow: '0 1px 8px rgba(79,176,255,0.15)' }
+                    : { color: '#64748b' }
+                }
+              >
+                {tb.label}
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {isLoading ? (
@@ -339,66 +383,97 @@ const Performance = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Hero */}
-                    <div className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4"
-                      style={{ background:'linear-gradient(135deg,rgba(144,43,209,.1),rgba(0,208,203,.06))', borderColor:'rgba(0,208,203,.2)' }}>
-                      <div className="flex items-center gap-5 flex-wrap">
-                        <div className="w-20 h-20 rounded-full border-3 flex flex-col items-center justify-center flex-shrink-0"
-                          style={{ border:`3px solid ${scoreColor(report.overall_score)}`, background:scoreColor(report.overall_score)+'10' }}>
-                          <div className="text-3xl font-bold" style={{ color:scoreColor(report.overall_score) }}>
+                    {/* Hero card */}
+                    <div
+                      className="rounded-3xl p-5 sm:p-6 border col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 relative overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(135deg,rgba(144,43,209,.12),rgba(0,208,203,.06))',
+                        borderColor: 'rgba(0,208,203,.2)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      {/* BG glow */}
+                      <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-[60px] opacity-10 pointer-events-none"
+                        style={{ background: scoreColor(report.overall_score) }} />
+                      <div className="flex items-center gap-4 sm:gap-6 flex-wrap relative z-10">
+                        {/* Score ring */}
+                        <div
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center flex-shrink-0"
+                          style={{
+                            border: `3px solid ${scoreColor(report.overall_score)}`,
+                            background: scoreColor(report.overall_score) + '12',
+                            boxShadow: `0 0 24px ${scoreColor(report.overall_score)}30`,
+                          }}
+                        >
+                          <div className="text-3xl sm:text-4xl font-black" style={{ color: scoreColor(report.overall_score) }}>
                             {fmt(report.overall_score)}
                           </div>
-                          <div className="text-xs text-gray-500">/10</div>
+                          <div className="text-[10px] text-gray-500 font-semibold">/10</div>
                         </div>
-                        <div className="flex-1">
-                          <div className="text-base font-bold text-white mb-1">{playerName} · {report.month}</div>
-                          <div className="text-xs text-gray-500 mb-2">{player?.position} · {player?.group?.name}</div>
-                          <div className="flex flex-wrap gap-2 mb-2">
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base sm:text-lg font-bold text-white mb-0.5 truncate">{playerName} · {report.month}</div>
+                          <div className="text-xs text-gray-500 mb-2.5">{player?.position} · {player?.group?.name}</div>
+                          <div className="flex flex-wrap gap-1.5 mb-2.5">
                             {groupAvg && (
-                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                              <span className="text-[11px] px-2 py-0.5 rounded-full font-bold"
                                 style={report.overall_score >= groupAvg
-                                  ? { background:'rgba(74,222,128,.12)', color:'#4ade80', border:'1px solid rgba(74,222,128,.2)' }
-                                  : { background:'rgba(248,113,113,.12)', color:'#f87171', border:'1px solid rgba(248,113,113,.2)' }}>
+                                  ? { background: 'rgba(74,222,128,.12)', color: '#4ade80', border: '1px solid rgba(74,222,128,.2)' }
+                                  : { background: 'rgba(248,113,113,.12)', color: '#f87171', border: '1px solid rgba(248,113,113,.2)' }}>
                                 {report.overall_score >= groupAvg ? '+' : ''}{fmt(report.overall_score - groupAvg)} {t('stats.vsGroupAvg')}
                               </span>
                             )}
                             {delta !== null && (
-                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                              <span className="text-[11px] px-2 py-0.5 rounded-full font-bold"
                                 style={delta >= 0
-                                  ? { background:'rgba(79,176,255,.12)', color:'#4fb0ff', border:'1px solid rgba(79,176,255,.2)' }
-                                  : { background:'rgba(248,113,113,.12)', color:'#f87171', border:'1px solid rgba(248,113,113,.2)' }}>
+                                  ? { background: 'rgba(79,176,255,.12)', color: '#4fb0ff', border: '1px solid rgba(79,176,255,.2)' }
+                                  : { background: 'rgba(248,113,113,.12)', color: '#f87171', border: '1px solid rgba(248,113,113,.2)' }}>
                                 {delta >= 0 ? '↑ +' : '↓ '}{fmt(delta)} {t('stats.vsLastMonth')}
                               </span>
                             )}
                             {rankInGroup && (
-                              <span className="text-xs px-2 py-0.5 rounded-full"
-                                style={{ background:'rgba(144,43,209,.15)', color:'#c084fc', border:'1px solid rgba(144,43,209,.25)' }}>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full font-bold"
+                                style={{ background: 'rgba(144,43,209,.15)', color: '#c084fc', border: '1px solid rgba(144,43,209,.25)' }}>
                                 {t('stats.topPct', { pct: rankInGroup.pct })}
                               </span>
                             )}
                           </div>
-                          <StarRating score={report.overall_score}/>
+                          <StarRating score={report.overall_score} />
                         </div>
                       </div>
                     </div>
 
                     {/* Radar */}
-                    <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2 flex flex-col justify-between">
-                      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                    <div
+                      className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2 flex flex-col justify-between"
+                      style={{
+                        background: 'rgba(15,23,42,0.65)',
+                        borderColor: 'rgba(255,255,255,0.07)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-3 flex-shrink-0 flex-wrap gap-2">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('stats.playerProfile')}</span>
-                        <div className="flex gap-4 text-xs text-gray-500">
-                          <span className="flex items-center gap-1.5"><div className="w-4 h-0.5 bg-[#4fb0ff] rounded"/>{t('stats.player')}</span>
-                          <span className="flex items-center gap-1.5"><div className="w-4 h-0" style={{ borderTop:'1px dashed #475569' }}/>{t('stats.groupAvg')}</span>
+                        <div className="flex gap-3 text-[11px] text-gray-500">
+                          <span className="flex items-center gap-1.5"><div className="w-4 h-[2px] bg-[#4fb0ff] rounded" />{t('stats.player')}</span>
+                          <span className="flex items-center gap-1.5"><div className="w-4 h-0" style={{ borderTop: '1px dashed #475569' }} />{t('stats.groupAvg')}</span>
                         </div>
                       </div>
-                      <div className="w-full aspect-[340/260] max-w-[320px] md:max-w-[400px] mx-auto flex items-center justify-center">
-                        <RadarChart player={report} group={groupAvg ? { technical_avg:groupAvg, tactical_avg:groupAvg, physical_avg:groupAvg, mental_avg:groupAvg } : null}/>
+                      <div className="w-full aspect-[340/260] max-w-[300px] sm:max-w-[360px] md:max-w-[400px] mx-auto">
+                        <RadarChart player={report} group={groupAvg ? { technical_avg: groupAvg, tactical_avg: groupAvg, physical_avg: groupAvg, mental_avg: groupAvg } : null} />
                       </div>
                     </div>
 
-                    {/* 4 Piliers expandables */}
-                    <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 flex flex-col justify-between">
-                      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                    {/* 4 Pillars */}
+                    <div
+                      className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 flex flex-col justify-between"
+                      style={{
+                        background: 'rgba(15,23,42,0.65)',
+                        borderColor: 'rgba(255,255,255,0.07)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-4 flex-shrink-0">
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t('stats.fourPillars')}</span>
                         <span className="text-xs text-gray-600">{t('stats.tapToExpand')}</span>
                       </div>
@@ -589,28 +664,35 @@ const Performance = () => {
                       </div>
                     </div>
 
-                    {/* Sparkline */}
+                    {/* Sparkline: score over time */}
                     {history.length >= 2 && (
-                      <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
-                        <div className="flex items-center justify-between mb-3">
+                      <div
+                        className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4"
+                        style={{
+                          background: 'rgba(15,23,42,0.65)',
+                          borderColor: 'rgba(255,255,255,0.07)',
+                          backdropFilter: 'blur(12px)',
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                             {t('stats.monthsProgression', { count: history.length })}
                           </span>
-                          {history.length >= 2 && (() => {
-                            const first = parseFloat(history[0].overall_score||0);
-                            const last  = parseFloat(history[history.length-1].overall_score||0);
+                          {(() => {
+                            const first = parseFloat(history[0].overall_score || 0);
+                            const last  = parseFloat(history[history.length - 1].overall_score || 0);
                             const diff  = last - first;
                             return (
-                              <span className="text-xs font-bold" style={{ color:diff>=0?'#4ade80':'#f87171' }}>
-                                {diff>=0?'↑ +':'↓ '}{fmt(diff)} {t('stats.pts')}
+                              <span className="text-xs font-bold" style={{ color: diff >= 0 ? '#4ade80' : '#f87171' }}>
+                                {diff >= 0 ? '↑ +' : '↓ '}{fmt(diff)} {t('stats.pts')}
                               </span>
                             );
                           })()}
                         </div>
-                        <Sparkline data={history} color={scoreColor(report.overall_score)}/>
-                        <div className="flex justify-between mt-1">
-                          {history.map((h,i) => (
-                            <span key={i} className="text-gray-600" style={{ fontSize:9 }}>{h.month?.slice(5)}</span>
+                        <Sparkline data={history} color={scoreColor(report.overall_score)} height={56} />
+                        <div className="flex justify-between mt-1.5">
+                          {history.map((h, i) => (
+                            <span key={i} className="text-gray-600" style={{ fontSize: 9 }}>{h.month?.slice(5)}</span>
                           ))}
                         </div>
                       </div>
@@ -677,17 +759,31 @@ const Performance = () => {
                 ) : (
                   <>
                     {/* Multi-line chart */}
-                    <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 flex flex-col justify-between">
+                    <div
+                      className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 flex flex-col"
+                      style={{
+                        background: 'rgba(15,23,42,0.65)',
+                        borderColor: 'rgba(255,255,255,0.07)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
                       <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex-shrink-0">
                         {t('stats.pillarProgression', { count: history.length })}
                       </div>
-                      <div className="flex-1 flex flex-col justify-center">
-                        <MultiLineChart data={history}/>
+                      <div className="flex-1">
+                        <MultiLineChart data={history} />
                       </div>
                     </div>
 
                     {/* Trend per pillar */}
-                    <div className="bg-gray-900/70 rounded-2xl p-5 border border-gray-700/50 col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2 flex flex-col justify-between">
+                    <div
+                      className="rounded-2xl p-5 border col-span-1 md:col-span-2 lg:col-span-1 xl:col-span-2 flex flex-col"
+                      style={{
+                        background: 'rgba(15,23,42,0.65)',
+                        borderColor: 'rgba(255,255,255,0.07)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
                       <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 flex-shrink-0">
                         {t('stats.monthTrends', { count: history.length })}
                       </div>

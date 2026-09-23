@@ -33,6 +33,7 @@ import enPlayerprofile from './locales/en/playerprofile.json';
 import enPlayertraining from './locales/en/playertraining.json';
 import enPlayerstats from './locales/en/playerstats.json';
 import enPlayersettings from './locales/en/playersettings.json';
+import enAttendance from './locales/en/attendance.json';
 
 import frNavbar from './locales/fr/navbar.json';
 import frFooter from './locales/fr/footer.json';
@@ -63,6 +64,7 @@ import frPlayerprofile from './locales/fr/playerprofile.json';
 import frPlayertraining from './locales/fr/playertraining.json';
 import frPlayerstats from './locales/fr/playerstats.json';
 import frPlayersettings from './locales/fr/playersettings.json';
+import frAttendance from './locales/fr/attendance.json';
 
 import arNavbar from './locales/ar/navbar.json';
 import arFooter from './locales/ar/footer.json';
@@ -93,6 +95,7 @@ import arPlayerprofile from './locales/ar/playerprofile.json';
 import arPlayertraining from './locales/ar/playertraining.json';
 import arPlayerstats from './locales/ar/playerstats.json';
 import arPlayersettings from './locales/ar/playersettings.json';
+import arAttendance from './locales/ar/attendance.json';
 
 i18n
   .use(LanguageDetector)
@@ -129,6 +132,7 @@ i18n
         playertraining: enPlayertraining,
         playerstats: enPlayerstats,
         playersettings: enPlayersettings,
+        attendance: enAttendance,
       },
       fr: {
         navbar: frNavbar,
@@ -160,6 +164,7 @@ i18n
         playertraining: frPlayertraining,
         playerstats: frPlayerstats,
         playersettings: frPlayersettings,
+        attendance: frAttendance,
       },
       ar: {
         navbar: arNavbar,
@@ -191,6 +196,7 @@ i18n
         playertraining: arPlayertraining,
         playerstats: arPlayerstats,
         playersettings: arPlayersettings,
+        attendance: arAttendance,
       },
     },
     fallbackLng: 'en',

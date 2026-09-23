@@ -4,9 +4,10 @@ import {
   FaEnvelope, FaPhone, FaUserTie, FaTrophy,
   FaPlus, FaTrash
 } from 'react-icons/fa';
-import { FiSave, FiUpload, FiUsers, FiCalendar, FiAward, FiTarget, FiLock, FiEye, FiEyeOff, FiCamera, FiCheck, FiX } from 'react-icons/fi';
+import { FiSave, FiUpload, FiUsers, FiCalendar, FiAward, FiTarget, FiLock, FiEye, FiEyeOff, FiCamera, FiCheck, FiX, FiPlus, FiTrash2 } from 'react-icons/fi';
 import API from '../api';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import AdminToaster from '../administration/shared/AdminToaster';
 import { useCoachSession } from '../../context/CoachSessionContext';
 import { useTranslation } from 'react-i18next';
 
@@ -21,6 +22,7 @@ const CoachSettings = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const fileRef = useRef(null);
 
@@ -38,11 +40,13 @@ const CoachSettings = () => {
     last_name: '',
     email: '',
     phone: '',
+    phones: [{ number: '', label: 'Personal' }],
     specialization: '',
     years_of_experience: '',
     certification: '',
     address: '',
     notes: '',
+    date_of_birth: '',
     // Philosophie et méthodologie — stockées dans notes (JSON)
     philosophy: {
       development: '',
@@ -94,11 +98,15 @@ const CoachSettings = () => {
           last_name: data.last_name || '',
           email: data.email || '',
           phone: data.phone || '',
+          phones: (data.phones && Array.isArray(data.phones) && data.phones.length > 0)
+            ? data.phones
+            : (data.phone ? [{ number: data.phone, label: 'Personal' }] : [{ number: '', label: 'Personal' }]),
           specialization: data.specialization || '',
           years_of_experience: data.years_of_experience || '',
           certification: data.certification || '',
           address: data.address || '',
           notes: data.notes || '',
+          date_of_birth: data.date_of_birth || '',
           philosophy,
           methodology,
           photo: data.photo || null
@@ -179,6 +187,27 @@ const CoachSettings = () => {
     }
   };
 
+  const removePhoto = async () => {
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('remove_photo', 'true');
+      await API.patch('coachprofile/', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Photo removed');
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      setFormData(prev => ({ ...prev, photo: null }));
+      if (fileRef.current) fileRef.current.value = '';
+      refreshSession();
+    } catch {
+      toast.error('Failed to remove photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   // ✅ Submit → PUT /api/coach/profile/
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -198,16 +227,19 @@ const CoachSettings = () => {
         certifications
       });
 
+      const validPhones = (formData.phones || []).filter(p => p.number && p.number.trim());
       const payload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
-        phone: toWestern(formData.phone),
+        phone: validPhones.length > 0 ? validPhones[0].number : toWestern(formData.phone),
+        phones: validPhones,
         specialization: formData.specialization,
         years_of_experience: toWestern(formData.years_of_experience),
         certification: formData.certification,
         address: formData.address,
         notes: notesData,
+        date_of_birth: formData.date_of_birth || null,
         ...(passwords.new_password && {
           current_password: passwords.current_password,
           new_password: passwords.new_password,
@@ -216,12 +248,14 @@ const CoachSettings = () => {
 
       await API.put('coachprofile/', payload);
       toast.success('Profile updated successfully! ✅');
+      setApiError(null);
 
       // Reset password fields
       setPasswords({ current_password: '', new_password: '', confirm_password: '' });
 
     } catch (error) {
       const msg = error.response?.data?.error || 'Failed to update profile';
+      setApiError(msg);
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
@@ -247,7 +281,7 @@ const CoachSettings = () => {
       initial="hidden" animate="visible" variants={containerVariants}
       dir={isRtl ? 'rtl' : 'ltr'}
     >
-      <Toaster position="top-right" />
+      <AdminToaster position="top-right" />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -303,6 +337,19 @@ const CoachSettings = () => {
                       </button>
                     </motion.div>
                   )}
+                  {!photoFile && photoPreview && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                      className="w-full mt-2">
+                      <button type="button" onClick={removePhoto} disabled={uploadingPhoto}
+                        className="w-full flex justify-center items-center gap-2 py-2 rounded-xl text-sm font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-all disabled:opacity-50">
+                        {uploadingPhoto ? (
+                          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <><FiTrash2 size={14} /> {t('removePhoto', 'Remove photo')}</>
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </motion.div>
 
@@ -317,8 +364,8 @@ const CoachSettings = () => {
                     { name: 'first_name', label: t('firstName'), placeholder: 'John', type: 'text' },
                     { name: 'last_name', label: t('lastName'), placeholder: 'Doe', type: 'text' },
                     { name: 'email', label: t('email'), placeholder: 'coach@example.com', type: 'email', dir: 'ltr' },
-                    { name: 'phone', label: t('phone'), placeholder: '+216 12 345 678', type: 'tel', dir: 'ltr' },
                     { name: 'address', label: t('address'), placeholder: 'City, Country', type: 'text' },
+                    { name: 'date_of_birth', label: t('dateOfBirth', 'Date of Birth'), placeholder: '', type: 'date' },
                   ].map(field => (
                     <div key={field.name}>
                       <label className="block text-sm font-medium text-gray-300 mb-2">{field.label}</label>
@@ -329,6 +376,60 @@ const CoachSettings = () => {
                         placeholder={field.placeholder} />
                     </div>
                   ))}
+
+                  {/* Dynamic Phone Numbers */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                      <FaPhone className="text-[#4fb0ff]" size={12} /> {t('phone', 'Phone Numbers')}
+                    </label>
+                    <div className="space-y-2">
+                      {(formData.phones || [{ number: '', label: 'Personal' }]).map((phone, idx) => (
+                        <div key={idx} className="flex gap-2 items-center">
+                          <input
+                            type="tel"
+                            value={phone.number}
+                            onChange={e => {
+                              const updated = [...formData.phones];
+                              updated[idx] = { ...updated[idx], number: e.target.value };
+                              setFormData(prev => ({ ...prev, phones: updated }));
+                            }}
+                            className="flex-1 px-3 py-2.5 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d0cb] text-sm"
+                            placeholder="+216 12 345 678"
+                            dir="ltr"
+                          />
+                          <select
+                            value={phone.label}
+                            onChange={e => {
+                              const updated = [...formData.phones];
+                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              setFormData(prev => ({ ...prev, phones: updated }));
+                            }}
+                            className="px-2 py-2.5 bg-gray-800/65 border border-gray-700/50 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#00d0cb]"
+                          >
+                            <option value="Personal">Personal</option>
+                            <option value="Work">Work</option>
+                            <option value="Other">Other</option>
+                          </select>
+                          {formData.phones.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, phones: prev.phones.filter((_, i) => i !== idx) }))}
+                              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all"
+                            >
+                              <FiTrash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, phones: [...(prev.phones || []), { number: '', label: 'Personal' }] }))}
+                      className="mt-2 flex items-center gap-1.5 text-[#00d0cb] hover:text-[#00d0cb]/80 text-sm font-medium transition-all"
+                    >
+                      <FiPlus size={14} /> Add Phone
+                    </button>
+                  </div>
                 </div>
               </motion.div>
 
@@ -553,6 +654,15 @@ const CoachSettings = () => {
                   </motion.button>
                 </div>
               </motion.div>
+
+              {/* API Error Banner */}
+              {apiError && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 flex items-center gap-3 text-red-400 mb-6">
+                  <FiX className="text-xl flex-shrink-0" />
+                  <p className="text-sm font-medium">{apiError}</p>
+                </motion.div>
+              )}
 
               {/* Submit */}
               <motion.div whileHover={{ y: -4 }}

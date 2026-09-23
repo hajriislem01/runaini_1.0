@@ -16,12 +16,21 @@
     "bio": "نبذة / ملاحظات",
     "bioPlaceholder": "أخبرنا عن نفسك...",
     "choosePhoto": "اختر صورة جديدة",
+    "removePhoto": "حذف الصورة",
     "confirmPhoto": "تأكيد الصورة",
     "cancel": "إلغاء",
     "saving": "جاري الحفظ...",
     "saveChanges": "حفظ التغييرات",
     "photoSizeWarning": "JPG أو PNG. الحجم الأقصى 5MB.",
-    "photoMaxSize": "يجب أن تكون الصورة أقل من 5MB"
+    "photoMaxSize": "يجب أن تكون الصورة أقل من 5MB",
+    "dateOfBirth": "تاريخ الميلاد",
+    "addPhone": "إضافة هاتف",
+    "phoneLabels": {
+      "father": "الأب",
+      "mother": "الأم",
+      "personal": "شخصي",
+      "other": "آخر"
+    }
   },
   "security": {
     "title": "الأمان وكلمة المرور",
@@ -34,6 +43,7 @@
   },
   "messages": {
     "photoUpdated": "تم تحديث صورة الملف الشخصي بنجاح",
+    "photoRemoved": "تم حذف صورة الملف الشخصي",
     "photoFailed": "فشل تحديث الصورة",
     "nameRequired": "الاسم الكامل مطلوب",
     "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
