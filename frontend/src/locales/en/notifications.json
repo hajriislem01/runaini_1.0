@@ -21,8 +21,6 @@
     "settings_title": "Settings Update",
     "coach_assigned": "New coach assigned to group {{group}}",
     "coach_assigned_title": "Coach Assigned",
-    "training": "New training scheduled for {{group}}",
-    "training_title": "Training Update",
     "session": "New training session created",
     "session_title": "New Session",
     "event": "New event invitation",

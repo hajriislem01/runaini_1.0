@@ -12,6 +12,13 @@ class PlayerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     parser_classes     = [MultiPartParser, FormParser, JSONParser]
 
+    def perform_destroy(self, instance):
+        # Deleting only the PlayerProfile leaves its CustomUser (username/email)
+        # behind, permanently blocking reuse of that username/email. Delete the
+        # user instead — CustomUser -> PlayerProfile is CASCADE, so this removes
+        # both in one go.
+        instance.user.delete()
+
     def get_queryset(self):
         user     = self.request.user
         queryset = PlayerProfile.objects.filter(academy=user.academy).select_related(

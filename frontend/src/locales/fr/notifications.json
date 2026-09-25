@@ -21,8 +21,6 @@
     "settings_title": "Mise à jour des paramètres",
     "coach_assigned": "Nouvel entraîneur affecté au groupe {{group}}",
     "coach_assigned_title": "Entraîneur affecté",
-    "training": "Nouvel entraînement planifié pour {{group}}",
-    "training_title": "Mise à jour de l'entraînement",
     "session": "Nouvelle session d'entraînement créée",
     "session_title": "Nouvelle session",
     "event": "Nouvelle invitation d'événement",

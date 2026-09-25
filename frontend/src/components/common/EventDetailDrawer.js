@@ -196,6 +196,15 @@ const EventDetailDrawer = ({
                               </div>
                             ))}
                           </div>
+                        ) : detailSession.coach_name ? (
+                          <div className={`flex flex-wrap gap-2 mt-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg py-1 ${isRtl ? 'pl-3 pr-1' : 'pr-3 pl-1'}`}>
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#00d0cb] to-[#4fb0ff] flex items-center justify-center text-[10px] font-bold text-white">
+                                {detailSession.coach_name.charAt(0)}
+                              </div>
+                              <span className="text-xs">{detailSession.coach_name}</span>
+                            </div>
+                          </div>
                         ) : (
                           <span className="text-gray-500 italic font-normal">{t('noAssignedCoach')}</span>
                         )}

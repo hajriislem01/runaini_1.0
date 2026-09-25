@@ -5,6 +5,7 @@ import {
   FiSearch, FiUsers, FiFilter, FiX,
   FiChevronLeft, FiChevronRight,
   FiActivity, FiTarget, FiFileText, FiChevronDown, FiCheck,
+  FiEdit2,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,6 +19,7 @@ import AdminToaster from '../../administration/shared/AdminToaster';
 import { format, addMonths, subMonths } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import PlayerReportHistoryModal from './modals/PlayerReportHistoryModal';
+import PlayerActionsMenu from './components/PlayerActionsMenu';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip);
 
@@ -190,6 +192,10 @@ const PlayerManagement = () => {
   const [evalPlayer,     setEvalPlayer]     = useState(null);
   const [evalMonth,      setEvalMonth]      = useState(format(new Date(),'yyyy-MM'));
   const [activePillar,   setActivePillar]   = useState('technical');
+  const [editingReport,  setEditingReport]  = useState(null); // existing report being edited, or null when creating
+  // { [playerId]: report } — reports already filed for the current month
+  const [monthlyReports, setMonthlyReports] = useState({});
+  const currentMonth = format(new Date(), 'yyyy-MM');
   const [isSubmitting,   setIsSubmitting]   = useState(false);
   const [apiError,       setApiError]       = useState(null);
   const [evalForm,       setEvalForm]       = useState({
@@ -222,9 +228,16 @@ const PlayerManagement = () => {
   const fetchAll = async () => {
     setIsLoading(true);
     try {
-      const [pRes,gRes] = await Promise.all([API.get('players/'),API.get('groups/')]);
+      const [pRes, gRes, rRes] = await Promise.all([
+        API.get('players/'),
+        API.get('groups/'),
+        API.get('reports/', { params: { month: currentMonth } }),
+      ]);
       setPlayers(pRes.data);
       setGroups(gRes.data);
+      const map = {};
+      (rRes.data || []).forEach(r => { map[r.player] = r; });
+      setMonthlyReports(map);
     } catch { toast.error('Failed to load players'); }
     finally  { setIsLoading(false); }
   };
@@ -244,17 +257,56 @@ const PlayerManagement = () => {
   };
 
   // ── Evaluation ────────────────────────────────────────────────────────────
-  const openEvalModal = (player) => {
+  // Pass an existing report to open the modal in edit mode, pre-filled with its data.
+  const openEvalModal = (player, existingReport = null) => {
     setEvalPlayer(player); setActivePillar('technical');
     setApiError(null);
-    setEvalForm({
-      technical_scores:{}, tactical_scores:{}, physical_scores:{}, mental_scores:{},
-      fatigue_level:0, sleep_quality:0, pain_location:'',
-      is_injured:false, injury_details:'', medical_cert_valid:true,
-      school_grade_avg:'', school_attendance:'', school_behaviour:0,
-      strength:'', to_improve:'', objective:'', comment:'',
-    });
+    setEditingReport(existingReport);
+    if (existingReport) {
+      setEvalMonth(existingReport.month);
+      setEvalForm({
+        technical_scores: existingReport.technical_scores || {},
+        tactical_scores:  existingReport.tactical_scores  || {},
+        physical_scores:  existingReport.physical_scores  || {},
+        mental_scores:    existingReport.mental_scores    || {},
+        fatigue_level: existingReport.fatigue_level || 0,
+        sleep_quality: existingReport.sleep_quality || 0,
+        pain_location: existingReport.pain_location || '',
+        is_injured: existingReport.is_injured || false,
+        injury_details: existingReport.injury_details || '',
+        medical_cert_valid: existingReport.medical_cert_valid !== false,
+        school_grade_avg: existingReport.school_grade_avg ?? '',
+        school_attendance: existingReport.school_attendance ?? '',
+        school_behaviour: existingReport.school_behaviour || 0,
+        strength: existingReport.strength || '', to_improve: existingReport.to_improve || '',
+        objective: existingReport.objective || '', comment: existingReport.comment || '',
+      });
+    } else {
+      setEvalMonth(currentMonth);
+      setEvalForm({
+        technical_scores:{}, tactical_scores:{}, physical_scores:{}, mental_scores:{},
+        fatigue_level:0, sleep_quality:0, pain_location:'',
+        is_injured:false, injury_details:'', medical_cert_valid:true,
+        school_grade_avg:'', school_attendance:'', school_behaviour:0,
+        strength:'', to_improve:'', objective:'', comment:'',
+      });
+    }
     setShowEvalModal(true);
+  };
+
+  const handleDeleteReport = async (report, player) => {
+    if (!window.confirm(t('confirmDeleteReport', { name: player.full_name }))) return;
+    try {
+      await API.delete(`reports/${report.id}/`);
+      toast.success(t('reportDeleted'));
+      setMonthlyReports(prev => {
+        const next = { ...prev };
+        delete next[player.id];
+        return next;
+      });
+    } catch {
+      toast.error(t('reportDeleteFailed'));
+    }
   };
 
   // Attendance is computed automatically from the real attendance records — never entered by hand.
@@ -292,7 +344,7 @@ const PlayerManagement = () => {
     if (!evalForm.objective.trim())  { toast.error(t('errObjReq'));  return; }
     setIsSubmitting(true);
     try {
-      await API.post('reports/', {
+      const payload = {
         player:evalPlayer.id, month:evalMonth,
         technical_scores:evalForm.technical_scores, tactical_scores:evalForm.tactical_scores,
         physical_scores:evalForm.physical_scores,   mental_scores:evalForm.mental_scores,
@@ -306,10 +358,21 @@ const PlayerManagement = () => {
         school_behaviour:evalForm.school_behaviour||null,
         strength:evalForm.strength, to_improve:evalForm.to_improve,
         objective:evalForm.objective, comment:evalForm.comment,
-      });
-      toast.success(t('evalSaved', { name: evalPlayer.full_name }));
+      };
+      if (editingReport) {
+        const { data } = await API.patch(`reports/${editingReport.id}/`, payload);
+        setMonthlyReports(prev => ({ ...prev, [evalPlayer.id]: data }));
+        toast.success(t('evalUpdated', { name: evalPlayer.full_name }));
+      } else {
+        const { data } = await API.post('reports/', payload);
+        if (evalMonth === currentMonth) {
+          setMonthlyReports(prev => ({ ...prev, [evalPlayer.id]: data }));
+        }
+        toast.success(t('evalSaved', { name: evalPlayer.full_name }));
+      }
       setApiError(null);
       setShowEvalModal(false);
+      setEditingReport(null);
     } catch (err) {
       const errorData = err.response?.data;
       let msg = t('Failed to save evaluation');
@@ -665,39 +728,34 @@ const PlayerManagement = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-1.5 flex-wrap">
-                          {/* Evaluate */}
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); openEvalModal(p); }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 text-white rounded-xl text-[11px] font-bold shadow-md transition-all border-none"
-                            style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}
-                            title={t('monthlyEvaluation')}>
-                            <FaStar size={10} />{t('evaluate')}
-                          </motion.button>
-                          
-                          {/* History */}
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); setHistoryPlayer(p); setShowHistoryModal(true); }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-gray-300 rounded-xl text-[11px] font-bold border border-gray-700 hover:text-white hover:bg-gray-700 transition-all"
-                            title={t('reportHistory')}>
-                            <FiFileText size={12} />{t('history')}
-                          </motion.button>
-                          
-                          {/* Analysis */}
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); navigate('/coach/analysis'); }}
-                            className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#00d0cb] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
-                            title={t('deepKpiAnalysis')}>
-                            <FiActivity size={16} />
-                          </motion.button>
+                        <div className="flex gap-1.5 items-center">
+                          {/* Primary CTA — contextual: Evaluate, or Edit if already evaluated this month */}
+                          {monthlyReports[p.id] ? (
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                              onClick={(e) => { e.stopPropagation(); openEvalModal(p, monthlyReports[p.id]); }}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-[#4fb0ff] rounded-xl text-[11px] font-bold border border-gray-700 hover:bg-gray-700 transition-all"
+                              title={t('alreadyEvaluatedThisMonth', { name: p.full_name })}>
+                              <FiEdit2 size={12} />{t('edit')}
+                            </motion.button>
+                          ) : (
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                              onClick={(e) => { e.stopPropagation(); openEvalModal(p); }}
+                              className="inline-flex items-center gap-1.5 px-3 py-2 text-white rounded-xl text-[11px] font-bold shadow-md transition-all border-none"
+                              style={{ background: 'linear-gradient(135deg,#902bd1,#4fb0ff)' }}
+                              title={t('monthlyEvaluation')}>
+                              <FaStar size={10} />{t('evaluate')}
+                            </motion.button>
+                          )}
 
-                          {/* Best position */}
-                          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); openPredictModal(p); }}
-                            className="inline-flex items-center justify-center w-9 h-9 bg-gray-800 text-[#f59e0b] rounded-xl border border-gray-700 hover:bg-gray-700 transition-all"
-                            title={t('positionPredictor')}>
-                            <FaMagic size={14} />
-                          </motion.button>
+                          {/* Secondary actions — History / Analysis / Predictor / Delete report */}
+                          <PlayerActionsMenu
+                            isRtl={isRtl}
+                            hasReport={!!monthlyReports[p.id]}
+                            onHistory={() => { setHistoryPlayer(p); setShowHistoryModal(true); }}
+                            onAnalysis={() => navigate('/coach/analysis')}
+                            onPredict={() => openPredictModal(p)}
+                            onDelete={() => handleDeleteReport(monthlyReports[p.id], p)}
+                          />
                         </div>
                       </td>
                     </motion.tr>
@@ -757,15 +815,17 @@ const PlayerManagement = () => {
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
                     <div className="flex items-center gap-2 bg-gray-800/50 rounded-xl px-3 py-2 border border-gray-700 flex-1 md:flex-none justify-between md:justify-start">
-                      <button type="button" onClick={() => setEvalMonth(format(subMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
-                        className="text-gray-400 hover:text-white"><FiChevronLeft size={16}/></button>
+                      <button type="button" disabled={!!editingReport}
+                        onClick={() => setEvalMonth(format(subMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
+                        className="text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400"><FiChevronLeft size={16}/></button>
                       <span className="text-sm text-white font-medium min-w-28 text-center select-none">
                         {format(new Date(evalMonth+'-01'),'MMMM yyyy')}
                       </span>
-                      <button type="button" onClick={() => setEvalMonth(format(addMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
-                        className="text-gray-400 hover:text-white"><FiChevronRight size={16}/></button>
+                      <button type="button" disabled={!!editingReport}
+                        onClick={() => setEvalMonth(format(addMonths(new Date(evalMonth+'-01'),1),'yyyy-MM'))}
+                        className="text-gray-400 hover:text-white disabled:opacity-30 disabled:hover:text-gray-400"><FiChevronRight size={16}/></button>
                     </div>
-                    <button type="button" onClick={() => setShowEvalModal(false)}
+                    <button type="button" onClick={() => { setShowEvalModal(false); setEditingReport(null); }}
                       className="text-gray-400 hover:text-white p-2 rounded-xl hover:bg-gray-800 flex-shrink-0">
                       <FiX size={20}/>
                     </button>
@@ -975,7 +1035,7 @@ const PlayerManagement = () => {
 
                   {/* Footer */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="button" onClick={() => setShowEvalModal(false)}
+                    <button type="button" onClick={() => { setShowEvalModal(false); setEditingReport(null); }}
                       className="w-full sm:w-auto px-6 py-3 bg-gray-800/50 text-gray-300 rounded-xl border border-gray-700 hover:bg-gray-700/50 order-2 sm:order-1">
                       {t('cancel')}
                     </button>
@@ -985,7 +1045,7 @@ const PlayerManagement = () => {
                       style={{ background:'linear-gradient(135deg,#4fb0ff,#00d0cb)' }}>
                       {isSubmitting
                         ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t('saving')}</>
-                        : <><FaStar style={{ fontSize:14 }} className="shrink-0" /><span>{t('saveDate', { date: format(new Date(evalMonth+'-01'),'MMMM yyyy') })}</span></>}
+                        : <><FaStar style={{ fontSize:14 }} className="shrink-0" /><span>{t(editingReport ? 'updateDate' : 'saveDate', { date: format(new Date(evalMonth+'-01'),'MMMM yyyy') })}</span></>}
                     </motion.button>
                   </div>
                 </div>

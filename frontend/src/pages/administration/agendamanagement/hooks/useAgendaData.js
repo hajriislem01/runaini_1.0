@@ -238,6 +238,11 @@ export const useAgendaData = () => {
   };
 
   const handleEditEvent = (event) => {
+    // Training sessions are coach-owned and read-only for admin (same rule as delete)
+    if (event._isTraining) {
+      toast.error('Coach training sessions cannot be edited from the admin agenda.');
+      return;
+    }
     const eventDate = new Date(event.date);
     setSelectedEvent(event);
     setEventForm({

@@ -21,8 +21,6 @@
     "settings_title": "تحديث الإعدادات",
     "coach_assigned": "تم تعيين مدرب جديد للمجموعة {{group}}",
     "coach_assigned_title": "تم تعيين مدرب",
-    "training": "تم جدولة تدريب جديد لمجموعة {{group}}",
-    "training_title": "تحديث التدريب",
     "session": "تم إنشاء حصة تدريبية جديدة",
     "session_title": "حصة جديدة",
     "event": "دعوة لحدث جديد",

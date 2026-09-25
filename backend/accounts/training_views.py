@@ -74,6 +74,12 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
             academy=user.academy,
             coach=coach_profile,
         )
+        # Notifie les joueurs des groupes/sous-groupes ciblés — appelé ici (et non
+        # via un signal post_save) car les champs M2M groups/subgroups ne sont
+        # définis par DRF qu'après ce .save(), pas au moment de la création.
+        from .signals import notify_training_group_players
+        notify_training_group_players(session)
+
         # Générer les séances récurrentes si nécessaire
         if session.recurrence != 'none' and session.recurrence_end:
             self._generate_recurring_sessions(session)

@@ -113,6 +113,37 @@ def notify_training_session_creation(sender, instance, created, **kwargs):
                     'session'
                 )
 
+
+def notify_training_group_players(session):
+    """
+    Coach -> Players in the session's target group(s)/subgroup(s).
+    Called explicitly by the view after the session is fully saved: DRF sets
+    ManyToMany fields (groups, subgroups) *after* the initial .create() call,
+    so they aren't available yet inside the post_save signal above.
+    """
+    players = set()
+    for group in session.groups.all():
+        players.update(group.players.all())
+    for subgroup in session.subgroups.all():
+        players.update(subgroup.players.all())
+
+    if not players:
+        return
+
+    if session.coach:
+        coach_name = session.coach.user.get_full_name() or session.coach.user.username
+    else:
+        coach_name = 'Your coach'
+
+    for player in players:
+        create_notification(
+            player.user,
+            "New Training Session",
+            f"{coach_name} scheduled '{session.title}' on {session.date}.",
+            session.id,
+            'session'
+        )
+
 def send_event_notifications(event):
     """
     Called after Event M2M fields are saved.
