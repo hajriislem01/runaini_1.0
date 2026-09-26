@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Event, EventParticipant, PlayerProfile
+from .models import Event, EventParticipant, PlayerProfile, Notification
 from .serializers import EventSerializer, EventParticipantSerializer
 from .permissions import IsAdmin
 
@@ -11,6 +11,12 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [IsAuthenticated]
     queryset = Event.objects.all()
+
+    def perform_destroy(self, instance):
+        # Notification.event_id is a loose text reference (not a FK), so it
+        # never cascades — clean up stale notifications ourselves.
+        Notification.objects.filter(event_type='event', event_id=str(instance.id)).delete()
+        instance.delete()
 
     def get_queryset(self):
         user = self.request.user

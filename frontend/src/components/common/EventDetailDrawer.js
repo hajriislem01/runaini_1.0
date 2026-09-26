@@ -307,17 +307,23 @@ const EventDetailDrawer = ({
               )}
             </div>
 
-            {/* Footer Actions (For Admin & Coach) */}
-            {(userType === 'admin' || userType === 'coach') && (
+            {/* Footer Actions (For Admin & Coach) — only when the caller actually wired
+                these handlers (e.g. the Agenda page). Opened from the notification bell
+                (AdministrationLayout / CoachLayout), neither is passed, so no footer. */}
+            {(userType === 'admin' || userType === 'coach') && (handleEditEvent || (setEventToDelete && setShowDeleteConfirm)) && (
               <div className={`p-6 border-t border-white/10 bg-black/40 flex gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                <button onClick={() => { handleEditEvent(detailSession); setDetailSession(null); setShowDayEventsModal && setShowDayEventsModal(false); }}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00d0cb] to-[#4fb0ff] text-[#0c132a] font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[#00d0cb]/20 transition-all">
-                  <FiEdit size={16} /> {t('editSession')}
-                </button>
-                <button onClick={() => { setEventToDelete(detailSession); setShowDeleteConfirm(true); setDetailSession(null); setShowDayEventsModal && setShowDayEventsModal(false); }}
-                  className="p-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all">
-                  <FiTrash2 size={20} />
-                </button>
+                {handleEditEvent && (
+                  <button onClick={() => { handleEditEvent(detailSession); setDetailSession(null); setShowDayEventsModal && setShowDayEventsModal(false); }}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00d0cb] to-[#4fb0ff] text-[#0c132a] font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[#00d0cb]/20 transition-all">
+                    <FiEdit size={16} /> {t('editSession')}
+                  </button>
+                )}
+                {setEventToDelete && setShowDeleteConfirm && (
+                  <button onClick={() => { setEventToDelete(detailSession); setShowDeleteConfirm(true); setDetailSession(null); setShowDayEventsModal && setShowDayEventsModal(false); }}
+                    className="p-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all">
+                    <FiTrash2 size={20} />
+                  </button>
+                )}
               </div>
             )}
           </motion.div>

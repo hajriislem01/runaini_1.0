@@ -346,18 +346,7 @@ const NotificationBell = ({ onNotificationClick }) => {
             </div>
 
             {/* Footer */}
-            <div className="p-3.5 border-t border-white/10 bg-black/40 text-center flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setShowDropdown(false);
-                  if (onNotificationClick) {
-                    onNotificationClick({ action: 'view_all' });
-                  }
-                }}
-                className="text-xs font-black text-[#00d0cb] hover:text-[#4fb0ff] transition-colors tracking-wide uppercase"
-              >
-                {t('actions.viewAll')}
-              </button>
+            <div className="p-3.5 border-t border-white/10 bg-black/40 text-center">
               <p className="text-[10px] text-gray-500 font-medium">{t('footerSchedule')}</p>
             </div>
           </motion.div>

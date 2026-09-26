@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from datetime import date, timedelta
-from .models import TrainingSession
+from .models import TrainingSession, Notification
 from .serializers import TrainingSessionSerializer, TrainingSessionListSerializer
 
 
@@ -14,6 +14,12 @@ class TrainingSessionViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return TrainingSessionListSerializer
         return TrainingSessionSerializer
+
+    def perform_destroy(self, instance):
+        # Notification.event_id is a loose text reference (not a FK), so it
+        # never cascades — clean up stale notifications ourselves.
+        Notification.objects.filter(event_type='session', event_id=str(instance.id)).delete()
+        instance.delete()
 
     # ── Queryset filtré par académie + rôle ───────────────────────────────────
     def get_queryset(self):

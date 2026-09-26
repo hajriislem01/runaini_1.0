@@ -335,8 +335,13 @@ class PlayerProfile(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._original_weight = self.weight
-        self._original_height = self.height
+        # Deferred-loading guard: when Django's deletion collector cascades
+        # through this model with a lean/deferred queryset, touching a deferred
+        # field here triggers an implicit reload that re-enters __init__,
+        # recursing forever. Skip fields that aren't loaded on this instance.
+        deferred = self.get_deferred_fields()
+        self._original_weight = self.weight if 'weight' not in deferred else None
+        self._original_height = self.height if 'height' not in deferred else None
 
     group = models.ForeignKey(
         Group,
